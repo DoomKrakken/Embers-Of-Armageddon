@@ -1,0 +1,304 @@
+Class EOA_Armor : BasicArmorBonus //phantombeta saves the day once again! :D
+{
+	Mixin EOA_MapMarkerUser;
+	Bool Dropped;
+	Default
+	{
+		Armor.SaveAmount 1;
+		Armor.MaxSaveAmount 50;
+		Armor.SavePercent 100;
+		Armor.MaxBonus 0;
+		Armor.MaxBonusMax 0;
+		Inventory.Icon "SHLDE0";
+		Inventory.PickupMessage "+1 Armor";
+		Inventory.PickupSound "Armor/Shard";
+		+BRIGHT
+		+CANBOUNCEWATER
+		+DONTGIB
+		-INVENTORY.ALWAYSPICKUP
+		+INVENTORY.NOSCREENFLASH
+	}
+	Action Bool EOA_CheckPlayerInRange(Int Dist)
+	{
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			PlayerInfo Player = Players[i];
+			If (Player && Player.Mo && PlayerInGame[i])
+			{
+				If (Player.Mo.CheckInventory("BasicArmor", GetDefaultByType("EOA_Armor").MaxSaveAmount + 25 * Player.Mo.CountInv("EOA_ArgentArmorBonusCounter")))
+				{
+					Continue;
+				}
+				Dist *= (1 + Player.Mo.CountInv("VacuumSelected")) * (1 + (Player.Mo.CountInv("VacuumSelected") * Player.Mo.CountInv("VacuumII")));
+				If (CheckIfCloser(Player.Mo, Dist))
+				{
+					Tracer = Player.Mo;
+					Return True;
+				}
+			}
+		}
+		Tracer = Null;
+		Return False;
+	}
+	Override Void BeginPlay()
+	{
+		Super.BeginPlay();
+		bDROPPED = False;
+		If (Self Is "EOA_LargeArmor")
+		{
+			MarkerType = "EOA_LargeArmorMarker";
+		}
+	}
+	Override Bool SpecialDropAction(Actor Dropper)
+	{
+		If (Dropper.bISMONSTER || Dropper Is "EOA_AmmoCrate" || Dropper Is "EOA_KillRewardDropper")
+		{
+			Dropped = True;
+			bDROPPED = True;
+		}
+		Return False;
+	}
+	Override Void Touch(Actor Toucher)
+	{
+		Let Player = Toucher.Player;
+
+		// If a voodoo doll touches something, pretend the real player touched it instead.
+		If (Player != Null)
+		{
+			Toucher = Player.Mo;
+		}
+
+		Bool LocalView = Toucher.CheckLocalView(ConsolePlayer);
+		DoPickupSpecial(Toucher); //[DoomKrakken]: See the related entry in EOA_Health.
+		Bool Res;
+		[Res, Toucher] = CallTryPickup(Toucher);
+		If (!Res)
+		{
+			Return;
+		}
+
+		// This is the only situation when a pickup flash should ever play.
+		If (PickupFlash != Null && !ShouldStay())
+		{
+			Spawn(PickupFlash, Pos, ALLOW_REPLACE);
+		}
+
+		If (!bQUIET)
+		{
+			PrintPickupMessage(LocalView, PickupMessage());
+
+			// Special check so voodoo dolls picking up items cause the
+			// real player to make noise.
+			If (Player != Null)
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Player.Mo, PickupSound, 30, CHANF_OVERLAP);
+				If (!bNOSCREENFLASH)
+				{
+					Player.BonusCount = BONUSADD;
+				}
+			}
+			Else
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Toucher, PickupSound, 30, CHANF_OVERLAP);
+			}
+		}							
+
+		// [RH] Execute an attached special (if any)
+		//DoPickupSpecial(Toucher);
+
+		If (bCOUNTITEM)
+		{
+			If (Player != Null)
+			{
+				Player.ItemCount++;
+			}
+			Level.Found_Items++;
+		}
+
+		If (bCOUNTSECRET)
+		{
+			Actor ac = Player != Null? Actor(Player.Mo) : Toucher;
+			ac.GiveSecret(True, True);
+		}
+
+		//Added by MC: Check if item taken was the roam destination of any bot
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			If (Players[i].Bot != Null && Self == Players[i].Bot.dest)
+			{
+				Players[i].Bot.Dest = Null;
+			}
+		}
+	}
+	Override Bool Use(Bool Pickup)
+	{
+		Int TrueMaxSaveAmount = GetDefaultByType("EOA_Armor").MaxSaveAmount + 25 * Owner.CountInv("EOA_ArgentArmorBonusCounter");
+		MaxSaveAmount = Max(MaxSaveAmount, TrueMaxSaveAmount);
+		Let Armor = BasicArmor(Owner.FindInventory("BasicArmor"));
+		Bool Result = False;
+
+		// This should really never happen but let's be prepared for a broken inventory.
+		If (Armor == Null)
+		{
+			Armor = BasicArmor(Spawn("BasicArmor"));
+			Armor.BecomeItem();
+			Armor.Amount = 0;
+			Armor.MaxAmount = MaxSaveAmount;
+			Owner.AddInventory(Armor);
+		}
+
+		If (BonusCount > 0 && Armor.BonusCount < BonusMax)
+		{
+			Armor.BonusCount = min(Armor.BonusCount + BonusCount, BonusMax);
+			Result = True;
+		}
+
+		Int SaveAmount = min(SaveAmount, MaxSaveAmount);
+		//If it can't give you anything, it's as good as used.
+		If (SaveAmount <= 0)
+		{ 
+			Return BonusCount > 0 ? Result : True;
+		}
+		
+		//If you already have more armor than this item can give you, you can't use it.
+		If (Armor.Amount >= MaxSaveAmount + Armor.BonusCount && !bALWAYSPICKUP)
+		{
+			If (Pickup && !(Self Is "EOA_ArgentArmorBonusMax")) //[DoomKrakken]: If it's an armor pickup, and you're at or beyond your max, you shouldn't be able to pick it up.  It most definitely shouldn't contribute to your counters should the pickup fail.
+			{
+				Return False;
+			}
+			//[DoomKrakken]: Do the checks here for armor, if the armor was successfully picked up, but can't be added because you have more than enough.
+			If (!(Self Is "EOA_SiphonArmor")) //[DoomKrakken]: Exclude Siphon Armor from here, else you can obtain the upgrade for Rich Get Richer just by tossing one enhanced Siphon Grenade while at full armor.  Armor gained from an enhanced Siphon Grenade only contributes to the Rich Get Richer upgrade challenge if it puts you at full armor when you're not at full armor prior, which is why there's no exclusion for the second Rich Get Richer check below this entire If block.  As for Armored Offensive... Siphon Armor doesn't contribute at all to the Armored Offensive Upgrade Challenge.
+			{
+				If (Owner.CountInv("ArmoredOffensiveSelected") && !Owner.CountInv("ArmoredOffensiveII"))
+				{
+					Owner.A_GiveInventory("ArmoredOffensiveChallengeCounter", SaveAmount);
+				}
+				If (Owner.CountInv("RichGetRicherSelected") && !Owner.CountInv("RichGetRicherII") && Owner.CheckInventory("BasicArmor", TrueMaxSaveAmount))
+				{
+					Owner.A_GiveInventory("RichGetRicherChallengeCounter");
+				}
+				If (Marker)
+				{
+					Marker.ItemClaimed = True;
+				}
+			}
+			Armor.MaxAmount = max(Armor.MaxAmount, TrueMaxSaveAmount); //[DoomKrakken]: This way, temp armor doesn't home in on the player if he has more armor than his current maximum.
+			Return Result;
+		}
+		
+		//Should never be less than 0, but might as well check anyway
+		If (Armor.Amount <= 0)
+		{ 
+			Armor.Amount = 0;
+			Armor.Icon = Icon;
+			Armor.SavePercent = clamp(SavePercent, 0, 100) / 100;
+			Armor.MaxAbsorb = MaxAbsorb;
+			Armor.ArmorType = GetClassName();
+			Armor.MaxFullAbsorb = MaxFullAbsorb;
+			Armor.ActualSaveAmount = MaxSaveAmount; 
+		}
+		Armor.Amount = min(Armor.Amount + SaveAmount, MaxSaveAmount + Armor.BonusCount);
+		Armor.MaxAmount = max(Armor.MaxAmount, TrueMaxSaveAmount); //[DoomKrakken]: This way, temp armor doesn't home in on the player if he has more armor than his current maximum.
+		If (Owner.CountInv("ArmoredOffensiveSelected") && !Owner.CountInv("ArmoredOffensiveII") && !(Self Is "EOA_SiphonArmor"))
+		{
+			Owner.A_GiveInventory("ArmoredOffensiveChallengeCounter", SaveAmount);
+		}
+		If (Owner.CountInv("RichGetRicherSelected") && !Owner.CountInv("RichGetRicherII") && Owner.CheckInventory("BasicArmor", TrueMaxSaveAmount))
+		{
+			Owner.A_GiveInventory("RichGetRicherChallengeCounter");
+		}
+		If (Marker)
+		{
+			Marker.ItemClaimed = True;
+		}
+		Return True;
+	}
+	Override String PickupMessage()
+	{
+		Return String.Format("+%d Armor", SaveAmount);
+	}
+}
+
+Class EOA_SiphonArmor : EOA_Armor{}
+
+//Pickups
+Class EOA_SmallArmor : EOA_Armor
+{
+	Default
+	{
+		Armor.SaveAmount 5;
+	}
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+	States
+	{
+	Spawn:
+		ASHD A 35;
+		ASHD BCDEDCB 2;
+		Loop;
+	}
+}
+
+Class EOA_MediumArmor : EOA_Armor
+{
+	Default
+	{
+		Armor.SaveAmount 25;
+		Inventory.PickupSound "Armor/Pickup";
+	}
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+	States
+	{
+	Spawn:
+		SHLD A 35;
+		SHLD BCDEDCB 2;
+		Loop;
+	}
+}
+
+Class EOA_LargeArmor : EOA_Armor
+{
+	Default
+	{
+		Armor.SaveAmount 50;
+		Inventory.PickupSound "Armor/Pickup";
+	}
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+	States
+	{
+	Spawn:
+		BPLT A 35;
+		BPLT BCDEDCB 2;
+		Loop;
+	}
+}
+
+//Spawners
+Class EOA_SmallArmorSpawner : Actor {}
+Class EOA_MediumArmorSpawner : Actor{}
+Class EOA_LargeArmorSpawner : Actor {}
+Class EOA_LargeArmorSpawner2 : RandomSpawner {Default {DropItem "EOA_LargeArmorSpawner";} }

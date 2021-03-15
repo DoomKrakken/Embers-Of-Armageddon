@@ -1,0 +1,8 @@
+/*Resolution 640, 480;
+InterpolateHealth true, 10;
+InterpolateArmor true, 10;
+*/
+StatusBar Normal, forcescaled
+{}
+
+//[DoomKrakken]: Smart.  This way we see nothing from the default status bar... ;)

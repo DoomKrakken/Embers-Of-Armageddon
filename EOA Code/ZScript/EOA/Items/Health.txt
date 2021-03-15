@@ -1,0 +1,234 @@
+Class EOA_Health : Health
+{
+	Actor Collector;
+	Bool Dropped;
+	Default
+	{
+		Inventory.Amount 1;
+		//Inventory.PickupMessage "+1 Health";
+		Inventory.PickupSound "Health/Stim";
+		+BRIGHT
+		+CANBOUNCEWATER
+		+DONTGIB
+		+INVENTORY.NOSCREENFLASH
+	}
+	Action Int GetMaxHealth()
+	{
+		Let PPtr = PlayerPawn(Self);
+		Return PPtr.MaxHealth ? PPtr.MaxHealth : PPtr.GetSpawnHealth();
+	}
+	Action Bool EOA_CheckPlayerInRange(Int Dist)
+	{
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			PlayerInfo Player = Players[i];
+			If (Player && Player.Mo && PlayerInGame[i])
+			{
+				If (Player.Mo.Health >= Player.Mo.MaxHealth)
+				{
+					Continue;
+				}
+				Dist *= (1 + Player.Mo.CountInv("VacuumSelected")) * (1 + (Player.Mo.CountInv("VacuumSelected") * Player.Mo.CountInv("VacuumII")));
+				If (CheckIfCloser(Player.Mo, Dist))
+				{
+					Tracer = Player.Mo;
+					Return True;
+				}
+			}
+		}
+		Tracer = Null;
+		Return False;
+	}
+	Override Void BeginPlay()
+	{
+		Super.BeginPlay();
+		bDROPPED = False;
+	}
+	Override Bool SpecialDropAction(Actor Dropper)
+	{
+		If (Dropper.bISMONSTER || Dropper Is "EOA_AmmoCrate" || Dropper Is "EOA_KillRewardDropper")
+		{
+			Dropped = True;
+			bDROPPED = True;
+		}
+		Return False;
+	}
+	Override Void Touch(Actor Toucher)
+	{
+		Collector = Toucher;
+		Let Player = Toucher.Player;
+
+		// If a voodoo doll touches something, pretend the real player touched it instead.
+		If (Player != Null)
+		{
+			Toucher = Player.Mo;
+		}
+
+		Bool LocalView = Toucher.CheckLocalView(ConsolePlayer);
+		DoPickupSpecial(Toucher); //[DoomKrakken]: Why did I move this?  Because health items that replace health bonuses that can always be picked up cannot be picked up anymore if you have full health.  So that you don't have to shoot yourself in the foot in order to execute a special that involves picking up the item, we'll execute it upon touching it.
+		Bool Res;
+		[Res, Toucher] = CallTryPickup(Toucher);
+		If (!Res)
+		{
+			Return;
+		}
+
+		// This is the only situation when a pickup flash should ever play.
+		If (PickupFlash != Null && !ShouldStay())
+		{
+			Spawn(PickupFlash, Pos, ALLOW_REPLACE);
+		}
+
+		If (!bQUIET)
+		{
+			PrintPickupMessage(LocalView, PickupMessage());
+
+			// Special check so voodoo dolls picking up items cause the
+			// real player to make noise.
+			If (Player != Null)
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Player.Mo, PickupSound, 30, CHANF_OVERLAP);
+				If (!bNOSCREENFLASH)
+				{
+					Player.BonusCount = BONUSADD;
+				}
+			}
+			Else
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Toucher, PickupSound, 30, CHANF_OVERLAP);
+			}
+		}							
+
+		// [RH] Execute an attached special (if any)
+		//DoPickupSpecial(Toucher);
+
+		If (bCOUNTITEM)
+		{
+			If (Player != Null)
+			{
+				Player.ItemCount++;
+			}
+			Level.Found_Items++;
+		}
+
+		If (bCOUNTSECRET)
+		{
+			Actor ac = Player != Null? Actor(Player.Mo) : Toucher;
+			ac.GiveSecret(True, True);
+		}
+
+		//Added by MC: Check if item taken was the roam destination of any bot
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			If (Players[i].Bot != Null && Self == Players[i].Bot.dest)
+			{
+				Players[i].Bot.Dest = Null;
+			}
+		}
+	}
+	Override String PickupMessage()
+	{
+		Int TrueMaxAmount;
+		If (Collector.Player)
+		{
+			Let Player = PlayerPawn(Collector);
+			If (Player)
+			{
+				TrueMaxAmount = Player.MaxHealth;
+			}
+		}
+		Return String.Format("+%d Health", min(Amount, TrueMaxAmount));
+	}
+}
+
+//Pickups
+Class EOA_SmallHealth : EOA_Health
+{
+	Default
+	{
+		Scale 1.125;
+		Inventory.Amount 5;
+		Inventory.PickupSound "Health/Stim";
+		+BRIGHT
+	}
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+	States
+	{
+	Spawn:
+		HSTM A 0 NoDelay;
+	SpawnLoop:
+		HSTM A 35;
+		HSTM BCDEDCB 2;
+		Loop;
+	}
+}
+
+Class EOA_MediumHealth : EOA_Health
+{
+	Default
+	{
+		Scale 0.75;
+		Inventory.Amount 25;
+		Inventory.PickupSound "Health/Kit";
+		+BRIGHT
+	}
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+	States
+	{
+	Spawn:
+		HKIT A 0 NoDelay;
+	SpawnLoop:
+		HKIT A 35;
+		HKIT BCDEDCB 2;
+		Loop;
+	}
+}
+
+Class EOA_LargeHealth : EOA_Health
+{
+	Default
+	{
+		Scale 0.75;
+		Inventory.Amount 50;
+		Inventory.PickupSound "Health/Pack";
+		+BRIGHT
+	}
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+	States
+	{
+	Spawn:
+		HPCK A 35;
+		HPCK BCDEDCB 2;
+		Loop;
+	}
+}
+
+
+//Spawners
+Class EOA_SmallHealthSpawner : RandomSpawner {Default {DropItem "EOA_SmallHealth";} }
+Class EOA_MediumHealthSpawner : Actor {}
+Class EOA_LargeHealthSpawner : Actor {}

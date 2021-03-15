@@ -1,0 +1,85 @@
+GameInfo
+{
+	PlayerClasses = "DoomSlayer"
+	MapArrow = "marrow", "ddtmarr" //strongbelly: map player arrow by m8f from Hellscape Navigator.
+	BlurAmount = 0.5
+	DimColor = "Black"
+	DimAmount = 0.8
+	ForceKillScripts = True
+	AddEventHandlers = /*"EOA_ReticleRenderer",*/ "EOA_ChallengeEventHandler", "EOA_StaticEventHandler"
+	StatusBarClass = "EOA_UI"//"EOA_StatusBar"
+}
+
+Automap //Doom2016 Automap Color Theme
+{
+	Base = "Doom"
+	Background = "22 1D 1C"
+	YourColor = "FF FF 00"
+	WallColor = "1D 56 89"
+	FloorDiffWallColor = "8B 8B 8B"
+	CeilingDiffWallColor = "83 83 83"
+	ExtraFloorWallColor = "66 55 55"
+	GridColor = "4B 4B 4B"
+	XHairColor = "80 80 80"
+	NotSeenColor = "6C 6C 6C"
+	//LockedColor = "B3 00 00"
+	IntraTeleportColor = "00 00 FF"
+	InterTeleportColor = "9F 00 9B"
+	SecretSectorColor = "AF 43 00"
+	SecretWallColor = "FF 9F 43"
+	ShowLocks = True
+	SpecialWallColor = "FF FF FF"
+}
+
+DoomEdNums
+{
+	20000 = "EOA_Chainsaw"
+	20001 = "EOA_Pistol"
+	20002 = "EOA_CombatShotgun"
+	20003 = "EOA_SuperShotgun"
+	20004 = "EOA_HeavyAssaultRifle"
+	20005 = "EOA_RocketLauncher"
+	20006 = "EOA_PlasmaRifle"
+	20007 = "EOA_GaussCannon"
+	20008 = "EOA_Chaingun"
+	20009 = "EOA_BFG"
+	20020 = "EOA_AmmoCrate"
+	20021 = "EOA_ThrustBootsGiver"
+	20100 = "EOA_EliteGuardCorpse"
+	20101 = "EOA_FieldDrone"
+	20102 = "EOA_ArgentCell"
+	20103 = "EOA_RuneTrialStone"
+	21000 = "EOA_BulletAmmo"
+	21001 = "EOA_ShellAmmo"
+	21002 = "EOA_RocketAmmo"
+	21003 = "EOA_CellAmmo"
+	21004 = "EOA_FuelAmmo"
+	21005 = "EOA_BFGAmmo"
+	21010 = "EOA_FragGrenadePickup"
+	21011 = "EOA_HologramPickup"
+	21012 = "EOA_SiphonGrenadePickup"
+	22000 = "EOA_SmallHealth"
+	22001 = "EOA_MediumHealth"
+	22002 = "EOA_LargeHealth"
+	22010 = "EOA_SmallArmor"
+	22011 = "EOA_MediumArmor"
+	22012 = "EOA_LargeArmor"
+	22020 = "EOA_MegaHealth"
+	22030 = "EOA_Allmap"
+	22031 = "EOA_AutomapStation"
+	22224 = "Intro_CH_LOGO"
+	23000 = "EOA_Haste"
+	23001 = "EOA_Berserk"
+	23002 = "EOA_QuadDamage"
+	23003 = "EOA_Invulnerability"
+	31000 = "TitlemapSmokeEmitter"
+	31001 = "TitlemapFireSmokeEmitter"
+	31002 = "TitlemapFlareSpawner"
+}
+
+//Title Map
+Map TITLEMAP "Embers of Armageddon"
+{
+	//[Strongbelly]: There's a noticeable lag spike when the titlemap plays. This fixes that issue.
+	PrecacheSounds = "Doom4/Menu/Intro", "Doom4/Menu/MenuTheme"
+}

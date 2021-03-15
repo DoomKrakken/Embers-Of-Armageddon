@@ -1,0 +1,548 @@
+Class ChainsawSelected : EOA_Token {}
+Class ChainsawGloryKillCounter : EOA_KillCounter {}
+Class ChainsawFuelCounter : EOA_Token {Default {Inventory.MaxAmount 5;} }
+Class ChainsawRipAndTear : EOA_Token {}
+Class BloodCounter : EOA_Token {}
+
+Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
+{
+	Default
+	{
+		Inventory.Icon "ICONSAW";
+		Weapon.AmmoType "EOA_FuelAmmo";
+		Weapon.AmmoUse 0;
+		Weapon.AmmoGive 3;
+		Weapon.SlotNumber 0;
+		Inventory.PickupMessage "Chainsaw";
+		Tag "Chainsaw";
+		+EOA_WEAPON.POWERWEAPON
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("Chainsaw/Idle");
+		MarkSound("Chainsaw/Roar");
+		MarkSound("Chainsaw/Use");
+		MarkSound("Chainsaw/MetalLoop");
+		MarkSound("Chainsaw/Down");
+		MarkSound("Chainsaw/Stab");
+		Super.MarkPrecacheSounds();
+	}
+	States
+	{
+	Spawn:
+		CHSW A -1;
+		Stop;
+	Select:
+		TNT1 A 0
+		{
+			A_GiveInventory("ChainsawSelected");
+			//ACS_NamedExecuteAlways("ChainsawReticle", 0);
+			If (GetCVar("EOA_Reticles"))
+			{
+				A_SetCrosshair(99);
+			}
+			Else
+			{
+				A_SetCrosshair(0);
+			}
+		}
+		TNT1 A 0 A_Raise();
+		Wait;
+	Deselect:
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" A 0
+		{
+			A_WeaponOffset();
+			A_TakeInventory("ChainsawSelected");
+			If (IsActorPlayingSound((Invoker.SlotNumber + 0.75) * 100 + 1, "Chainsaw/Idle") || IsActorPlayingSound((Invoker.SlotNumber + 0.75) * 100 + 1, "Chainsaw/Fire"))
+			{
+				EOA_DestroyPersistentNoiseMaker(Invoker.SlotNumber + 0.75);
+			}
+			If (IsActorPlayingSound((Invoker.SlotNumber + 0.5) * 100 + 5, "Chainsaw/MetalLoop") || IsActorPlayingSound((Invoker.SlotNumber + 0.5) * 100 + 6, "Chainsaw/MetalLoop"))
+			{
+				EOA_DestroyPersistentNoiseMaker(Invoker.SlotNumber + 0.5);
+			}
+			If (!CountInv("EOA_FuelAmmo"))
+			{
+				Return ResolveState("DeselectEmpty");
+			}
+			Return ResolveState(Null);
+		}
+		"####" AAAABBBB 1
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_WEAPSPEEDUPGRADE * CountInv("Adept"));
+			A_WeaponOffset(0, 16, WOF_KEEPX|WOF_ADD);
+		}
+	DeselectLoop:
+		TNT1 A 4 A_SetTics(4 * !CountInv("Adept") * !CountInv("PowerBerserk"));
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	DeselectEmpty:
+		"####" AAAAAAAA 1
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("Adept"));
+			A_WeaponOffset(0, 16, WOF_KEEPX|WOF_ADD);
+		}
+		Goto DeselectLoop;
+	Ready:
+		TNT1 A 0 
+		{
+			If (Level.Time)
+			{
+				EOA_SpawnNoiseMaker("Weapon/Switch");
+			}
+			A_WeaponOffset(0, 160);
+			If (!CountInv("EOA_FuelAmmo"))
+			{
+				Return ResolveState("EmptyRaise");
+			}
+			Else
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "Chainsaw/Idle", 1, CHANF_LOOPING, 0.5);
+				A_WeaponOffset(0, 160);
+				Return ResolveState(Null);
+			}
+		}
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" ABABABAB 1 
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("Adept"));
+			A_WeaponOffset(0, -16, WOF_KEEPX|WOF_ADD);
+		}		
+		Goto SlowDown;
+	ReRaise:
+		TNT1 A 0 
+		{
+			A_WeaponOffset(0, 160);
+			If (!CountInv("EOA_FuelAmmo") && !GetCVar("SV_InfiniteAmmo"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "", 1);
+				Return ResolveState("EmptyReRaise");
+			}
+			Else
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "Chainsaw/Idle", 1, CHANF_LOOPING, 0.5);
+				Return ResolveState(Null);
+			}
+		}
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" ABABABAB 1 
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_WeaponOffset(0, -16, WOF_KEEPX|WOF_ADD);
+		}		
+	SlowDown:
+		"####" "#" 0 EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "Chainsaw/Idle", 1, CHANF_LOOPING, 0.5);
+		"####" ABABABABABABABAAABBBAAABBBAAABBB 1
+		{
+			EOA_WeaponReady(WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			A_WeaponOffset(frandom(-1, 1), frandom(32, 34));
+		}
+	ReadyLoop:
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" AAAAABBBBB 1 
+		{
+			If (!CountInv("EOA_FuelAmmo") && !GetCVar("SV_InfiniteAmmo"))
+			{
+				Return ResolveState("Empty");
+			}
+			EOA_WeaponReady(WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			A_WeaponOffset(frandom(-1, 1), frandom(32, 34));
+			Return ResolveState(Null);
+		}
+		Loop;
+	EmptyRaise:
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" AAAAAAAA 1 
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("Adept"));
+			A_WeaponOffset(0, -16, WOF_KEEPX|WOF_ADD);
+		}		
+		Goto Empty;
+	EmptyReRaise:
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" AAAAAAAA 1 
+		{
+			A_WeaponOffset(0, -16, WOF_KEEPX|WOF_ADD);
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}		
+	Empty:
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" A 1
+		{
+			A_WeaponOffset();
+			If (CountInv("EOA_FuelAmmo") || GetCVar("SV_InfiniteAmmo"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "Chainsaw/Idle", 1, CHANF_LOOPING, 0.5);
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "Chainsaw/Roar", 3, 0, 0.5);
+				Return ResolveState("ReadyLoop");
+			}
+			EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			Return ResolveState(Null);
+		}
+		Loop;
+	Fire:
+		TNT1 A 0 
+		{
+			A_AlertMonsters();
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "Chainsaw/Use", 1, CHANF_LOOPING, 0.5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "Chainsaw/Roar", 3, 0, 0.5);
+		}
+	ReFire:
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" A 0
+		{
+			A_WeaponOffset(frandom(-2, 2), frandom(32, 36));
+			EOA_WeaponReady(WRF_NOFIRE);
+			A_CustomPunch(0, 0, CPF_NOTURN, "ChainsawGloryKillChecker", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+			A_CustomPunch(0, 1, CPF_NOTURN, "ChainsawPuff");
+			If (CountInv("ChainsawRipAndTear"))
+			{
+				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+				A_GunFlash("Null");
+				Return ResolveState("ChainsawGloryKill");
+			}
+			Else
+			{
+				If (CountInv("ChainsawWallHit"))
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "Chainsaw/MetalLoop", 5, CHANF_LOOPING);
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "Chainsaw/MetalLoop", 6, CHANF_LOOPING);
+				}
+				Else
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 5);
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 6);
+				}
+				Return ResolveState(Null);
+			}
+		}
+		"####" CD 1;
+		"####" "#" 0 A_ReFire("ReFire");
+		"####" "#" 0
+		{
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "Chainsaw/Down", 3, 0, 0.5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 6);
+		}
+		Goto SlowDown;
+	ChainsawGloryKill:
+		TNT1 A 0
+		{
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 6);
+			SetPlayerProperty(0, 1, PROP_TOTALLYFROZEN);
+			bNOTARGET = bNOPAIN = bNODAMAGE = True;
+			bNOGRAVITY = Tracer && Tracer.bNOGRAVITY;
+			If (CountInv("SeekAndDestroySelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/SeekAndDestroy");
+			}
+		}
+	ChainsawGloryTravel:
+		TNT1 A 1;
+		TNT1 A 0 A_Warp(AAPTR_MASTER, 0, 0, 0, 0, WARPF_TESTONLY, "ChainsawGloryTravel"); //[DoomKrakken]: The projectile itself has us do the warp.  This is here, doing the same thing, except it merely tests the very same conditions for the warp.  This way, it'll remain idle here until the warp fails.
+		TNT1 A 1
+		{
+			A_SetPitch(0, SPF_INTERPOLATE);
+			A_TransferPointer(AAPTR_DEFAULT, AAPTR_TRACER, AAPTR_DEFAULT, AAPTR_TARGET);
+			A_WeaponOffset(-80, 160);
+			A_Stop();
+		}
+		TNT1 A 0
+		{
+			Let Challenges = EOA_ChallengeArchive.Get();
+			If (Challenges)
+			{
+				Challenges.QueueGK = True;
+			}
+			If (CountInv("SavagerySelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/Savagery");
+				If (!CountInv("SavageryII") && SavageryQueue())
+				{
+					A_GiveInventory("SavageryChallengeCounter");
+				}
+			}
+			If (CountInv("SeekAndDestroySelected") && !CountInv("SeekAndDestroyII"))
+			{
+				A_GiveInventory("SeekAndDestroyChallengeCounter");
+			}
+			If (CountInv("BloodFueledSelected") && !CountInv("BloodFueledII") && CountInv("PowerBloodFueledSpeed"))
+			{
+				A_GiveInventory("BloodFueledChallengeCounter");
+			}
+			If (CountInv("SavingThrowSelected") && !CountInv("SavingThrowII") && CountInv("PowerSavingThrow"))
+			{
+				A_GiveInventory("SavingThrowChallengeCounter");
+			}
+			If (CountInv("InFlightMobilitySelected") && !CountInv("InFlightMobilityII") && !CheckOnGround())
+			{
+				A_GiveInventory("InFlightMobilityChallengeCounter");
+			}
+		}
+		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN A 0;
+		"####" EFEF 1 A_WeaponOffset(20, -32, WOF_ADD);
+		"####" "#" 0 
+		{
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "Chainsaw/Stab", 1);
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		"####" EFEFEFEFEFEFEFEFEFEF 1
+		{
+			A_WeaponOffset(frandom(-2, 2), frandom(32, 36));
+			A_CustomPunch(0, 1, CPF_NOTURN, "EOA_MeleePuff", 192);
+		}
+		"####" EFEFEFEFEF 1
+		{
+			A_SetTics(1 - CountInv("SavagerySelected"));
+			A_WeaponOffset(frandom(-2, 2), frandom(32, 36));
+			A_CustomPunch(0, 1, CPF_NOTURN, "EOA_MeleePuff", 192);
+		}
+		"####" EFEFEFEFEF 1
+		{
+			A_SetTics(1 - (CountInv("SavagerySelected") && CountInv("SavageryII")));
+			A_WeaponOffset(frandom(-2, 2), frandom(32, 36));
+			A_CustomPunch(0, 1, CPF_NOTURN, "EOA_MeleePuff", 192);
+		}
+		"####" "#" 0 
+		{
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		"####" CDCDCDCD 1 A_WeaponOffset(10, 16, WOF_ADD);
+		"####" "#" 0
+		{
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "Chainsaw/Down", 3, 0, 0.5);
+			SetPlayerProperty(0, 0, PROP_TOTALLYFROZEN);
+			bNOTARGET = bNOPAIN = bNODAMAGE = bNOGRAVITY = False;
+			A_TakeInventory("ChainsawRipAndTear");
+			A_TakeInventory("DeathFromAbove");
+			If (!GetCVar("SV_InfiniteAmmo")) //MAD HACX for those who are into that sort of thing... ;)
+			{
+				A_TakeInventory("EOA_FuelAmmo", CountInv("ChainsawFuelCounter"));
+			}
+			A_TakeInventory("ChainsawFuelCounter");
+			A_GiveInventory("BloodCounter");
+			If (CountInv("ArmoredOffensiveSelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/ArmoredOffensive");
+			}
+			If (CountInv("BloodFueledSelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/BloodFueled");
+				If (CountInv("BloodFueledII"))
+				{
+					A_GiveInventory("ExtendedBloodFueledSpeed");
+				}
+				Else
+				{
+					A_GiveInventory("BloodFueledSpeed");
+				}
+			}
+		}
+		Goto ReRaise;
+	Zoom:
+		SCSB "#" 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN "#" 0;
+		"####" "#" 0 EOA_MeleeDash();
+		"####" "#####" 1
+		{
+			A_WeaponOffset(0, 16, WOF_ADD);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+			If (CountInv("RipAndTear"))
+			{
+				A_SpawnProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+				A_GunFlash("Null");
+				Return ResolveState("GloryKill");
+			}
+			Return ResolveState(Null);
+		}
+		"####" "#" 0 A_GunFlash("MeleeAttack", GFF_NOEXTCHANGE);
+		Goto Budge;
+	UseEquipment:
+		SCSB "#" 0 A_JumpIfInventory("BloodCounter", 1, 2);
+		SCSN "#" 0;
+		"####" "#####" 1 A_WeaponOffset(0, 16, WOF_ADD);
+		"####" "#" 0 
+		{
+			If (CountInv("FragGrenadeSelected"))
+			{
+				A_GunFlash("FragGrenadeToss", GFF_NOEXTCHANGE);
+			}
+			Else If (CountInv("HologramSelected"))
+			{
+				A_TakeInventory("EquipmentCharge", 1);
+				EOA_SpawnNoiseMaker("Hologram/Click");
+				A_SpawnItemEx("EOA_HologramProjection", 30, Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_SETMASTER);
+				If (CountInv("EquipmentPowerSelected") && !CountInv("EquipmentPowerII"))
+				{
+					A_GiveInventory("EquipmentPowerChallengeCounter");
+				}
+			}
+			Else If (CountInv("SiphonGrenadeSelected"))
+			{
+				A_GunFlash("SiphonGrenadeToss", GFF_NOEXTCHANGE);
+			}
+		}
+	Budge:
+		TNT1 AAAAAAAAAAAAAAA 1 
+		{
+			A_WeaponOffset();
+			If (CountInv("RipAndTear"))
+			{
+				A_SpawnProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+				A_GunFlash("Null");
+				Return ResolveState("GloryKill");
+			}
+			Return ResolveState(Null);
+		}
+		TNT1 A 0 A_WeaponOffset(0, 80);
+		Goto ReRaise;
+	}
+}
+
+Class ChainsawGloryKillChecker : EOA_NullPuff2
+{
+	Default
+	{
+		+HITTRACER
+	}
+	States
+	{
+	Spawn:
+	Crash:
+	Death:
+	XDeath:
+		TNT1 A 1 NoDelay
+		{
+			If (Tracer)
+			{
+				ThinkerIterator It = ThinkerIterator.Create("EOA_Essentials");
+				EOA_Essentials Essentials;
+				While (Essentials = EOA_Essentials(It.Next()))
+				{
+					If (Essentials && Essentials.Owner == Tracer && Essentials.FuelReq > 0 && (CountInv("EOA_FuelAmmo", AAPTR_TARGET) >= Essentials.FuelReq || GetCVar("SV_InfiniteAmmo")))
+					{
+						Target.Tracer = Tracer;
+						Tracer.Target = Target;
+						Tracer.bNOTARGETSWITCH = Tracer.bNEVERTARGET = Tracer.bNODAMAGE = True;
+						A_GiveToTarget("ChainsawRipAndTear");
+						A_GiveInventory("PowerStaggered", 1, AAPTR_TRACER);
+						A_GiveInventory("ChainsawGloryKillCounter", 1, AAPTR_TRACER);
+						If (!GetCVar("SV_InfiniteAmmo"))
+						{
+							A_SetInventory("ChainsawFuelCounter", Essentials.FuelReq, AAPTR_TARGET, False);
+						}
+					}
+				}
+			}
+		}
+		Stop;
+	}
+}
+
+Class ChainsawPuff : Actor
+{
+	Default
+	{
+		+NOINTERACTION
+		+PUFFGETSOWNER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_GiveToTarget("ChainsawWallHit");
+		}
+		TNT1 AAA 1
+		{
+			A_SpawnItemEx("ChaingunPuffSpark", 0, 0, 0, frandom(3, 6), 0, frandom(5, 6), -90 + frandom(-5, 5));
+			A_SpawnItemEx("ChaingunPuffSpark", 0, 0, 0, frandom(3, 6), 0, frandom(5, 6), -90 + frandom(-5, 5));
+			A_SpawnItemEx("ChaingunPuffSpark", 0, 0, 0, frandom(3, 6), 0, frandom(5, 6), -90 + frandom(-5, 5));
+		}
+		Stop;
+
+	}
+}
+
+Class ChainsawWallHit : PowerEOA_TempToken
+{
+	Default
+	{
+		Powerup.Duration 5;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+}
+
+Class ChainsawWallSoundDampener : PowerEOA_TempToken
+{
+	Default
+	{
+		Powerup.Duration 5;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+}
+
+Class ChainsawWallGrind : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		+NOBLOCKMAP
+		+NOGRAVITY
+		+NOTIMEFREEZE
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			If (!CountInv("ChainsawWallHit", AAPTR_TARGET) || CountInv("ChainsawWallSoundDampener", AAPTR_TARGET))
+			{
+				Return ResolveState("Null");
+			}
+			A_GiveToTarget("ChainsawWallSoundDampener");
+			Return ResolveState("Playing");
+		}
+	Playing:
+		TNT1 A 1
+		{
+			If (!CountInv("ChainsawWallHit", AAPTR_TARGET))
+			{
+				Return ResolveState("Null");
+			}
+			A_StartSound("Chainsaw/MetalLoop", 5, CHANF_LOOPING, 1);
+			A_StartSound("Chainsaw/MetalLoop", 6, CHANF_LOOPING, 1);
+			A_Warp(AAPTR_TARGET, 16, 0, 32, 0, WARPF_NOCHECKPOSITION);
+			Return ResolveState(Null);
+		}
+		Wait;
+	Null:
+		TNT1 A 1 
+		{
+			A_TakeFromTarget("ChainsawWallHit");
+			A_TakeFromTarget("ChainsawWallSoundDampener");
+		}
+		Stop;
+	}
+}

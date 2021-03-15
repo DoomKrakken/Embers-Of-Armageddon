@@ -1,0 +1,45 @@
+#library "tokenscripts"
+#include "zcommon.acs"
+
+//Fetched by Strongbelly from D4D.
+
+Script "EOA_CombatTokensBar" ENTER //Borrowed this from D4D
+{	
+	Delay(17);
+	int totalmonsters = GetLevelInfo(LEVELINFO_TOTAL_MONSTERS);
+		
+	// No point running this if there's nothing to get.
+	if (totalmonsters < 5 )
+		{Terminate;}
+		
+	int killsearned = 0;
+	
+				
+	while (1)
+	{
+		int MaxMonsters = GetLevelInfo(LEVELINFO_TOTAL_MONSTERS);
+		int combatcheckpoint = MaxMonsters / 5;
+		int numkills = GetLevelInfo(LEVELINFO_KILLED_MONSTERS);
+		if (GetLevelInfo(LEVELINFO_TOTAL_MONSTERS) > 5)
+		{
+			// Grant one combat token on every 1/5th of the level cleared of monsters.
+			if (killsearned == 5 && numkills != MaxMonsters)
+				{ killsearned = killsearned - 1; TakeInventory("EOA_CombatToken",1); }
+				
+			if (killsearned < 5)
+			{
+				if ((numkills >= combatcheckpoint * 1) && (killsearned == 0))
+				{ killsearned++; GiveInventory("EOA_CombatToken",1); }
+				if ((numkills >= combatcheckpoint * 2) && (killsearned == 1))
+				{ killsearned++; GiveInventory("EOA_CombatToken",1); }
+				if ((numkills >= combatcheckpoint * 3) && (killsearned == 2))
+				{ killsearned++; GiveInventory("EOA_CombatToken",1); }
+				if ((numkills >= combatcheckpoint * 4) && (killsearned == 3))
+				{ killsearned++; GiveInventory("EOA_CombatToken",1); }
+				if ((numkills >= GetLevelInfo(LEVELINFO_TOTAL_MONSTERS)) && (killsearned == 4))
+				{ killsearned++; GiveInventory("EOA_CombatToken",1);}
+			}
+		}
+		Delay(17);
+	}
+}

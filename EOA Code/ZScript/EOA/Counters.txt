@@ -1,0 +1,157 @@
+// Token Base Classes
+Class EOA_Token : Inventory
+{
+	Default
+	{
+		Inventory.Amount 1;
+		Inventory.MaxAmount 1;
+		+INVENTORY.ALWAYSPICKUP
+		-INVENTORY.INVBAR
+		+INVENTORY.UNDROPPABLE
+		+INVENTORY.UNTOSSABLE
+	}
+	Static Void SetMaxInventory(Actor Owner, Class<Inventory> ItemType, Int Amount)
+	{
+		If (Owner)
+		{
+			Let Item = Owner.FindInventory(ItemType);
+			If (Item)
+			{
+				Item.MaxAmount = Amount;
+			}
+		}
+	}
+}
+
+Class EOA_MasteryChallengeToken : Inventory
+{
+	Class<EOA_Token> MasteryItem, ChallengeCounter;
+	Int Threshold;
+	Property MasteryItem : MasteryItem;
+	Property ChallengeCounter : ChallengeCounter;
+	Int OldAmount;
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "EOA_Token";
+		EOA_MasteryChallengeToken.ChallengeCounter "EOA_Token";
+		Inventory.Amount 1;
+		Inventory.MaxAmount 1;
+		+INVENTORY.ALWAYSPICKUP
+		-INVENTORY.INVBAR
+		+INVENTORY.UNDROPPABLE
+		+INVENTORY.UNTOSSABLE
+	}
+	/*Override Void AttachToOwner(Actor Other)
+	{
+		Let Item = EOA_Token(GetDefaultByType(ChallengeCounter));
+		Threshold = Item ? Item.MaxAmount : 0;
+		Super.AttachToOwner(Other);
+	}*/
+	Override Void DoEffect()
+	{
+		Let Messenger = DoomSlayer(Owner);
+		If (Messenger && ChallengeCounter && Owner.CountInv(ChallengeCounter) > OldAmount)
+		{
+			OldAmount = Owner.CountInv(ChallengeCounter); //Only update if Amount changes.  This way, we can check when Amount increases. :D
+			Owner.A_StartSound("MasteryChallenge/Ticker", 1000, CHANF_UI|CHANF_LOCAL|CHANF_LISTENERZ);
+			Messenger.PrintUpgradeProgress("Weapon Mastery", GetTag(), ChallengeCounter.GetClassName(), Owner.CountInv(MasteryItem));
+		}
+		Super.DoEffect();
+	}
+}
+
+Class EOA_TempToken : PowerupGiver
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		Powerup.Type "PowerEOA_TempToken";
+		Powerup.Duration -1;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+}
+
+Class PowerEOA_TempToken : Powerup
+{
+	Default
+	{
+		Powerup.Duration -1;
+	}
+}
+
+Class EOA_Manipulator : CustomInventory
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0;
+		Stop;
+	Pickup:
+		TNT1 A 0;
+		Stop;
+	}
+}
+
+// Commonly used counters.
+Class AlreadyHit : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerAlreadyHit";
+		Powerup.Duration 18;
+	}
+}
+
+Class PowerAlreadyHit : PowerEOA_TempToken {}
+
+Class MasteryTicker : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0 ACS_NamedExecuteAlways("MasteryChallengeCounter", 0);
+		Stop;
+	}
+}
+
+Class SecretFinderTicker : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0 ACS_NamedExecuteAlways("SecretFinderBlip", 0);
+		Stop;
+	}
+}
+
+Class SoundCounter : EOA_Token  { Default {Inventory.MaxAmount 4;} }
+Class DoubleJumpCounter : EOA_Token {}
+
+//Generic Inventory Tokens
+Class WeaponUpgradePoint : EOA_Token { Default {Inventory.MaxAmount 0x7FFFFFFF;} }
+Class WeaponUpgradePoints : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0 A_GiveInventory("WeaponUpgradePoint", 0x7FFFFFFF);
+		Stop;
+	}
+}
+Class PraetorToken : EOA_Token { Default {Inventory.MaxAmount 0x7FFFFFFF;} }
+Class PraetorTokens : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0 A_GiveInventory("PraetorToken", 0x7FFFFFFF);
+		Stop;
+	}
+}

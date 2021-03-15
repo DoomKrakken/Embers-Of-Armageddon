@@ -1,0 +1,51 @@
+Credits!
+
+Resources and code came from all sorts of places.  Plenty of credits are assigned in the many different places where the credited source is used.
+
+In general, I want to thank everyone who has contributed to this project, one way or another... be it helping with code, making sprites, providing suggestions and support, etc.
+
+If I forget anyone, or you feel that credits given here are improperly done, do not hesitate to tell me about it (with all due respect, please).  I want to make sure I give credit where it's due, and I expect that this file will undergo all sorts of changes as time passes.
+
+Without further ado... let's roll the credits! :D
+
+= Weapon Sprites 
+	- Initially made by Neccronixis, overhauled and remastered by Franco Tieppo (franart18), and used in D4T, by DBThanatos.
+	- Chaingun's blue muzzle flashes for its standard firing modes by BerserkerNoir
+	- Totally closed BFG firing sprite by Clay.
+	- "Full" Rocket Launcher edits by Clay and Abysswalker.
+	- EMG Pistol charging sprite edits by strongbelly.
+	- All sprites edited further by me (DoomKrakken).
+
+= Item Sprites
+	- D4T (Spheres, Ammo, Field Drone, Automap, Health, Armor, Weapon Pickups, Frag Grenade Equipment Box)
+	- D4DHF (Elite Guard Corpses + indicators)
+	- Strongbelly, Enchanger/Nekroturge, VICE, QC:DE (Argent Cell Casket, with effects and animations, in-world and in-hand)
+	- Teuton Wolf, Yumi, Clay (Hologram Equipment Box, Siphon Grenade Equipment Canister)
+	
+= Sounds
+	- DOOM (a.k.a. "DOOM (2016)")
+	- Xeotroid (sound bank files and some pre-extracted sounds)
+	
+= Miscellaneous
+	- ZION (various special effects taken from DOOM)
+	- D4T (plasma puffs)
+	- Project MSX (various smoke effects and casings)
+	- The Abysswalker (Doom Slayer sprites)
+	- Strongbelly (doubling smooth circular reticle meter, updated Delta V Thrust Boots pickup sprite, first-person interaction sprites, powerup overlays, custom map markers, interactable Automap station)
+	- Guncaster (Power Surge shockwave, Heat Blast shockwave)
+	- Jimmy (font conversion)
+	- Simploo, ScrubHead (Ammo Crate)
+	- Simploo, Strongbelly, QC:DE (new Rune Trial Stone sprites [Simploo] and animations [Strongbelly] with effects [QC:DE])
+	- Frax, The Doom Man (Delta V Thrust Boots [deprecated])
+	- ScrubHead (Automap Item Tracker)
+
+= Code
+	- Credited in the appropriate places within the code.  All of it is custom, but some of it was authored with help.
+
+
+Titlemap is based on D4D/D4T with edits by Krokosaber (Doom4GZ).
+Mouse cursor from D4D/D4T.
+All menu aesthetics were made by Strongbelly.
+EOA logo by VeeQue.
+
+"Hellwalker" from the DOOM (2016) OST, by Mick Gordon.

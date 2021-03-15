@@ -1,0 +1,171 @@
+//[DoomKrakken]: Coded by Strongbelly, converted to ZScript and refined further by Yours Truly.
+
+Class TitlemapSmokeEmitter : Actor
+{
+	Default
+	{
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 12 NODELAY A_SpawnItemEx("TitleMapSmoke", 0, random(350, -350), 0, 0, random(6, -6), random(8, 15), 0, SXF_NOCHECKPOSITION);
+		Wait;
+	}
+}
+
+Class TitleMapSmoke : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Scale 2.0;
+		Alpha 0.3;
+		Translation "0:255=%[0, 0, 0]:[1, 0, 0]";
+		+BRIGHT
+		+FLATSPRITE
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			A_SetAngle(90);
+			A_SetPitch(90);
+			Return A_Jump(200, random(1, 9) * 2 + 1);
+		}
+	SpawnLoop:
+		X110 ABCDEFGHIJKLMNOPQRSTUVWXY 1
+		{
+			If (Scale.X <= 9)
+			{
+				A_SetScale(Scale.X + 0.8);
+			}
+			A_FadeOut(0.007);
+			A_ScaleVelocity(0.98);
+		}
+		Loop;
+	}
+}
+
+Class TitlemapFireSmokeEmitter : Actor
+{
+	Default
+	{
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 60 NoDelay A_SpawnItemEx("TitleMapSmokeOrangeIsh", 0, random(100, -100), 500, 0, random(-10, -20), random(1, 5), 0, SXF_NOCHECKPOSITION);
+		Wait;
+	}
+}
+
+Class TitleMapSmokeOrangeIsh : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Alpha 0.3;
+		Translation "0:255=%[0, 0, 0]:[1, 0.2, 0]";
+		+BRIGHT
+		+FLATSPRITE
+		+NOINTERACTION
+		+ROLLSPRITE
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			A_SetAngle(90);
+			A_SetPitch(90);
+			A_SetRoll(roll+random(0,359));
+			Return A_Jump(200, random(1, 6) * 2 + 1);//3,5,7,9,11,13);
+		}
+	SpawnLoop:
+		X101 ABCDEFGHIJKLMNOP 1
+		{
+			If (Scale.X <= 18)
+			{
+				A_SetScale(Scale.X +1.2);
+			}
+			A_FadeOut(0.001);
+			A_SetRoll(roll-1);
+		}
+		Loop;
+	}
+}
+
+Class TitlemapFlareSpawner : Actor
+{
+	Default
+	{
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 8 NoDelay A_SpawnItemEx("TitlemapFlare", 0, random(300, -300), 0, 0, random(-15, 15), random(4, 15), 0, SXF_NOCHECKPOSITION, 96);
+		Wait;
+	}
+}
+
+Class TitlemapFlare : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Scale 0.4;
+		+BRIGHT
+		+NOINTERACTION
+		+ROLLSPRITE
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			A_SetRoll(Roll + random(0, 359));
+			Return A_Jump(200, random(1, 6) * 2 + 1);
+		}
+	SpawnLoop:
+		X029 AABBCCDDEEFFGGHHIIJJKK 2
+		{
+			A_FadeOut(0.001);
+			A_SetRoll(roll-1);
+			If (!random(0, 4))
+			{
+				A_ChangeVelocity(0, random(5, -5), 0);
+			}
+		}
+		Loop;
+	}
+}
+Class Intro_CH_LOGO : Actor
+{
+	Default
+	{
+		//$sprite ALLYB0
+		//$Category INTROS
+		Alpha 0.0;
+		RenderStyle "Translucent";
+		+FORCEXYBILLBOARD
+		+NOGRAVITY
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1;
+		Goto Inactive;
+	Inactive:
+		TNT1 A 1;
+		Loop;
+	Active:
+		ALLY B 1 Bright A_FadeIn(0.01, FTF_CLAMP);
+		Loop;
+	}
+}

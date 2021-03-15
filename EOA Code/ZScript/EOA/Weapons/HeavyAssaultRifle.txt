@@ -1,0 +1,1365 @@
+Class HeavyAssaultRifleSelected : EOA_Token {}
+
+//Micro Missiles - Adds a rack of micro missiles with slight homing capabilities, that stick onto their targets and detonate shortly afterward.
+Class MicroMissiles : EOA_Token {}
+Class MicroMissilesSelected : EOA_Token {}
+Class AmmoEfficient : EOA_Token {} //Missiles cost 2 bullets rather than 3.
+Class AdvancedLoader : EOA_Token {} //Faster Reload.
+Class QuickLauncher : EOA_Token {} //Faster Deployment. 
+
+Class MC_BottomlessMissiles : EOA_MasteryChallengeToken //Hit 4 different enemies with Micro Missiles in 5 seconds.
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "BottomlessMissiles";
+		EOA_MasteryChallengeToken.ChallengeCounter "BottomlessMissiles";
+		Tag "Bottomless Missiles";
+	}
+}
+
+Class BottomlessMissiles : EOA_Token {} //Mastery Upgrade - Micro Missiles never need to reload.
+
+Class MicroMissileCounter : EOA_Token {Default {Inventory.MaxAmount 6;} }
+
+Class MicroMissileReloadCounter : EOA_Token {Default {Inventory.MaxAmount 20;} }
+
+Class MicroMissilesLoaded : EOA_Token {}
+
+Class MicroMissilesReady : EOA_Token {}
+
+Class MicroMissileStickCounter1 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerMicroMissileStickCounter1";
+		Powerup.Duration -5;
+	}
+}
+
+Class MicroMissileStickCounter2 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerMicroMissileStickCounter2";
+		Powerup.Duration -5;
+	}
+}
+
+Class MicroMissileStickCounter3 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerMicroMissileStickCounter3";
+		Powerup.Duration -5;
+	}
+}
+
+Class MicroMissileStickCounter4 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerMicroMissileStickCounter4";
+		Powerup.Duration -5;
+	}
+}
+
+Class PowerMicroMissileStickCounter1 : PowerEOA_TempToken {}
+Class PowerMicroMissileStickCounter2 : PowerEOA_TempToken {}
+Class PowerMicroMissileStickCounter3 : PowerEOA_TempToken {}
+Class PowerMicroMissileStickCounter4 : PowerEOA_TempToken {}
+
+//Tactical Scope - Allows you to zoom in for more accurate shots with the Heavy Assault Rifle.
+Class TacticalScope : EOA_Token {}
+Class TacticalScopeSelected : EOA_Token {}
+Class HARUraniumCoating : EOA_Token {} //Shots penetrate enemies (while zoomed).
+Class SkullCracker : EOA_Token {} //Bullets deal additional damage upon a headshot (while zoomed).
+Class HARLightWeight : EOA_Token {} //Move at full speed while using the Tactical Scope.
+
+Class MC_DevastatorRounds : EOA_MasteryChallengeToken //Kill 50 enemies while using the Tactical Scope.
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "DevastatorRounds";
+		EOA_MasteryChallengeToken.ChallengeCounter "DevastatorRoundsMasteryCounter";
+		Tag "Devastator Rounds";
+	}
+}
+
+Class DevastatorRounds : EOA_Token {} //Bullets are upgraded to high-damage Devastator Rounds (while zoomed).
+
+Class DevastatorRoundsMasteryCounter : EOA_Token {Default {Inventory.MaxAmount 50;} }
+
+Class TacticalScopeReady : EOA_Token {}
+Class TacticalScopeFireCounter : EOA_Token {}
+
+Class HARAccuracyCounter : EOA_Token {Default {Inventory.MaxAmount 20;} }
+
+Class HARMods : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("MicroMissiles");
+			A_GiveInventory("TacticalScope");
+		}
+		Stop;
+	}
+}
+
+Class HARUpgrades : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("AmmoEfficient");
+			A_GiveInventory("AdvancedLoader");
+			A_GiveInventory("QuickLauncher");
+			A_GiveInventory("HARUraniumCoating");
+			A_GiveInventory("SkullCracker");
+			A_GiveInventory("HARLightWeight");
+		}
+		Stop;
+	}
+}
+
+Class EOA_HeavyAssaultRifle : EOA_Weapon
+{
+	Actor BMQueue[4]; //Bottomless Missiles Mastery Challenge array
+	UI Double Z0Scale, Z1Scale, Z1Alpha, Z1Dist, Z1Tick, Z2Scale, Z2Alpha, Z2Dist, Z3Scale, Z3Alpha, XHRW, XHRH;
+	UI UInt PrevTime, DeltaTime;
+	Default
+	{
+		Inventory.Icon "ICONHAR";
+		Weapon.AmmoType "EOA_BulletAmmo";
+		Weapon.AmmoUse 1;
+		Weapon.AmmoGive 60;
+		Weapon.SlotNumber 4;
+		Inventory.PickupMessage "Heavy Assault Rifle";
+		Tag "Heavy Assault Rifle";
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("HAR/Fire");
+		MarkSound("HAR/Add");
+		MarkSound("HAR/Bass");
+		MarkSound("HAR/DeployFast");
+		MarkSound("HAR/Deploy");
+		MarkSound("HAR/Missile");
+		MarkSound("HAR/Launch");
+		MarkSound("HAR/Close");
+		MarkSound("HAR/ZoomIn");
+		MarkSound("HAR/ZoomOut");
+		MarkSound("HAR/Fire/Uranium");
+		MarkSound("MicroMissiles/Click");
+		MarkSound("MicroMissiles/Attach");
+		MarkSound("TacticalScope/Click");
+		MarkSound("TacticalScope/Attach");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void DoEffect()
+	{
+		Let Player = Owner.Player;
+		If (!Player)
+		{
+			Super.DoEffect();
+			Return;
+		}
+
+		//Mod not equipped...
+		If ((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !(Owner.GetPlayerInput(INPUT_OLDBUTTONS) & BT_ALTATTACK) && Player.ReadyWeapon == Self && !(Owner.CountInv("MicroMissilesSelected") || Owner.CountInv("TacticalScopeSelected")))
+		{
+			EOA_SpawnNoiseMaker("Weapon/DryFire");
+		}
+
+		//Cooldown
+		Owner.A_TakeInventory("HARAccuracyCounter", 1 + Owner.CountInv("PowerHaste"));
+		If (Owner.CountInv("MicroMissileCounter") < 6 && !Owner.CountInv("MicroMissilesReady"))
+		{
+			Owner.A_GiveInventory("MicroMissileReloadCounter", (1 + Owner.CountInv("AdvancedLoader")) * (1 + Owner.CountInv("PowerHaste")));
+			If (Owner.CountInv("MicroMissileReloadCounter") >= 20)
+			{
+				Owner.A_TakeInventory("MicroMissileReloadCounter");
+				Owner.A_GiveInventory("MicroMissileCounter");
+				If (Owner.CountInv("MicroMissileCounter") >= 6 && Owner.CountInv("MicroMissilesSelected"))
+				{
+					Owner.A_GiveInventory("MicroMissilesLoaded");
+				}
+			}
+		}
+		
+		//Mastery - Bottomless Missiles (Micro Missiles)
+		EOA_QueueBMChallenge();
+		If (!Owner.CountInv("BottomlessMissiles") && Owner.CountInv("AmmoEfficient") && Owner.CountInv("AdvancedLoader") && Owner.CountInv("QuickLauncher"))
+		{
+			Owner.A_GiveInventory("MC_BottomlessMissiles");
+			If (Owner.CountInv("PowerMicroMissileStickCounter1") && Owner.CountInv("PowerMicroMissileStickCounter2") && Owner.CountInv("PowerMicroMissileStickCounter3") && Owner.CountInv("PowerMicroMissileStickCounter4") && !Owner.CountInv("BottomlessMissiles"))
+			{
+				Owner.A_GiveInventory("BottomlessMissiles");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_BottomlessMissiles");
+		}
+		
+		//Mastery - Devastator Rounds (Tactical Scope)
+		If (!Owner.CountInv("DevastatorRounds") && Owner.CountInv("HARUraniumCoating") && Owner.CountInv("SkullCracker") && Owner.CountInv("HARLightWeight"))
+		{
+			Owner.A_GiveInventory("MC_DevastatorRounds");
+			If (Owner.CountInv("DevastatorRoundsMasteryCounter") >= 50)
+			{
+				Owner.A_GiveInventory("DevastatorRounds");
+				Owner.A_TakeInventory("DevastatorRoundsMasteryCounter");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_DevastatorRounds");
+		}
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon != Self)
+		{
+			If (Owner.CountInv("HeavyAssaultRifleSelected"))
+			{
+				Owner.A_TakeInventory("HeavyAssaultRifleSelected");
+				Owner.A_TakeInventory("MicroMissilesReady");
+				If (Owner.CountInv("BottomlessMissiles"))
+				{
+					Owner.A_GiveInventory("MicroMissileCounter", 6);
+				}
+				Owner.A_TakeInventory("TacticalScopeReady");
+				FOVScale = 1;
+			}
+		}
+		Super.DoEffect();
+	}
+	Override Double GetSpeedFactor()
+	{
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon == Self)
+		{
+			If (Owner.CountInv("TacticalScopeSelected") && Owner.CountInv("TacticalScopeReady") && !Owner.CountInv("HARLightWeight"))
+			{
+				Return 0.5;
+			}
+		}
+		Return 1.0;
+	}
+	Action Void EOA_QueueBMChallenge() //Thank you, Michaelis, for giving me this idea. :D
+	{
+		If (Invoker.Owner)
+		{
+			If (!Invoker.Owner.CountInv("PowerMicroMissileStickCounter1"))
+			{
+				Invoker.BMQueue[0] = Null;
+			}
+			If (!Invoker.Owner.CountInv("PowerMicroMissileStickCounter2"))
+			{
+				Invoker.BMQueue[1] = Null;
+			}
+			If (!Invoker.Owner.CountInv("PowerMicroMissileStickCounter3"))
+			{
+				Invoker.BMQueue[2] = Null;
+			}
+			If (!Invoker.Owner.CountInv("PowerMicroMissileStickCounter4"))
+			{
+				Invoker.BMQueue[3] = Null;
+			}
+		}
+	}
+	Action Void EOA_TransferMMPointer(Actor Pointer)
+	{
+		If (Pointer && Pointer.bISMONSTER && Invoker.Owner && Invoker.Owner.CountInv("MC_BottomlessMissiles"))
+		{
+			If (!Invoker.BMQueue[0] && Invoker.BMQueue[1] != Pointer && Invoker.BMQueue[2] != Pointer && Invoker.BMQueue[3] != Pointer)
+			{
+				Invoker.Owner.A_GiveInventory("MicroMissileStickCounter1");
+				Invoker.BMQueue[0] = Pointer;
+			}
+			Else If (!Invoker.BMQueue[1] && Invoker.BMQueue[2] != Pointer && Invoker.BMQueue[3] != Pointer && Invoker.BMQueue[0] != Pointer)
+			{
+				Invoker.Owner.A_GiveInventory("MicroMissileStickCounter2");
+				Invoker.BMQueue[1] = Pointer;
+			}
+			Else If (!Invoker.BMQueue[2] && Invoker.BMQueue[3] != Pointer && Invoker.BMQueue[0] != Pointer && Invoker.BMQueue[1] != Pointer)
+			{
+				Invoker.Owner.A_GiveInventory("MicroMissileStickCounter3");
+				Invoker.BMQueue[2] = Pointer;
+			}
+			Else If (!Invoker.BMQueue[3] && Invoker.BMQueue[0] != Pointer && Invoker.BMQueue[1] != Pointer && Invoker.BMQueue[2] != Pointer)
+			{
+				Invoker.Owner.A_GiveInventory("MicroMissileStickCounter4");
+				Invoker.BMQueue[3] = Pointer;
+			}
+		}
+	}
+	States
+	{
+	Spawn:
+		HARW A -1;
+		Stop;
+	Select:
+		TNT1 A 0
+		{
+			Invoker.SemiAutoOverride = True;
+			A_WeaponOffset();
+			A_GiveInventory("HeavyAssaultRifleSelected");
+			If (GetCVar("EOA_Reticles"))
+			{
+				ACS_NamedExecuteAlways("HARReticle", 0);
+				A_SetCrosshair(99);
+			}
+			Else
+			{
+				A_SetCrosshair(0);
+			}
+		}
+		TNT1 A 0 A_Raise();
+		Wait;
+	Deselect:
+		TNT1 A 0
+		{
+			If (CountInv("MicroMissilesReady"))
+			{
+				Return ResolveState("MissileClose");
+			}
+			Else If (CountInv("TacticalScopeReady"))
+			{
+				Return ResolveState("ScopeOut");
+			}
+			A_ZoomFactor();
+			Return ResolveState(Null);
+		}
+		HMMR A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 3);
+		HMSR A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNR A 0;
+		"####" HFDB 1;
+		TNT1 A 4
+		{
+			A_TakeInventory("HeavyAssaultRifleSelected");
+			A_SetTics(4 * !CountInv("Adept") * !CountInv("PowerBerserk"));
+		}
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	Ready:
+		TNT1 A 0
+		{
+			If (Level.Time && !(CountInv("MicroMissilesSwitch") || CountInv("TacticalScopeSwitch")))
+			{
+				EOA_SpawnNoiseMaker("Weapon/Switch");
+			}
+		}
+		HMMR A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 3);
+		HMSR A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNR A 0;
+		"####" ACEG 1 
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			If (CountInv("MicroMissilesSwitch"))
+			{
+				A_TakeInventory("MicroMissilesSwitch");
+				Return ResolveState("MicroMissilesMod");
+			}
+			Else If (CountInv("TacticalScopeSwitch"))
+			{
+				A_TakeInventory("TacticalScopeSwitch");
+				Return ResolveState("TacticalScopeMod");
+			}
+			Return ResolveState(Null);
+		}
+		Goto ReadyLoop;
+	ReRaise:
+		TNT1 A 0 A_WeaponOffset(-144, 56);
+		HMMR A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 3);
+		HMSR A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNR A 0;
+		"####" CDEFGH 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_WeaponOffset(24, -4, WOF_ADD);
+		}
+	ReadyLoop:
+		TNT1 A 0
+		{
+			If (CountInv("MicroMissilesLoaded"))
+			{
+				A_TakeInventory("MicroMissilesLoaded");
+				EOA_SpawnNoiseMaker("Weapon/Loaded");
+			}
+		}
+		HMMI A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 3);
+		HMSI A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNI A 0;
+		"####" "#" 1 
+		{
+			EOA_WeaponReady(WRF_NOSWITCH * Invoker.SemiAutoOverride|WRF_ALLOWRELOAD|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			Invoker.SemiAutoOverride = False;
+			If (CountInv("MicroMissilesSwitch"))
+			{
+				A_TakeInventory("MicroMissilesSwitch");
+				Return ResolveState("SwitchToMicroMissiles");
+			}
+			Else If (CountInv("TacticalScopeSwitch"))
+			{
+				A_TakeInventory("TacticalScopeSwitch");
+				Return ResolveState("SwitchToTacticalScope");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	Fire:
+		//[DoomKrakken]: Frame E of the standard firing sequence is identical to the idle frame.  I chose to duplicate it for efficiency.
+		HMMF A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 3);
+		HMSF A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNF A 0;
+		"####" "#" 0 
+		{
+			If (CountInv("SoundCounter") >= 4)
+			{
+				A_TakeInventory("SoundCounter");
+			}
+			A_GiveInventory("SoundCounter");
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Fire", CountInv("SoundCounter"));
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Add", 1+ CountInv("SoundCounter"), 0, 0.5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Bass", 0);
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "HARTracer", -6 + GetViewZ(), 10 + GetRelVelY() / 3);
+			EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -0.75, 0, 0.25);
+			EOA_SpawnCustomDynamicLight("HAR_Light", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+			A_AlertMonsters();
+			A_GiveInventory("HARAccuracyCounter", 10);
+		}
+		"####" AB 1
+		{
+			If (CountInv("MicroMissilesLoaded"))
+			{
+				A_TakeInventory("MicroMissilesLoaded");
+				EOA_SpawnNoiseMaker("Weapon/Loaded");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("TacticalScopeSelected") || (CountInv("MicroMissilesSelected") && CountInv("MicroMissileCounter") == 6))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+		}
+		"####" "#" 0 A_FireProjectile("EOA_EmptyBrass", -60, 0, 3, 2, 0, -5 + Pitch / 2);
+		"####" CDE 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("TacticalScopeSelected") || (CountInv("MicroMissilesSelected") && CountInv("MicroMissileCounter") == 6))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+		}
+		TNT1 A 0 A_ReFire();
+		Goto ReadyLoop;
+	AltFire:
+		TNT1 A 0
+		{
+			If (CountInv("MicroMissilesLoaded"))
+			{
+				A_TakeInventory("MicroMissilesLoaded");
+				EOA_SpawnNoiseMaker("Weapon/Loaded");
+			}
+		}
+		TNT1 A 0 A_JumpIf(CountInv("MicroMissilesSelected") && CountInv("MicroMissileCounter") > 5, "MissilePrime");
+		TNT1 A 0 A_JumpIf(CountInv("TacticalScopeSelected"), "ScopePrime");
+		Goto ReadyLoop;
+	MissilePrime:
+		TNT1 A 0
+		{
+			A_GiveInventory("MicroMissilesReady");
+			If (CountInv("QuickLauncher"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/DeployFast");
+			}
+			Else
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Deploy");
+			}
+		}
+		HMML ABBBBB 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH);
+			If (CountInv("QuickLauncher") && GetFrame() == 1)
+			{
+				A_SetTics(0);
+			}
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || CountInv("Grabbing_A_Ledge") || !CountInv("MicroMissilesSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("MissileClose");
+			}
+			Return ResolveState(Null);
+		}
+		HMML CDDDDD 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH);
+			If (CountInv("QuickLauncher") && GetFrame() == 3)
+			{
+				A_SetTics(0);
+			}
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || CountInv("Grabbing_A_Ledge") || !CountInv("MicroMissilesSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("MissileClose");
+			}
+			Return ResolveState(Null);
+		}
+		HMML EFFFFF 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH);
+			If (CountInv("QuickLauncher") && GetFrame() == 5)
+			{
+				A_SetTics(0);
+			}
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || CountInv("Grabbing_A_Ledge") || !CountInv("MicroMissilesSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("MissileClose");
+			}
+			Return ResolveState(Null);
+		}
+		HMML G 0;
+	MissileReady:
+		"####" "#" 1 
+		{
+			EOA_WeaponReady(WRF_NOFIRE);
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || !CountInv("MicroMissileCounter") || CountInv("Grabbing_A_Ledge") || !CountInv("MicroMissilesSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("MissileClose");
+			}
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK))
+			{
+				If (CountInv("BottomlessMissiles"))
+				{
+					Return ResolveState("BottomlessMissileFire");
+				}
+				Else If (CountInv("MicroMissileCounter"))
+				{
+					Return ResolveState("MissileFire");
+				}
+			}
+			Return ResolveState(Null);
+		}
+		Wait;
+	MissileFire:
+		HMM1 A 0 A_JumpIfInventory("MicroMissileCounter", 6, "MissileContinue");
+		HMM2 A 0 A_JumpIfInventory("MicroMissileCounter", 5, "MissileContinue");
+		HMM3 A 0 A_JumpIfInventory("MicroMissileCounter", 4, "MissileContinue");
+		HMM4 A 0 A_JumpIfInventory("MicroMissileCounter", 3, "MissileContinue");
+		HMM5 A 0 A_JumpIfInventory("MicroMissileCounter", 2, "MissileContinue");
+		HMM6 A 0 A_JumpIfInventory("MicroMissileCounter", 1, "MissileContinue");
+		Goto MissileContinue;
+	BottomlessMissileFire:
+		HMB1 A 0 A_JumpIfInventory("MicroMissileCounter", 6, "MissileContinue");
+		HMB2 A 0 A_JumpIfInventory("MicroMissileCounter", 5, "MissileContinue");
+		HMB3 A 0 A_JumpIfInventory("MicroMissileCounter", 4, "MissileContinue");
+		HMB4 A 0 A_JumpIfInventory("MicroMissileCounter", 3, "MissileContinue");
+		HMB5 A 0 A_JumpIfInventory("MicroMissileCounter", 2, "MissileContinue");
+		HMB6 A 0 A_JumpIfInventory("MicroMissileCounter", 1, "MissileContinue");
+	MissileContinue:
+		"####" A 0
+		{
+			If (CountInv("EOA_BulletAmmo") >= 3 - CountInv("AmmoEfficient") || CheckInfiniteAmmo())
+			{
+				If (CountInv("SoundCounter") >= 4)
+				{
+					A_TakeInventory("SoundCounter");
+				}
+				A_GiveInventory("SoundCounter");
+				EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH);
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Missile", CountInv("SoundCounter"));
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Launch", 1 + CountInv("SoundCounter"));
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Bass", 0);
+				EOA_FireBullets(4, 2, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_PUFFTRACER, 32767, "HARMicroMissile", -4 + GetViewZ(), 5 + GetRelVelY() / 5);
+				EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -1, 0, 0.25);
+				EOA_SpawnCustomDynamicLight("HAR_Light", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+				A_TakeInventory("EOA_BulletAmmo", 3 - CountInv("AmmoEfficient"), TIF_NOTAKEINFINITE);
+				A_TakeInventory("MicroMissileCounter", 1);
+				A_AlertMonsters();
+				A_FireProjectile("EOA_EmptyBrass", -60, 0, 3, 2, 0, -5 + Pitch / 2);
+				If (CountInv("PowerQDMG"))
+				{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+				}
+				If (CountInv("BottomlessMissiles") && !CountInv("MicroMissileCounter"))
+				{
+					A_GiveInventory("MicroMissileCounter", 6);
+				}
+			}
+			Else
+			{
+				A_SelectWeapon("EOA_Weapon", SWF_SELECTPRIORITY);
+				Return ResolveState("Deselect");
+			}
+			Return ResolveState(Null);
+		}
+		"####" ABCDE 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH);
+			If (CountInv("Grabbing_A_Ledge") || !(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || !CountInv("MicroMissilesSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("MissileClose");
+			}
+			Return ResolveState(Null);
+		}
+		Goto MissileReady;
+	MissileClose:
+		TNT1 A 0 
+		{
+			A_TakeInventory("MicroMissilesReady");
+			If (CountInv("MicroMissilesSelected"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Close");
+			}
+			If (CountInv("BottomlessMissiles"))
+			{
+				A_GiveInventory("MicroMissileCounter", 6);
+			}
+		}
+		HMML ECA 1 
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			If (!CountInv("MicroMissilesSelected"))
+			{
+				Return ResolveState("ReadyLoop");
+			}
+			/*Else If (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
+			{
+				A_GiveInventory("PowerEquipmentTrigger");
+			}*/
+			Return ResolveState(Null);
+		}
+		//TNT1 A 0 A_JumpIfInventory("PowerEquipmentTrigger", 1, "UseEquipment");
+		Goto ReadyLoop;
+	ScopePrime:
+		TNT1 A 0 
+		{
+			A_ZoomFactor(2, ZOOM_NOSCALETURNING);
+			EOA_SpawnNoiseMaker("HAR/ZoomIn", 0, 0.5);
+		}
+		HMSZ ABCD 1 EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE, EOA_ALLOWMANTLE);
+		SCOP ABCD 1 Bright EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE, EOA_ALLOWMANTLE);
+		TNT1 A 0 A_GiveInventory("TacticalScopeReady");
+	ScopeReady:
+		SCOP D 1 Bright
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE);
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("TacticalScopeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("ScopeOut");
+			}
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK))
+			{
+				Return ResolveState("ScopeFire");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	ScopeFire:
+		SCOP E 0
+		{
+			A_GiveInventory("TacticalScopeFireCounter");
+			If (CountInv("PowerHaste"))
+			{
+				A_SetTics(1);
+			}
+			If (CountInv("EOA_BulletAmmo") || CheckInfiniteAmmo())
+			{
+				If (CountInv("SoundCounter") >= 4)
+				{
+					A_TakeInventory("SoundCounter");
+				}
+				A_GiveInventory("SoundCounter");
+				If (CountInv("HARUraniumCoating"))
+				{		
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Fire/Uranium", CountInv("SoundCounter"));
+				}
+				Else
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Fire", CountInv("SoundCounter"));
+				}
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Add", 1 + CountInv("SoundCounter"), 0, 0.5);
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Bass", 0);
+				If (CountInv("DevastatorRounds"))
+				{
+					EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "HARDevastatorTracer", -6 + GetViewZ(), GetRelVelY() / 1.5);
+				}
+				Else
+				{
+					EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "HARTracer", -6 + GetViewZ(), GetRelVelY() / 1.5);
+				}
+				EOA_SetWeaponRecoilOffset(frandompick(-1, 0.5, 0.5, 1), -0.75, 0, 0.25);
+				EOA_SpawnCustomDynamicLight("HAR_Light", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+				A_TakeInventory("EOA_BulletAmmo", 1, TIF_NOTAKEINFINITE);
+				A_AlertMonsters();
+				A_FireProjectile("EOA_EmptyBrass", -60, 0, 3, 2, 0, -5 + Pitch / 2);
+				A_GiveInventory("HARAccuracyCounter", 10);
+				If (CountInv("PowerQDMG"))
+				{
+					EOA_SpawnNoiseMaker("QuadDamage/Shot");
+				}
+				Return ResolveState(Null);
+			}
+			Else
+			{
+				A_SelectWeapon("EOA_Weapon", SWF_SELECTPRIORITY);
+				Return ResolveState("Deselect");
+			}
+		}
+		SCOP EE 1 Bright
+		{
+			If (GetCVar("EOA_APRRecoil"))
+			{
+				A_ZoomFactor(1.99, ZOOM_NOSCALETURNING);
+			}
+			If (CountInv("PowerHaste"))
+			{
+				If (CountInv("SpeedCounter"))
+				{
+					A_SetTics(0);
+					A_TakeInventory("SpeedCounter");
+				}
+				Else
+				{
+					A_GiveInventory("SpeedCounter");
+				}
+			}
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || CountInv("Grabbing_A_Ledge") || !CountInv("TacticalScopeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("ScopeOut");
+			}
+			Return ResolveState(Null);
+		}
+		SCOP DDD 1 Bright
+		{
+			A_ZoomFactor(2, ZOOM_NOSCALETURNING);
+			If (CountInv("PowerHaste"))
+			{
+				If (CountInv("SpeedCounter"))
+				{
+					A_SetTics(0);
+					A_TakeInventory("SpeedCounter");
+				}
+				Else
+				{
+					A_GiveInventory("SpeedCounter");
+				}
+			}
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || CountInv("Grabbing_A_Ledge") || !CountInv("TacticalScopeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("ScopeOut");
+			}
+			Return ResolveState(Null);
+		}
+		TNT1 A 0
+		{
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK))
+			{
+				A_ReFire("ScopeFire");
+			}
+		}
+		Goto ScopeReady;
+	ScopeOut:
+		TNT1 A 0 
+		{
+			A_ZoomFactor(1, ZOOM_INSTANT * !CountInv("TacticalScopeSelected"));
+			A_TakeInventory("TacticalScopeReady");
+			If (CountInv("TacticalScopeSelected"))
+			{
+				EOA_SpawnNoiseMaker("HAR/ZoomOut", 0, 0.5);
+			}
+		}
+		SCOP DCBA 1 Bright
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_ALLOWZOOM, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			If (!CountInv("TacticalScopeSelected"))
+			{
+				Return ResolveState("ReadyLoop");
+			}
+			Return ResolveState(Null);
+			/*Else 
+			{
+				If (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
+				{
+					A_GiveInventory("PowerEquipmentTrigger");
+				}
+				Return ResolveState(Null);
+			}*/
+		}
+		HMSZ DCBA 1 
+		{
+			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_ALLOWZOOM, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			If (!CountInv("TacticalScopeSelected"))
+			{
+				Return ResolveState("ReadyLoop");
+			}
+			Return ResolveState(Null);
+			/*Else 
+			{
+				If (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
+				{
+					A_GiveInventory("PowerEquipmentTrigger");
+				}
+				Return ResolveState(Null);
+			}*/
+		}
+		//TNT1 A 0 A_JumpIfInventory("PowerEquipmentTrigger", 1, "UseEquipment");
+		Goto ReadyLoop;
+	Reload:
+		TNT1 A 0 A_JumpIf(CountInv("MicroMissiles") && !CountInv("MicroMissilesSelected"), "SwitchToMicroMissiles");
+		TNT1 A 0 A_JumpIf(CountInv("TacticalScope") && !CountInv("TacticalScopeSelected"), "SwitchToTacticalScope");
+		Goto ReadyLoop;
+	SwitchToMicroMissiles:
+		HMSR A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNR A 0;
+		"####" HGFEDCBA 1;
+	MicroMissilesMod:
+		TNT1 A 0
+		{
+			A_GiveInventory("MicroMissilesSelected");
+			A_TakeInventory("TacticalScopeSelected");
+		}
+		HMMM ABCDEFGHIJKLM 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("MicroMissiles/Click");
+		HMMM MMMMMMMMMMMMMMMM 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("TacticalScope"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("MicroMissiles/Attach");
+		HMMM NOPQRS 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("TacticalScope"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		HMMM SSSSSSSSSS 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("TacticalScope"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		HMMM TU 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("TacticalScope"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		Goto ReadyLoop;
+	SwitchToTacticalScope:
+		HMMR A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 2);
+		HMNR A 0;
+		"####" HGFEDCBA 1;
+	TacticalScopeMod:
+		TNT1 A 0
+		{
+			A_GiveInventory("TacticalScopeSelected");
+			A_TakeInventory("MicroMissilesSelected");
+		}
+		HMSM ABCDEFGHIJKLMN 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("TacticalScope/Click");
+		HMSM NNNNNNNNNNNNNNNN 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MicroMissiles"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("TacticalScope/Attach");
+		HMSM OOPP 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MicroMissiles"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		HMSM PPPPPPPP 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MicroMissiles"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		HMSM QRSTU 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MicroMissiles"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		Goto ReadyLoop;
+	Zoom:
+		HMMT A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 3);
+		HMST A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNT A 0;
+		"####" "#" 0;
+		Goto Super::Melee;
+	UseEquipment:
+		HMMT A 0 A_JumpIfInventory("MicroMissilesSelected", 1, 3);
+		HMST A 0 A_JumpIfInventory("TacticalScopeSelected", 1, 2);
+		HMNT A 0;
+		"####" "#" 0;
+		Goto Super::UseEquipment;
+	}
+} 
+
+Class HARTracer : EOA_FastProjectile
+{
+	Default
+	{
+		Radius 0.5;
+		Height 1;
+		DamageFunction 16;
+		Decal "BulletChip";
+		Scale 0.375;
+		RenderStyle "Add";
+		EOA_Projectile.PuffType "HARPuff";
+		+DONTBLAST
+		+DONTREFLECT
+		+NOEXTREMEDEATH
+	}
+	Override Void PostBeginPlay()
+	{
+		If (Target && Target.CountInv("TacticalScopeReady"))
+		{
+			A_GiveInventory("TacticalScopeReady");
+			If (Target.CountInv("HARUraniumCoating"))
+			{
+				bRIPPER = True;
+			}
+		}
+		Super.PostBeginPlay();
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		If (!GetAge())
+		{
+			If (Self.Target && Self.Target.CountInv("TacticalScopeReady"))
+			{
+				A_GiveInventory("TacticalScopeReady");
+				If (Self.Target.CountInv("HARUraniumCoating"))
+				{
+					If (!bRIPPER)
+					{
+						Damage = 0;
+					}
+					bRIPPER = True;
+				}
+			}
+		}
+		If (Headshot)
+		{
+			Damage *= 1 + (CountInv("SkullCracker", AAPTR_TARGET) && CountInv("TacticalScopeReady") && (GetClassName() == "HARTracer" || GetClassName() == "HARDevastatorTracer"));
+		}
+		Return Super.DoSpecialDamage(Target, Damage, DamageType);
+	}
+	States
+	{
+	Spawn:
+		TRAC B 0 NoDelay A_JumpIfInTargetInventory("PowerQDMG", 1, 2);
+		TRAC A 0;
+		TRAC "#" -1 Bright;
+		Wait;
+	Death:
+	Crash:
+		TNT1 A 1
+		{
+			A_StartSound("Projectile/HitWall");
+		}
+		Stop;
+	XDeath:
+		TNT1 A 1
+		{
+			A_StartSound("Projectile/HitFlesh");
+		}
+		Stop;
+	}
+}
+
+Class HARDevastatorTracer : HARTracer
+{
+	Default
+	{
+		EOA_Projectile.PuffType "HARDevastatorPuff";
+		DamageFunction 28;
+	}
+	States
+	{
+	Death:
+	Crash:
+		TNT1 A 1
+		{
+			A_StartSound("Projectile/HitWall");
+		}
+		Stop;
+	XDeath:
+		TNT1 A 1
+		{
+			A_StartSound("Projectile/HitFlesh");
+		}
+		Stop;
+	}
+}
+
+Class HARPuff : Actor
+{
+	Int OfsAngle;
+	Int OfsPitch;
+	Default
+	{
+		Radius 0.1;
+		Height 0.1;
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			OfsAngle = random(-15, 15);
+			OfsPitch = random(0, 10);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "HARAddLight", DynamicLight.PulseLight, (255, 153, 76), 16, 1, DYNAMICLIGHT.LF_ADDITIVE, 4, (0, 0, Height / 2), 0.1);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "HARAttLight", DynamicLight.PulseLight, (255, 153, 76), 16, 1, DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+		}
+		TNT1 AAAAAAAAAAAAAAAAAAAA 0 A_SpawnProjectile("HARPuffSpark", 0, 0, OfsAngle + 180 + frandom(-10, 10), CMF_AIMDIRECTION, -(Pitch + OfsPitch + frandom(-3, 3)));
+		TNT1 A 1;
+		Stop;
+	}
+}
+
+Class HARDevastatorPuff : HARPuff
+{
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			OfsAngle = random(-15, 15);
+			OfsPitch = random(0, 10);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "HARAddLight", DynamicLight.PulseLight, (255, 153, 76), 32, 1, DYNAMICLIGHT.LF_ADDITIVE, 4, (0, 0, Height / 2), 0.1);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "HARAttLight", DynamicLight.PulseLight, (255, 153, 76), 32, 1, DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+			A_SetRoll(frandom(0, 359));
+		}
+		TNT1 AAAAAAAAAAAAAAAAAAAA 0 A_SpawnProjectile("HARDevastatorPuffSpark", 0, 0, random(1, 360), CMF_AIMDIRECTION, random(-90, 45));
+		TNT1 AAAA 0 A_SpawnProjectile("HARDevastatorPuffTrailProjectile", 0, 0, Random(1, 360), CMF_AIMDIRECTION, random(-90, 45));
+		TNT1 AA 0 A_SpawnItemEx("HARDevastatorPuffExplosion", -1, Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERROLL);
+		TNT1 A 0 A_SpawnItemEx("HARDevastatorPuffFX", Flags: SXF_TRANSFERPOINTERS);
+		Goto Super::Spawn+1;
+	}
+}
+
+Class HARDevastatorPuffExplosion : Actor
+{
+	Default
+	{
+		Scale 0.1;
+		Renderstyle "Add";
+		+BRIGHT
+		+FORCEXYBILLBOARD
+		+NOINTERACTION
+		+ROLLCENTER
+		+ROLLSPRITE
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_Jump(256, random(1, 12));
+		DEXP ABCDEFGHIJKL 0 A_Jump(256, "Anim");
+	Anim:
+		"####" "####" 1
+		{
+			A_FadeOut(0.1);
+			A_SetScale(Scale.X + 0.01);
+		}
+		Stop;
+	}
+}
+
+Class HARDevastatorPuffFX : Actor
+{
+	Default
+	{
+		Scale 1.25;
+		RenderStyle "Add";
+		+BRIGHT
+		+DONTBLAST
+		+DONTTHRUST
+		+FORCEXYBILLBOARD
+		+NOGRAVITY
+		+NOINTERACTION
+		+ROLLSPRITE
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SetRoll(frandom(0, 359));
+			Return A_Jump(256, random(1, 3));
+		}
+		DFX1 A 0 A_Jump(256, "FX");
+		DFX2 A 0 A_Jump(256, "FX");
+		DFX3 A 0 A_Jump(256, "FX");
+	FX:
+		"####" ABCDEF 1;
+		Stop;
+	}
+}
+
+Class HARDevastatorPuffTrailFX : HARDevastatorPuffFX {Default {Scale 0.125;} }
+
+Class HARDevastatorPuffTrailProjectile : Actor
+{
+	Default
+	{
+		Projectile;
+		BounceType "Doom";
+		Radius 1;
+		Height 1;
+		Gravity 0.20;
+		Speed 10;
+		BounceFactor 0.25;
+		WallBounceFactor 0.25;
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+NOBLOCKMAP
+		+NOBLOCKMONST
+		+NOTRIGGER
+		+SLIDESONWALLS
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_ScaleVelocity(frandom(0.75, 1.1));
+			A_SpawnItemEx("HARDevastatorPuffTrail", Flags: SXF_ORIGINATOR|SXF_SETTRACER|SXF_TRANSFERPOINTERS);
+		}
+		TNT1 AA 1 A_Weave(1, 3, 3, frandom(-1, 1));
+		Stop;
+	}
+}
+
+Class HARDevastatorPuffTrail : FastProjectileTrail {Default {MissileType "HARDevastatorPuffTrailFX";} }
+
+Class HARPuffSpark : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		Scale 0.2;
+		Gravity 0.33;
+		Speed 15;
+		RenderStyle "Add";
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+MISSILE
+		+NOBLOCKMAP
+		+NOBLOCKMONST
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_ScaleVelocity(frandom(0.75, 1.1));
+			If (!random(0, 1))
+			{
+				A_SetScale(Scale.X * 2);
+			}
+			A_SetScale(Scale.X * frandom(0.75, 1.2));
+		}
+		NULL A 3 Bright;
+	Fade:
+		NULL A 1 Bright
+		{
+			If (Scale.X <= 0)
+			{
+				Return ResolveState("Null");
+			}
+			Else
+			{
+				A_ScaleVelocity(0.75);
+				A_SetScale(Scale.X - 0.1);
+				Return ResolveState(Null);
+			}
+		}
+		Loop;
+	}
+}
+
+Class HARDevastatorPuffSpark : HARPuffSpark
+{
+	Default
+	{
+		Scale 0.4;
+		Speed 10;
+	}
+}
+
+Class HARSmokeTrail : FastProjectileTrail 
+{
+	Default
+	{
+		MissileType "HARSmoke";
+	}
+}
+
+Class HARSmoke : Actor
+{
+	Default
+	{
+		+NOINTERACTION
+		+DONTBLAST
+		+DONTTHRUST
+		+NOTRIGGER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 2;
+		HSMK A 1
+		{
+			A_FadeOut(0.03);
+			A_SetScale(Scale.X + 0.01);
+		}
+		Wait;
+	}
+}
+
+Class HARMicroMissile : EOA_Projectile
+{
+	Double WeaveFactor[4];
+	Vector3 MMPosition;
+	Default
+	{
+		Radius 2;
+		Height 4;
+		Speed 54;
+		DamageFunction 2; //[DoomKrakken]: This is supposed to deal 4 damage.  However, it's dealing 8 damage to actors upon impact for whatever reason, so I set it to 2 so that it'll deal 4 damage to actors upon impact in-game.
+		Scale 0.5;
+		ReactionTime 35;
+		+BRIGHT
+		+BLOODLESSIMPACT
+		+FORCERADIUSDMG
+		+SEEKERMISSILE
+	}
+	Override Void PostBeginPlay()
+	{
+		EOA_SpawnCustomDynamicLight("HAR_Light", DynamicLight.PointLight, (255, 153, 76), 16, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 0x7FFFFFFF, (0, 0, Height / 2));
+		A_SpawnItemEx("MicroMissileSmokeTrail", Flags: SXF_ORIGINATOR|SXF_SETTRACER);
+		A_TransferPointer(AAPTR_TARGET, AAPTR_DEFAULT, AAPTR_PLAYER_GETTARGET, AAPTR_TRACER);
+		A_StartSound("Rocket/Fly", 4, CHANF_LOOPING, 0.3);
+		WeaveFactor[0] = frandom(4.0, 8.0);
+		WeaveFactor[1] = WeaveFactor[0];
+		WeaveFactor[2] = frandom(-1.0, 1.0);
+		WeaveFactor[3] = WeaveFactor[2];
+		Super.PostBeginPlay();
+	}
+	Override Void Tick()
+	{
+		If (!Level.IsFrozen() && !ReactionTime--)
+		{
+			SetState(ResolveState("Explode"));
+		}
+		Super.Tick();
+	}
+	Override Int SpecialMissileHit(Actor Victim)
+	{
+		If (Victim && Victim != Target)
+		{
+			Tracer = Victim;
+			MMPosition = Tracer.Vec3To(Self);
+			MMPosition.X *= 0.75;
+			MMPosition.Y *= 0.75;
+		}
+		Return -1;
+	}
+	Action Void EOA_QueueBottomlessMissiles()
+	{
+		Let HAR = EOA_HeavyAssaultRifle(Target.FindInventory("EOA_HeavyAssaultRifle"));
+		If (HAR)
+		{
+			HAR.EOA_TransferMMPointer(Tracer);
+		}
+	}
+	Void EOA_MicroMissileStick()
+	{
+		If (Tracer)
+		{
+			Warp(Tracer, MMPosition.X, MMPosition.Y, MMPosition.Z, 0, WARPF_ABSOLUTEOFFSET|WARPF_USECALLERANGLE|WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE);
+		}
+	}
+	States
+	{
+	Spawn:
+		MMSL A 1 NoDelay
+		{
+			A_Weave(WeaveFactor[0], WeaveFactor[1], WeaveFactor[2], WeaveFactor[3]);
+			If (Tracer && CheckIfCloser(Tracer, 128))
+			{
+				A_SeekerMissile(90, 90, SMF_PRECISE);
+				A_SeekerMissile(90, 90, SMF_PRECISE);
+				A_SeekerMissile(90, 90, SMF_PRECISE);
+				A_SeekerMissile(90, 90, SMF_PRECISE);
+			}
+			Return ResolveState(Null);
+		}
+		Wait;
+	Death:
+		TNT1 A 0 
+		{
+			A_StartSound("MicroMissile/Stick", 4, 0, 0.5);
+			EOA_QueueBottomlessMissiles();
+		}
+		MMSL A 1 EOA_MicroMissileStick();
+		Wait;
+	Explode:
+		TNT1 A 1
+		{
+			A_SetScale(0.75);
+			Bool Check;
+			Actor Explosion;
+			[Check, Explosion] = A_SpawnItemEx("EOA_RocketExplosion", Flags: SXF_TRANSFERSCALE|SXF_NOCHECKPOSITION);
+			If (Explosion)
+			{
+				//[DoomKrakken]: Thank you, phantombeta!
+				Let Norm = (0, 0, 0);
+				If (L && !Targ && !(L.Delta ~== (0, 0))) //[DoomKrakken]: To prevent NANs (thank you, Zombie).
+				{
+					Norm = (L.Delta.Y, -L.Delta.X, 0).Unit();
+					If (EOA_ActorExtensions.PointOnLineSidePrecise(Pos.X, Pos.Y, L) == 1)
+					{
+						Norm = -Norm;
+					}
+				}
+				Explosion.SetOrigin(Pos + Norm * Explosion.Radius * 2, False);
+				EOA_ActorExtensions.SpawnCustomDynamicLight(Explosion, "HARAddLight", DynamicLight.PulseLight, (255, 153, 76), 32, 1, DYNAMICLIGHT.LF_ADDITIVE, 10, (0, 0, Height / 2), 1.0 * 10 / TICRATE);
+				EOA_ActorExtensions.SpawnCustomDynamicLight(Explosion, "HARAttLight", DynamicLight.PulseLight, (255, 153, 76), 32, 1, DYNAMICLIGHT.LF_ATTENUATE, 10, (0, 0, Height / 2), 1.0 * 10 / TICRATE);
+			}
+			A_Stop();
+			A_StartSound("MicroMissile/Explode");
+			A_SprayDecal("Scorch", Radius + 1);
+			bEXTREMEDEATH = True;
+			EOA_Explode(40, 48, XF_HURTSOURCE, 1, 48, 0.375);
+		}
+		Stop;
+	}
+}
+
+Class MicroMissileSmokeTrail : FastProjectileTrail {Default {MissileType "MicroMissileSmoke";} }
+
+Class MicroMissileSmoke : FragGrenadeSmoke
+{
+	Default
+	{
+		Scale 0.01;
+	}
+	States
+	{
+	SetSprite:
+		"####" "#" 1
+		{
+			A_FadeOut(0.055);
+			A_SetScale(Scale.X + 0.01);
+		}
+		Loop;
+	}
+}
+
+Class EOA_EmptyBrass : Actor
+{
+	Default
+	{
+		Projectile;
+		Radius 2;
+		Height 2;
+		Speed 9;
+		Mass 4;
+		BounceFactor 0.4;
+		Scale 0.1;
+		BounceType "Doom";
+		BounceSound "Casing/Brass";
+		+BOUNCEONACTORS
+		+FLOORCLIP
+		+FORCEXYBILLBOARD
+		+ROLLCENTER
+		+ROLLSPRITE
+		-NOGRAVITY
+		+NOTRIGGER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_ChangeVelocity(0, frandom(0.0, 2.0), frandom(0.0, 2.0), CVF_RELATIVE);
+	SpawnLoop:
+		BRSS ABCDEF 1 A_SetRoll(Roll - 30);
+		Loop;
+	Death:
+		TNT1 A 0 A_SetRoll(0);
+		TNT1 A 0 A_Jump(256, random(1, 3));
+		BRSS ABF 0 A_Jump(256, "SetSprite");
+	SetSprite:
+		"####" "#" 400 A_StartSound("Casing/Brass");
+		"####" "##########" 1 A_FadeOut(0.1);
+		Stop;
+	}
+}

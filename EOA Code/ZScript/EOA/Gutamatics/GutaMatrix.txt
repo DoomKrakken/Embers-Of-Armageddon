@@ -1,0 +1,405 @@
+Enum EOA_VectorType
+{
+	EOA_Vector_Position,
+	EOA_Vector_Direction
+}
+
+Class EOA_Matrix
+{
+	Private Array<Double> values;
+	Private Int columns;
+	Private Int rows;
+
+	// Initialises a new Matrix.
+	EOA_Matrix init(Int columns, Int rows)
+	{
+		If (columns <= 0 || rows <= 0)
+		{
+			ThrowAbortException("Error: <%p>.init(%d, %d) - Matrix needs to be at least 1 * 1", Self, columns, rows);
+		}
+
+		Self.rows = rows;
+		Self.columns = columns;
+		values.resize(columns * rows);
+		For (Int i = 0; i < values.size(); i++)
+		{
+			values[i] = 0;
+		}
+		Return Self;
+	}
+
+	// Initialises a new Matrix in a Static context.
+	Static EOA_Matrix create(Int columns, Int rows)
+	{
+		Return new("EOA_Matrix").init(columns, rows);
+	}
+
+	// Returns an identity matrix.
+	Static EOA_Matrix identity(Int dimension)
+	{
+		EOA_Matrix ret = EOA_Matrix.create(dimension, dimension);
+		For (Int i = 0; i < dimension; i++)
+		{
+			ret.set(i, i, 1);
+		}
+		Return ret;
+	}
+
+	// Returns a rotation matrix from euler angles.
+	Static EOA_Matrix fromEulerAngles(Double yaw, Double pitch, Double roll)
+	{
+		EOA_Matrix rYaw = EOA_Matrix.identity(4);
+		Double sYaw = sin(yaw);
+		Double cYaw = cos(yaw);
+		rYaw.set(0, 0,  cYaw);
+		rYaw.set(1, 0, -sYaw);
+		rYaw.set(0, 1,  sYaw);
+		rYaw.set(1, 1,  cYaw);
+
+		EOA_Matrix rPitch = EOA_Matrix.identity(4);
+		Double sPitch = sin(pitch);
+		Double cPitch = cos(pitch);
+		rPitch.set(0, 0,  cPitch);
+		rPitch.set(0, 2, -sPitch);
+		rPitch.set(2, 0,  sPitch);
+		rPitch.set(2, 2,  cPitch);
+
+		EOA_Matrix rRoll = EOA_Matrix.identity(4);
+		Double sRoll = sin(roll);
+		Double cRoll = cos(roll);
+		rRoll.set(1, 1,  cRoll);
+		rRoll.set(2, 1, -sRoll);
+		rRoll.set(1, 2,  sRoll);
+		rRoll.set(2, 2,  cRoll);
+
+		// concatenate ypr to get the final matrix
+		EOA_Matrix ret = rYaw.multiplyMatrix(rPitch);
+		ret = ret.multiplyMatrix(rRoll);
+		Return ret;
+	}
+
+	// Returns a rotation matrix from an axis and an angle.
+	Static EOA_Matrix fromAxisAngle(Vector3 axis, Double angle)
+	{
+		EOA_Matrix ret = EOA_Matrix.identity(4);
+		Double c = cos(angle);
+		Double s = sin(angle);
+		Double x = axis.X;
+		Double y = axis.Y;
+		Double z = axis.Z;
+
+		ret.set(0, 0, (x * x * (1.0 - c) + c));
+		ret.set(1, 0, (x * y * (1.0 - c) - z * s));
+		ret.set(2, 0, (x * z * (1.0 - c) + y * s));
+		ret.set(0, 1, (y * x * (1.0 - c) + z * s));
+		ret.set(1, 1, (y * y * (1.0 - c) + c));
+		ret.set(2, 1, (y * z * (1.0 - c) - x * s));
+		ret.set(0, 2, (x * z * (1.0 - c) - y * s));
+		ret.set(1, 2, (y * z * (1.0 - c) + x * s));
+		ret.set(2, 2, (z * z * (1.0 - c) + c));
+
+		Return ret;
+	}
+
+	// Converts back from the rotation matrix to euler angles.
+	Double, Double, Double rotationToEulerAngles()
+	{
+		If (EOA_GlobalMaths.closeEnough(get(0, 2), -1))
+		{
+			Double x = 90;
+			Double y = 0;
+			Double z = atan2(get(1, 0), get(2, 0));
+			Return z, x, y;
+		}
+		Else If (EOA_GlobalMaths.closeEnough(get(0, 2), 1))
+		{
+			Double x = -90;
+			Double y = 0;
+			Double z = atan2(-get(1, 0), -get(2, 0));
+			Return z, x, y;
+		}
+		Else
+		{
+			Float x1 = -asin(get(0, 2));
+			Float x2 = 180 - x1;
+
+			Float y1 = atan2(get(1, 2) / cos(x1), get(2, 2) / cos(x1));
+			Float y2 = atan2(get(1, 2) / cos(x2), get(2, 2) / cos(x2));
+
+			Float z1 = atan2(get(0, 1) / cos(x1), get(0, 0) / cos(x1));
+			Float z2 = atan2(get(0, 1) / cos(x2), get(0, 0) / cos(x2));
+
+			If ((abs(x1) + abs(y1) + abs(z1)) <= (abs(x2) + abs(y2) + abs(z2)))
+			{
+				Return z1, x1, y1;
+			}
+			Else
+			{
+				Return z2, x2, y2;
+			}
+		}
+	}
+	
+	Static EOA_Matrix createTRSEuler(Vector3 translate, Double yaw, Double pitch, Double roll, Vector3 scale)
+	{
+		EOA_Matrix translateMat = EOA_Matrix.identity(4);
+		translateMat.set(3, 0, translate.X);
+		translateMat.set(3, 1, translate.Y);
+		translateMat.set(3, 2, translate.Z);
+		
+		EOA_Matrix rotateMat = EOA_Matrix.fromEulerAngles(yaw, pitch, roll);
+		
+		EOA_Matrix scaleMat = EOA_Matrix.identity(4);
+		scaleMat.set(0, 0, scale.X);
+		scaleMat.set(1, 1, scale.Y);
+		scaleMat.set(2, 2, scale.Z);
+		
+		EOA_Matrix ret = translateMat.multiplyMatrix(rotateMat);
+		ret = ret.multiplyMatrix(scaleMat);
+		Return ret;
+	}
+	
+	Static EOA_Matrix createTRSAxisAngle(Vector3 translate, Vector3 axis, Double angle, Vector3 scale)
+	{
+		EOA_Matrix translateMat = EOA_Matrix.identity(4);
+		translateMat.set(3, 0, translate.X);
+		translateMat.set(3, 1, translate.Y);
+		translateMat.set(3, 2, translate.Z);
+		
+		EOA_Matrix rotateMat = EOA_Matrix.fromAxisAngle(axis, angle);
+		
+		EOA_Matrix scaleMat = EOA_Matrix.identity(4);
+		scaleMat.set(0, 0, scale.X);
+		scaleMat.set(1, 1, scale.Y);
+		scaleMat.set(2, 2, scale.Z);
+		
+		EOA_Matrix ret = translateMat.multiplyMatrix(rotateMat);
+		ret = ret.multiplyMatrix(scaleMat);
+		Return ret;
+	}
+
+	// Returns a view matrix.
+	Static EOA_Matrix view(Vector3 camPos, Double yaw, Double pitch, Double roll)
+	{
+		// all of this is basically lifted and converted from PolyRenderer::SetupPerspectiveMatrix(),
+		// so credit goes to Graf Zahl/dpJudas/whoever Else
+		// pitch needs to be adjusted by the pixel ratio
+		Float pixelRatio = level.pixelstretch;
+		Double angx = cos(pitch);
+		Double angy = sin(pitch) * pixelRatio;
+		Double alen = sqrt(angx * angx + angy * angy);
+		Double adjustedPitch = asin(angy / alen);
+		Double adjustedYaw = yaw - 90;
+
+		// rotations
+		EOA_Matrix rotR = EOA_Matrix.fromAxisAngle((0, 0, 1), roll);
+		EOA_Matrix rotP = EOA_Matrix.fromAxisAngle((1, 0, 0), adjustedPitch);
+		EOA_Matrix rotY = EOA_Matrix.fromAxisAngle((0, -1, 0), adjustedYaw);
+		// pixel ratio scaling
+		EOA_Matrix scale = EOA_Matrix.identity(4);
+		scale.set(1, 1, pixelRatio);
+		// swapping y and z
+		EOA_Matrix swapYZ = EOA_Matrix.create(4, 4);
+		swapYZ.set(0, 0, 1);
+		swapYZ.set(2, 1, 1);
+		swapYZ.set(1, 2, -1);
+		swapYZ.set(3, 3, 1);
+		// translation
+		EOA_Matrix translate = EOA_Matrix.identity(4);
+		translate.set(3, 0, -camPos.X);
+		translate.set(3, 1, -camPos.Y);
+		translate.set(3, 2, -camPos.Z);
+
+		// concatenate them all to get a final matrix
+		EOA_Matrix ret = rotR.multiplyMatrix(rotP);
+		ret = ret.multiplyMatrix(rotY);
+		ret = ret.multiplyMatrix(scale);
+		ret = ret.multiplyMatrix(swapYZ);
+		ret = ret.multiplyMatrix(translate);
+		Return ret;
+	}
+
+	// Returns a perspective matrix (same format as gluPerspective).
+	Static EOA_Matrix perspective(Double fovy, Double aspect, Double zNear, Double zFar)
+	{
+		EOA_Matrix ret = EOA_Matrix.create(4, 4);
+		Double f = 1 / tan(fovy / 2.0);
+		// x coord
+		ret.set(0, 0, f / aspect);
+		// y coord
+		ret.set(1, 1, f);
+		// z buffer coord
+		ret.set(2, 2, (zFar + zNear) / (zNear - zFar));
+		ret.set(3, 2, (2 * zFar * zNear) / (zNear - zFar));
+		// w (homogeneous coordinates)
+		ret.set(2, 3, -1);
+		Return ret;
+	}
+
+	// Returns a world->clip coords matrix from the passed args.
+	Static EOA_Matrix worldToClip(Vector3 viewPos, Double yaw, Double pitch, Double roll, Double FOV)
+	{
+		Double aspect = Screen.getAspectRatio();
+		Double fovy = EOA_GlobalMaths.fovHToY(FOV);
+		EOA_Matrix view = EOA_Matrix.view(viewPos, yaw, pitch, roll);
+		// 5 & 65535 are what are used internally, so they're used here for consistency
+		EOA_Matrix perp = EOA_Matrix.perspective(fovy, aspect, 5, 65535);
+		EOA_Matrix worldToClip = perp.multiplyMatrix(view);
+		Return worldToClip;
+	}
+
+	// Gets the value at col, row.
+	Double get(Int col, Int row) Const
+	{
+		Return values[columns * row + col];
+	}
+
+	// Sets the value at col, row.
+	Void set(Int col, Int row, Double val)
+	{
+		values[columns * row + col] = val;
+	}
+
+	// Adds two matrices and Returns the result.
+	EOA_Matrix addMatrix(EOA_Matrix other) Const
+	{
+		If (rows != other.rows || columns != other.columns)
+		{
+			ThrowAbortException("Error: <%p>.addMatrix(<%p>) - Matrices need to be equal size", Self, other);
+		}
+		EOA_Matrix ret = EOA_Matrix.Create(columns, rows);
+		For (Int row = 0; row < rows; row++)
+		{
+			For (Int col = 0; col < columns; col++)
+			{
+				ret.set(col, row, get(col, row) + other.get(col, row));
+			}
+		}
+		Return ret;
+	}
+
+	// Multiplies the matrix by a scalar and Returns the result.
+	EOA_Matrix multiplyScalar(Double scalar) Const
+	{
+		EOA_Matrix ret = EOA_Matrix.Create(rows, columns);
+		For (Int row = 0; row < rows; row++)
+		{
+			For (Int col = 0; col < columns; col++)
+			{
+				ret.set(col, row, get(col, row) * scalar);
+			}
+		}
+		Return ret;
+	}
+
+	// Multiplies two matrices and Returns the result.
+	EOA_Matrix multiplyMatrix(EOA_Matrix Other) Const
+	{
+		If (columns != Other.rows)
+		{
+			ThrowAbortException("Error: <%p>.multiplyMatrix(<%p>) - Matrix A columns needs to equal Matrix B rows", Self, Other);
+		}
+		EOA_Matrix ret = EOA_Matrix.Create(other.columns, rows);
+		For (Int row = 0; row < ret.rows; row++)
+		{
+			For (Int col = 0; col < ret.columns; col++)
+			{
+				Double val = 0;
+				For (Int i = 0; i < columns; i++)
+				{
+					val += get(i, row) * Other.get(col, i);
+				}
+				ret.set(col, row, val);
+			}
+		}
+		Return ret;
+	}
+
+	// Multiplies this Matrix by a 2D vector.
+	EOA_Matrix multiplyVector2(Vector2 vec, EOA_VectorType type = EOA_Vector_Position) Const
+	{
+		EOA_Matrix vec2Matrix = EOA_Matrix.Create(1, 3);
+		vec2Matrix.set(0, 0, vec.X);
+		vec2Matrix.set(0, 1, vec.Y);
+		If (type == EOA_Vector_Position)
+		{
+			vec2Matrix.set(0, 2, 1);
+		}
+		Else If (type == EOA_Vector_Direction)
+		{
+			vec2Matrix.set(0, 2, 0);
+		}
+		Else
+		{
+			ThrowAbortException("Error: Invalid vector type for multiplyVector2 (%d)", type);
+		}
+		Return multiplyMatrix(vec2Matrix);
+	}
+
+	// Multiplies this Matrix by a 3D vector.
+	EOA_Matrix multiplyVector3(Vector3 vec, EOA_VectorType type = EOA_Vector_Position) Const
+	{
+		EOA_Matrix vec3Matrix = EOA_Matrix.Create(1, 4);
+		vec3Matrix.set(0, 0, vec.X);
+		vec3Matrix.set(0, 1, vec.Y);
+		vec3Matrix.set(0, 2, vec.Z);
+		If (type == EOA_Vector_Position)
+		{
+			vec3Matrix.set(0, 3, 1);
+		}
+		Else If (type == EOA_Vector_Direction)
+		{
+			vec3Matrix.set(0, 3, 0);
+		}
+		Else
+		{
+			ThrowAbortException("Error: Invalid vector type for multiplyVector3 (%d)", type);
+		}
+		Return multiplyMatrix(vec3Matrix);
+	}
+
+	// Returns the Matrix in Vector2 form, optionally dividing by z.
+	Vector2 asVector2(Bool divideZ = True) Const
+	{
+		If (columns != 1 || rows != 3) {
+			throwAbortException("Error: <%p>.asVector2() - Matrix needs to be 1 * 3", Self);
+		}
+		If (divideZ)
+		{
+			Return (get(0, 0), get(0, 1)) / get(0, 2);
+		}
+		Else
+		{
+			Return (get(0, 0), get(0, 1));
+		}
+	}
+
+	// Returns the Matrix in Vector3 form, optionally dividing by w.
+	Vector3 asVector3(Bool divideW = True) Const
+	{
+		If (columns != 1 || rows != 4)
+		{
+			ThrowAbortException("Error: <%p>.asVector3() - Matrix needs to be 1 * 4", Self);
+		}
+		If (divideW)
+		{
+			Return (get(0, 0), get(0, 1), get(0, 2)) / get(0, 3);
+		}
+		Else
+		{
+			Return (get(0, 0), get(0, 1), get(0, 2));
+		}
+	}
+
+	// Returns the number of columns.
+	Int getColumns() Const
+	{
+		Return columns;
+	}
+
+	// Returns the number of rows.
+	Int getRows() Const
+	{
+		Return rows;
+	}
+}

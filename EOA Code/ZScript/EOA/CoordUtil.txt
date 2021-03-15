@@ -1,0 +1,73 @@
+/*
+   Coordinate Utility helper class.
+   (C)2018 Marisa Kirisame, UnSX Team.
+   Released under the GNU Lesser General Public License version 3 (or later).
+   See https://www.gnu.org/licenses/lgpl-3.0.txt for its terms.
+*/
+
+Class CoordUtil
+{
+	// In Tim Sweeney's own words: "transform by a Pitch-Yaw-Roll rotation"
+	Static Vector3, Vector3, Vector3 GetUnAxes(Double Pitch, Double Yaw, Double Roll)
+	{
+		Vector3 x = (1, 0, 0), y = (0, -1, 0), z = (0, 0, 1);	// y inverted for left-handed result
+		Vector3 a, b, c;
+		// Pitch and Roll in gzdoom work in reverse compared to UE
+		Pitch = -Pitch;
+		Roll = -Roll;
+		// Yaw
+		a = (cos(Yaw), sin(Yaw), 0);
+		b = (-sin(Yaw), cos(Yaw), 0);
+		c = (0, 0, 1);
+		x = (x dot a, x dot b, x dot c);
+		y = (y dot a, y dot b, y dot c);
+		z = (z dot a, z dot b, z dot c);
+		// Pitch
+		a = (cos(Pitch), 0, sin(Pitch));
+		b = (0, 1, 0);
+		c = (-sin(Pitch), 0, cos(Pitch));
+		x = (x dot a, x dot b, x dot c);
+		y = (y dot a, y dot b, y dot c);
+		z = (z dot a, z dot b, z dot c);
+		// Roll
+		a = (1, 0, 0);
+		b = (0, cos(Roll), -sin(Roll));
+		c = (0, sin(Roll), cos(Roll));
+		x = (x dot a, x dot b, x dot c);
+		y = (y dot a, y dot b, y dot c);
+		z = (z dot a, z dot b, z dot c);
+		Return x, y, z;
+	}
+
+	// In Tim Sweeney's own words: "detransform by a Pitch-Yaw-Roll rotation"
+	Static Vector3, Vector3, Vector3 GetAxes(Double Pitch, Double Yaw, Double Roll)
+	{
+		Vector3 x = (1, 0, 0), y = (0, -1, 0), z = (0, 0, 1);	// y inverted for left-handed result
+		Vector3 a, b, c;
+		// Pitch and Roll in gzdoom work in reverse compared to UE
+		Pitch = -Pitch;
+		Roll = -Roll;
+		// inverse Roll
+		a = (1, 0, 0);
+		b = (0, cos(Roll), sin(Roll));
+		c = (0, -sin(Roll), cos(Roll));
+		x = (x dot a, x dot b, x dot c);
+		y = (y dot a, y dot b, y dot c);
+		z = (z dot a, z dot b, z dot c);
+		// inverse Pitch
+		a = (cos(Pitch), 0, -sin(Pitch));
+		b = (0, 1, 0);
+		c = (sin(Pitch), 0, cos(Pitch));
+		x = (x dot a, x dot b, x dot c);
+		y = (y dot a, y dot b, y dot c);
+		z = (z dot a, z dot b, z dot c);
+		// inverse Yaw
+		a = (cos(Yaw), -sin(Yaw),0);
+		b = (sin(Yaw), cos(Yaw),0);
+		c = (0, 0, 1);
+		x = (x dot a, x dot b, x dot c);
+		y = (y dot a, y dot b, y dot c);
+		z = (z dot a, z dot b, z dot c);
+		Return x, y, z;
+	}
+}

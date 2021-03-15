@@ -1,0 +1,1679 @@
+Class EOA_Weapon : DoomWeapon
+{
+	//Thank you, phantombeta! :D
+	Transient CVar APR_Recoil;
+	Private Int EOA_WeaponFlags;
+	Flagdef PowerWeapon: EOA_WeaponFlags, 1;
+	Flagdef SemiAuto: EOA_WeaponFlags, 2;
+	Int MantleTics, MeleeTics, MeleeDelayTics, SpeedCounter, LedgeXVel;
+	Double LedgeZStep;
+	Bool MantleLedge, UseEquipment, SemiAutoOverride;
+	Property MeleeTics: MeleeTics;
+	ENum WeaponInfoFlags
+	{
+		WeapInfo_WeaponIcon = 0,
+		WeapInfo_AmmoAmount = 1,
+		WeapInfo_AmmoMaxAmount = 2,
+		WeapInfo_AmmoWarnAmount = 3,
+		WeapInfo_AmmoLowAmount = 4
+	};
+	ENum EOAWeaponReadyFlags //[DoomKrakken]: Custom flags for this special version of A_WeaponReady.
+	{
+		EOA_ALLOWMANTLE = 1, //Allows playing the animation for mantling ledges.
+		EOA_ALLOWEQUIPMENT = 2, //Allows for usage of equipment.
+		EOA_DISABLEHASTE = 4, //Disables speed boost from Haste.
+		EOA_WEAPSPEEDUPGRADE = 8 //Allows for an additional speed boost (used in conjunction with the presence of a weapon speed upgrade).
+	};
+	Default
+	{
+		Inventory.PickupMessage "Congrats, you picked up something you shouldn't have.  Put it down, now.  Good boy. :)";
+		Inventory.PickupSound "Item/Pickup";
+		Weapon.AmmoType1 "None";
+		Weapon.BobRangeX 0.3;
+		Weapon.BobRangeY 0.1;
+		Weapon.BobSpeed 2.5;
+		Weapon.BobStyle "Inverse";
+		EOA_Weapon.MeleeTics 12;
+		+DONTGIB
+		+INVENTORY.NOSCREENFLASH
+		+INVENTORY.UNDROPPABLE
+		+WEAPON.ALT_AMMO_OPTIONAL
+		+WEAPON.NOALERT
+		+WEAPON.NOAUTOAIM
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("Weapon/Switch");
+		MarkSound("Weapon/Loaded");
+		MarkSound("Player/Mantle");
+		MarkSound("Player/DoubleJump");
+		MarkSound("Player/JumpThrust");
+		MarkSound("Punch/Swing");
+		MarkSound("QuadDamage/Shot");
+		MarkSound("Frag/Pin");
+		MarkSound("Hologram/Click");
+		MarkSound("Rune/SeekAndDestroy");
+		MarkSound("Rune/Savagery");
+		MarkSound("Rune/ArmoredOffensive");
+		MarkSound("Rune/BloodFueled");
+		MarkSound("Rune/InFlightMobility");
+		Super.MarkPrecacheSounds();
+	}
+	Action Void EOA_WeaponReady(Int Flags = 0, Int EOA_Flags = 0, Int SpeedRate = 3)
+	{
+		A_WeaponReady(Flags);
+		Invoker.MantleLedge = (EOA_Flags & EOA_ALLOWMANTLE);
+		Invoker.UseEquipment = (EOA_Flags & EOA_ALLOWEQUIPMENT);
+		Bool Haste = (!(EOA_Flags & EOA_DISABLEHASTE)) && CountInv("PowerHaste");
+		Bool Speed = (EOA_Flags & EOA_WEAPSPEEDUPGRADE);
+		If (Haste || Speed)
+		{
+			If (Haste && Speed)
+			{
+				If (Invoker.SpeedCounter >= SpeedRate)
+				{
+					Invoker.SpeedCounter = 0;
+				}
+				Else
+				{
+					A_SetTics(0);
+					Invoker.SpeedCounter++;
+				}
+			}
+			Else If (Speed)
+			{
+				If (Invoker.SpeedCounter >= 4 - SpeedRate)
+				{
+					Invoker.SpeedCounter = 0;
+				}
+				Else
+				{
+					A_SetTics(0);
+					Invoker.SpeedCounter++;
+				}
+			}
+			Else If (Invoker.SpeedCounter)
+			{
+				A_SetTics(0);
+				Invoker.SpeedCounter = 0;
+			}
+			Else
+			{
+				Invoker.SpeedCounter++;
+			}
+		}
+	}
+	Action Int GetSpeedCounter()
+	{
+		Return Invoker.SpeedCounter;
+	}
+	Action Void SetSpeedCounter(Int Amount)
+	{
+		Invoker.SpeedCounter = Amount;
+	}
+	Action Void EOA_CheckGloryKill()
+	{
+		Double ClosestDist = Double.Infinity;
+		//Double ClosestAng = CameraFOV / 2;
+		Actor Victim;
+		BlockThingsIterator It = BlockThingsIterator.Create(Invoker.Owner, 1024);
+		While (It.Next())
+		{
+			Actor Mo = It.Thing;
+			If (Mo && AbsAngle(AngleTo(Mo), Angle) <= CameraFOV / 2 && !Mo.bKILLED && Mo.bISMONSTER && Mo.bSHOOTABLE && !Mo.bDORMANT && CheckSight(Mo) && CheckIfCloser(Mo, 192 * (1 + CountInv("SeekAndDestroySelected")) * (1 + CountInv("SeekAndDestroySelected") * CountInv("SeekAndDestroyII"))) && !CountInv("RipAndTear") && !Mo.CountInv("GloryKillCounter") && (Mo.CountInv("PowerStaggered") || (CountInv("PowerBerserk") && (!Mo.bBOSS || Mo.Default.Health < 3000))))
+			{
+				//Double Ang = AbsAngle(AngleTo(Mo), Angle);
+				//If (Ang < ClosestAng)
+				Double Dist = Distance3D(Mo);
+				If (Dist < ClosestDist)
+				{
+					//ClosestAng = Ang;
+					ClosestDist = Dist;
+					Victim = Mo;
+				}
+			}
+		}
+		If (Victim)
+		{
+			Tracer = Victim; //Have the victim be stored in the player's Tracer pointer.
+			A_GiveInventory("RipAndTear");
+			Victim.A_GiveInventory("PowerStaggered");
+			Victim.A_GiveInventory("GloryKillCounter");
+			Victim.bNOTARGETSWITCH = True;
+			Victim.bNEVERTARGET = True;
+			Victim.bNODAMAGE = True;
+		}
+	}
+	Action Double GetViewZ() //[DoomKrakken]: DO NOT NULLIFY!!!  If view-bobbing is enabled, projectiles will appear above or below the weapon's muzzle while the player is in motion.
+	{
+		Let Player = Invoker.Owner.Player;
+		If (Player && Player.Mo && !CVar.FindCVar("EOA_ViewZ").GetBool())
+		{
+			Return Player.ViewZ - Player.Mo.Pos.Z - Player.ViewHeight;
+		}
+		Return 0;
+	}
+	Action Double GetRelVelY()
+	{
+		Let Player = Invoker.Owner.Player;
+		If (Player && Player.Mo)
+		{
+			Return Vel.XY Dot AngleToVector(Angle - 90);
+		}
+		Return 0;
+	}
+	Static Vector3 GetLedgeOffset(Actor Activator)
+	{
+		PlayerInfo Player = Activator.Player;
+		Bool PlayerOnGround = Player && Player.Mo && Player.Mo == Activator && Player.OnGround;
+		Vector3 OldPos = Activator.Pos;
+		Vector3 Highest = (0, 0, 0); //[DoomKrakken]: Returns the highest height to mantle, so that the mantling doesn't get stuck.
+		Int MaxHeight = 72 / (1 + PlayerOnGround); //[DoomKrakken]: The maximum height to check for mantling.  Mantling while not in the air will result in a shorter check, since the Slayer can auto-mantle shorter ledges, but must be midair in order to mantle taller ledges.
+		Int i; //[DoomKrakken]: Radius Check
+		For (i = 0; i <= Activator.Radius; i++) //[DoomKrakken]: Let's have some elbow room.
+		{
+			For (Int j = 0; j <= 315; j += 45)
+			{
+				If (Activator.GetZAt(i, 0, j, GZF_NO3DFLOOR|GZF_CEILING) - Activator.GetZAt(i, 0, j, GZF_3DRESTRICT|GZF_CEILING)) //[DoomKrakken]: This check is only necessary for 3D floors.  Therefore, check if we're dealing with a 3D floor to begin with (we will if the difference is non-zero).
+				{
+					If (Activator.GetZAt(i, 0, j, GZF_3DRESTRICT|GZF_CEILING) - OldPos.Z < Activator.Height + MaxHeight) //[DoomKrakken]: Check to see if any point in front of, behind, or to either side of the player has too low of a ceiling or is in the level.
+					{
+						Return (0, 0, 0);
+					}
+				}
+			}
+		}
+		Activator.SetXYZ(OldPos + (0, 0, MaxHeight)); //[DoomKrakken]: Use SetXYZ to change the actor's position for testing purposes, without actually moving him.  This way he can detect 3D floors using GetZAt (since it can only be used to detect 3D floors beneath the player).
+		For (i = Activator.Radius; i <= Activator.Radius * 2; i++) //[DoomKrakken]: If attempting to mantle at an angle to the ledge, the check may fall short and yield a negative result.  This'll make sure that it won't happen.
+		{
+			Vector3 np = Activator.Vec3Angle(i, Activator.Angle, 0);
+			Int LedgeFloorZ = Activator.GetZAt(i, 0, 0);
+			Int LedgeCeilingZ = Activator.GetZAt(i, 0, 0, GZF_CEILING);
+			If (LedgeFloorZ - OldPos.Z > Activator.MaxStepHeight && LedgeFloorZ - OldPos.Z <= MaxHeight && LedgeCeilingZ - LedgeFloorZ >= Activator.Height && Activator.CheckPosition(np.XY))
+			{
+				If (Highest.Z < min(LedgeFloorZ - OldPos.Z, Activator.Height)) //[DoomKrakken]: Find the highest ledge.
+				{
+					Highest = (i, 0, min(LedgeFloorZ - OldPos.Z, Activator.Height));
+				}
+			}
+		}
+		Activator.SetXYZ(OldPos);
+		Return Highest;
+	}
+	Static String GetWeaponIcon(Actor Activator)
+	{
+		If (!Activator || !Activator.Player || !Activator.Player.ReadyWeapon)
+		{
+			Return "";
+		}
+		Let Player = Activator.Player;
+		Let Icon = TexMan.GetName(Activator.Player.ReadyWeapon.Icon);
+		If (Icon)
+		{
+			Return Icon;
+		}
+		Return "TNT1A0";
+	}
+	Static String GetWeaponAmmoType(Actor Activator)
+	{
+		If (!Activator || !Activator.Player || !Activator.Player.ReadyWeapon)
+		{
+			Return "";
+		}
+		Let Player = Activator.Player;
+		Let AmmoType = Player.ReadyWeapon.AmmoType1;
+		Let Item = Activator.FindInventory(AmmoType);
+		If (Item)
+		{
+			Return Item.GetClassName();
+		}
+		Return "None";
+	}
+	Static Int GetWeaponAmmoInfo(Actor Activator, Int WeaponInfo = 0)
+	{
+		If (!Activator || !Activator.Player || !Activator.Player.ReadyWeapon)
+		{
+			Return 0;
+		}
+		Let Player = Activator.Player;
+		Let AmmoType = Player.ReadyWeapon.AmmoType1;
+		Let Item = Activator.FindInventory(AmmoType);
+		If (Item)
+		{
+			Switch(WeaponInfo)
+			{
+				Case 1:
+					Return Activator.CountInv(AmmoType);
+				Case 2:
+					Return Item.MaxAmount;
+				Case 3:
+					Return EOA_Ammo(Item) ? EOA_Ammo(Item).WarnAmount : 0;
+				Case 4:
+					Return EOA_Ammo(Item) ? EOA_Ammo(Item).LowAmount : 0;
+			}
+		}
+		Return 0;
+	}
+	Action Void EOA_FireBullets(Double Spread_XY, Double Spread_Z, Int NumBullets, Int DamagePerBullet, Class<Actor> PuffType = "BulletPuff", Int Flags = 1, Double Range = 0, Class<Actor> Missile = Null, Double SpawnHeight = 0, Double SpawnOfs_XY = 0, Double PitchCompOfs = 10) //[DoomKrakken]: We're not doing 32 for SpawnHeight.  That's uber retarded.
+	{
+		Let Player = Player;
+		If (!Player)
+		{
+			Return;
+		}
+		Let Pawn = PlayerPawn(Self);
+		Let Weapon = Player.ReadyWeapon;
+
+		Int i;
+		Double bangle;
+		Double bslope = 0.;
+		Int LAFlags = (Flags & FBF_NORANDOMPUFFZ)? LAF_NORANDOMPUFFZ : 0;
+
+		If ((Flags & FBF_USEAMMO) && Weapon && StateInfo != Null && StateInfo.mStateType == STATE_PSprite)
+		{
+			If (!Weapon.DepleteAmmo(Weapon.bALTFIRE, True))
+			{
+				Return;	// out of ammo
+			}
+		}
+		
+		If (Range == 0)	Range = PLAYERMISSILERANGE;
+
+		If (!(Flags & FBF_NOFLASH))
+		{
+			Pawn.PlayAttacking2();
+		}
+
+		If (!(Flags & FBF_NOPITCH))
+		{
+			bslope = BulletSlope();
+		}
+		bangle = Angle;
+
+		If (PuffType == Null) PuffType = 'BulletPuff';
+
+		If (Weapon != Null)
+		{
+			A_StartSound(Weapon.AttackSound, CHAN_WEAPON);
+		}
+
+		If ((NumBullets == 1 && !Player.ReFire) || NumBullets == 0)
+		{
+			Int Damage = DamagePerBullet;
+
+			If (!(Flags & FBF_NORANDOM))
+			{
+				Damage *= Random[CABullet](1, 3);
+			}
+			Let ProjSpawner = LineAttack(Angle, Radius * 2 * cos(Pitch), Pitch, 0, 'Hitscan', "EOA_NullPuff", LAFlags);
+			If (ProjSpawner)
+			{
+				Let Player = Self.Player;
+				ProjSpawner.A_SetSize(0.5, 1);
+				Let Puff = ProjSpawner.LineAttack(bangle, Range, bslope, Damage, 'Hitscan', PuffType, LAFlags, OffsetZ: -8);
+				If (Puff && ProjSpawner.CheckIfCloser(Puff, Radius * 2))
+				{
+					ProjSpawner.SetOrigin((Pos.X, Pos.Y, ProjSpawner.Pos.Z), False);
+				}
+				If (Missile != Null)
+				{
+					Bool Temp = False;
+					Double Ang = Angle - 90;
+					Vector2 Ofs = AngleToVector(Ang, SpawnOfs_XY);
+					//[DoomKrakken]: Thank you, Marisa Kirisame!
+					Vector3 x, y, z;
+					[x, y, z] = CoordUtil.GetAxes(Pitch, Angle, Roll);
+					Actor Proj = ProjSpawner.SpawnMissileXYZ(Level.Vec3Offset(ProjSpawner.Pos, (Ofs.X, Ofs.Y, SpawnHeight) - (PitchCompOfs * sin(abs(Pitch))) * z), Puff, Missile, True, Self);
+					If (Proj)
+					{
+						Proj.Angle = bangle;
+						Proj.Pitch = Pitch;
+						Proj.Target = Self;
+						Proj.SetFriendPlayer(Self.Player);
+						If (!Puff)
+						{
+							Temp = True;
+							Puff = ProjSpawner.LineAttack(bangle, Range, bslope, 0, 'Hitscan', PuffType, LAFlags|LAF_NOINTERACT, OffsetZ: -8);
+						}
+						AimBulletMissile(Proj, Puff, Flags, Temp, False);
+					}
+				}
+			}
+		}
+		Else 
+		{
+			For (i = 0; i < abs(NumBullets); i++)
+			{
+				Double pangle = bangle;
+				Double slope = bslope;
+
+				If (Flags & FBF_EXPLICITANGLE)
+				{
+					pangle += spread_xy;
+					slope += spread_z;
+				}
+				Else
+				{
+					pangle += spread_xy * Random2[cabullet]() / 255.;
+					slope += spread_z * Random2[cabullet]() / 255.;
+				}
+
+				Int Damage = DamagePerBullet;
+
+				If (!(Flags & FBF_NORANDOM))
+				{
+					Damage *= random[CABullet](1, 3);
+				}
+				Let ProjSpawner = LineAttack(Angle, Radius * 2 * cos(Pitch), Pitch, 0, 'Hitscan', "EOA_NullPuff", LAFlags);
+				If (ProjSpawner)
+				{
+					ProjSpawner.A_SetSize(0.5, 1);
+					Let Puff = ProjSpawner.LineAttack(pangle, Range, Slope, Damage, 'Hitscan', PuffType, LAFlags, OffsetZ: -8);
+					If (Puff && ProjSpawner.CheckIfCloser(Puff, Radius * 2))
+					{
+						ProjSpawner.SetOrigin((Pos.X, Pos.Y, ProjSpawner.Pos.Z), False);
+					}
+					If (Missile != Null)
+					{
+						Bool Temp = False;
+						Double Ang = Angle - 90;
+						Vector2 Ofs = AngleToVector(Ang, SpawnOfs_XY);
+						Vector3 x, y, z;
+						[x, y, z] = CoordUtil.GetAxes(Pitch, Angle, Roll);
+						Actor Proj = ProjSpawner.SpawnMissileXYZ(Level.Vec3Offset(ProjSpawner.Pos, (Ofs.X, Ofs.Y, SpawnHeight) - (PitchCompOfs * sin(abs(Pitch))) * z), Puff, Missile, True, Self);
+						If (Proj)
+						{
+							Proj.Angle = bangle;
+							Proj.Pitch = Pitch;
+							Proj.Target = Self;
+							Proj.SetFriendPlayer(Self.Player);
+							If (!Puff)
+							{
+								Temp = True;
+								Puff = ProjSpawner.LineAttack(bangle, Range, bslope, 0, 'Hitscan', PuffType, LAFlags|LAF_NOINTERACT, OffsetZ: -8);
+							}
+							AimBulletMissile(Proj, Puff, Flags, Temp, False);
+						}
+					}
+				}
+			}
+		}
+	}
+	Action Void EOA_SetWeaponRecoilOffset(Double OfsAngle = 0, Double OfsPitch = 0, Double OfsRoll = 0, Double Factor = 1.0, Bool Interpolate = True)
+	{
+		Invoker.APR_Recoil = Invoker.APR_Recoil ? Invoker.APR_Recoil : CVar.GetCVar("EOA_APRRecoil", Self.Player);
+		If (Invoker.APR_Recoil.GetBool())
+		{
+			Let RecoilHandler = New("EOA_WeaponRecoilThinker");
+			If (RecoilHandler)
+			{
+				RecoilHandler.Owner = Self;
+				RecoilHandler.RecoilAngle = OfsAngle;
+				RecoilHandler.RecoilPitch = OfsPitch;
+				RecoilHandler.RecoilRoll = OfsRoll;
+				RecoilHandler.RecoilFactor = abs(Factor);
+				If (RecoilHandler.RecoilFactor == 0)
+				{
+					RecoilHandler.RecoilFactor = 1;
+				}
+				A_SetAngle(Angle + OfsAngle, Interpolate);
+				A_SetPitch(Pitch + OfsPitch, Interpolate);
+				A_SetRoll(Roll + OfsRoll, Interpolate);
+			}
+		}
+	}
+	Action Void EOA_SetGKRecoilOffset(Double OfsAngle = 0, Double OfsPitch = 0, Double OfsRoll = 0, Bool Ignore = False, Bool Interpolate = True)
+	{
+		Invoker.APR_Recoil = Invoker.APR_Recoil ? Invoker.APR_Recoil : CVar.GetCVar("EOA_APRRecoil", Self.Player);
+		If (Invoker.APR_Recoil.GetBool())
+		{
+			Let RecoilHandler = New("EOA_GKRecoilThinker");
+			If (RecoilHandler)
+			{
+				RecoilHandler.Owner = Self;
+				RecoilHandler.RecoilAngle = OfsAngle;
+				RecoilHandler.RecoilPitch = OfsPitch;
+				RecoilHandler.RecoilRoll = OfsRoll;
+				RecoilHandler.RecoilFactor = 0.5;
+				RecoilHandler.Ignore = Ignore;
+				A_SetAngle(Angle + OfsAngle, Interpolate);
+				A_SetPitch(Pitch + OfsPitch, Interpolate);
+				A_SetRoll(Roll + OfsRoll, Interpolate);
+			}
+		}
+	}
+	Action Bool CheckSemiAuto()
+	{
+		Return Invoker.bSEMIAUTO;
+	}
+	Action Bool CheckWeaponClass(Class<Weapon> Weap)
+	{
+		Return Weap && Invoker Is Weap;
+	}
+	Action Bool EOA_CheckMeleeDelay()
+	{
+		If (Invoker Is "EOA_SuperShotgun" && !CountInv("SSGShots"))
+		{
+			Return True;
+		}
+		Return Invoker.MeleeDelayTics;
+	}
+	Action Void EOA_SetMeleeDelay()
+	{
+		Invoker.MeleeDelayTics = Invoker.Default.MeleeTics;
+	}
+	Action Void EOA_MeleeDash()
+	{
+		FTranslatedLineTarget LTarget;
+		Let Puff = LineAttack(Angle, 256, Pitch, 0, "None", "EOA_NullPuff2", LAF_NORANDOMPUFFZ|LAF_NOIMPACTDECAL, LTarget);
+		If (Puff)
+		{
+			Puff.Destroy();
+		}
+		If (LTarget.LineTarget)
+		{
+			Let Victim = LTarget.LineTarget;
+			If ((Victim.bISMONSTER || Victim Is "EOA_WeakPoint") && abs(Victim.Pos.Z - Pos.Z) <= Height && ((Pos.Z <= FloorZ) || bONMOBJ))
+			{
+				Let MT = New("EOA_MeleeThinker");
+				If (MT)
+				{
+					MT.Owner = Self;
+					MT.Victim = Victim;
+				}
+			}
+		}
+	}
+	Override Void DoEffect()
+	{
+		PlayerInfo Player = Owner.Player;
+		If (Player && Player.Mo && Player.Mo == Owner && Player.ReadyWeapon == Self && Player.FindPSprite(PSP_WEAPON) && !Player.Mo.CountInv("RipAndTear"))
+		{
+			Vector3 LedgeOffset = GetLedgeOffset(Owner); //[DoomKrakken]: This function returns the distance away from the ledge (X) and height from the actor's feet (Z) in the form of a Vector3.  Y remains untouched.
+			If (LedgeOffset.Z > 0 && !Owner.CountInv("Grabbing_A_Ledge") && (Owner.GetPlayerInput(INPUT_BUTTONS) & BT_FORWARD) && !(Owner.GetPlayerInput(INPUT_BUTTONS) & BT_CROUCH) && !Owner.CountInv("EOA_MantleCooldown")) //[DoomKrakken]: Most of the necessary checks were put into GetLedgeOffset.  If it successfully found a ledge to mantle, it will return a number greater than 0 for both LedgeOffset.X and LedgeOffset.Z, so checking for either of those being greater than 0 will be enough to tell us whether or not to go through with this movement.
+			{
+				Owner.A_GiveInventory("Grabbing_A_Ledge"); //[DoomKrakken]: The necessary counter which just about everything else relies on in order to jump to the necessary animation.
+				LedgeZStep = LedgeOffset.Z / 16.0 * (1 + Owner.CountInv("QuickHands")); //[DoomKrakken]: Divide the offset height of the ledge into individual steps.
+				MantleTics = 16 / (1 + Owner.CountInv("QuickHands")); //[DoomKrakken]: Define the number of tics to spend mantling.
+			}
+			If (Owner.CountInv("Grabbing_A_Ledge"))
+			{
+				If (MantleLedge)
+				{
+					Player.FindPSprite(PSP_WEAPON).SetState(ResolveState("LedgeClimb")); //[DoomKrakken]: This finds the "LedgeClimb" state sequence in the weapon PSprites (HUD-view sprites) for the player that "owns" them and then jumps to it.  DoEffect works outside of the direct PSprite state manipulation, so any "jumps" that would occur here in the function need to be done this way.
+				}
+			}
+			Vector3 OldPos = Owner.Pos; //[DoomKrakken]: Store the old position of the player...
+			Owner.SetXYZ(OldPos + (0, 0, 72 / (1 + Player.OnGround))); //[DoomKrakken]: ... and then set his XYZ so that 3D floors above him can be detected.
+			If (MantleTics > 0 && OldPos.Z < Owner.GetZAt(LedgeOffset.X, 0, 0) + Player.Mo.MaxStepHeight) //[DoomKrakken]: Do this while we still have MantleTics and the player's actual position is still below the desired ledge.
+			{
+				Owner.SetXYZ(OldPos); //[DoomKrakken]: Reset the XYZ back to its original position.
+				MantleTics--; //Decrement MantleTics.
+				Player.Cheats |= CF_TOTALLYFROZEN; //Freeze the player so that he can't interfere with the movement.
+				Owner.A_SetGravity(0); //No falling. :D
+				Owner.A_ChangeVelocity(max(0.5, LedgeOffset.X - Owner.Radius) / 1.5, 0, 0, CVF_RELATIVE|CVF_REPLACE); //Move forward.
+				Owner.SetOrigin(OldPos + (0, 0, LedgeZStep), True); //Move up.
+			}
+			Else
+			{
+				Owner.SetXYZ(OldPos); //[DoomKrakken]: Reset the XYZ back to its original position.
+				MantleTics = 0; //[DoomKrakken]: Reset MantleTics.
+				If (!(Self Is "EOA_InteractWeapon") && !(Owner.CountInv("RipAndTear") || Owner.CountInv("ChainsawRipAndTear")))
+				{
+					Player.Cheats &= ~CF_TOTALLYFROZEN; //[DoomKrakken]: Unfreeze the player.
+				}
+				Owner.A_TakeInventory("Grabbing_A_Ledge"); //[DoomKrakken]: Take the mantling counter.
+				Owner.A_SetGravity(Owner.Default.Gravity); //[DoomKrakken]: Restore the player's gravity.
+			}
+			If (UseEquipment && Owner.CountInv("EquipmentTrigger") && Owner.CountInv("EquipmentCharge"))
+			{
+				Player.FindPSprite(PSP_WEAPON).SetState(ResolveState("UseEquipment"));
+				UseEquipment = False;
+			}
+		}
+		MantleLedge = False;
+		MeleeDelayTics -= 1 + (Self Is "EOA_SuperShotgun" && Owner.CountInv("FasterReload")); //[DoomKrakken]: Faster cooldown for the primary fire of the Super Shotgun if Faster Reload is here.
+		MeleeDelayTics = max(0, MeleeDelayTics);
+		If (!Owner.CountInv("Dexterity"))
+		{
+			If (Owner.CountInv("EOA_Pistol") + Owner.CountInv("EOA_CombatShotgun") + Owner.CountInv("EOA_SuperShotgun") + Owner.CountInv("EOA_HeavyAssaultRifle") + Owner.CountInv("EOA_RocketLauncher") + Owner.CountInv("EOA_PlasmaRifle") + Owner.CountInv("EOA_GaussCannon") + Owner.CountInv("EOA_Chaingun") >= 4)
+			{
+				Owner.A_GiveInventory("Dexterity");
+			}
+		}
+		Super.DoEffect();
+	}
+	Action Int GetFrame()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player && Player.Mo && Player.Mo == Invoker.Owner && Invoker.Owner && Player.ReadyWeapon == Invoker && Player.FindPSprite(PSP_WEAPON))
+		{
+			Return Player.FindPSprite(PSP_WEAPON).Frame;
+		}
+		Return -1;
+	}
+	Action Bool CheckGKVictimState(StateLabel Label = "XDeath")
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		Let ThisPlayer = DoomSlayer(Player.Mo);
+		If (Tracer && ThisPlayer)
+		{
+			Return Tracer.FindState(Label);
+		}
+		Return False;
+	}
+	Action Int GetGKAngle() //Calculates difference in angle between inflictor and victim.
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		Let ThisPlayer = DoomSlayer(Player.Mo);
+		If (Tracer && ThisPlayer)
+		{
+			Int Ret;
+			Int VictimAngle = Int(DeltaAngle(Tracer.AngleTo(Self), Tracer.Angle));
+			If ((-22.5 < VictimAngle && VictimAngle < 22.5)) //Front
+			{
+				Ret = 0;
+			}
+			Else If (22.5 <= VictimAngle && VictimAngle < 67.5) //Front Right
+			{
+				Ret = 1;
+			}
+			Else If (67.5 <= VictimAngle && VictimAngle < 112.5) //Right
+			{
+				Ret = 2;
+			}
+			Else If (112.5 <= VictimAngle && VictimAngle < 147.5) //Back Right
+			{
+				Ret = 3;
+			}
+			Else If (abs(VictimAngle) >= 147.5) //Back
+			{
+				Ret = 4;
+			}
+			Else If (-147.5 < VictimAngle && VictimAngle <= -112.5) //Back Left
+			{
+				Ret = 5;
+			}
+			Else If (-112.5 < VictimAngle && VictimAngle <= -67.5) //Left
+			{
+				Ret = 6;
+			}
+			Else If (-67.5 < VictimAngle && VictimAngle <= -22.5) //Front Left
+			{
+				Ret = 7;
+			}
+			Return Ret;
+		}
+		Return -1;
+	}
+	Action Bool SavageryQueue()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		Let Rune = Savagery(FindInventory("Savagery"));
+		If (Tracer && Rune)
+		{
+			Let VictimInfo = New("SavageryArray");
+			VictimInfo.Victim = Tracer;
+			VictimInfo.ClassName = VictimInfo.Victim.GetClassName();
+			VictimInfo.Angle = GetGKAngle();
+			If (CountInv("PowerBerserk"))
+			{
+				VictimInfo.MOD = "Berserk";
+			}
+			Else If (CountInv("ChainsawRipAndTear"))
+			{
+				VictimInfo.MOD = "Chainsaw";
+			}
+			Else
+			{
+				VictimInfo.MOD = "Normal";
+			}
+			VictimInfo.DeathFromAbove = CountInv("DeathFromAbove");
+			For (Int i = 0; i < Rune.SavageryMastery.Size(); i++)
+			{
+				If (Rune.SavageryMastery[i].ClassName == VictimInfo.ClassName && Rune.SavageryMastery[i].Angle == VictimInfo.Angle && Rune.SavageryMastery[i].MOD == VictimInfo.MOD && Rune.SavageryMastery[i].DeathFromAbove == VictimInfo.DeathFromAbove)
+				{
+					Return False;
+				}
+			}
+			Rune.SavageryMastery.Push(VictimInfo);
+			Return True;
+		}
+		Return False;
+	}
+	Action Bool CheckOnGround()
+	{
+		Return Player.OnGround;
+	}
+	Action Bool CheckTracerOnGround()
+	{
+		Return (Tracer && (Tracer.Pos.Z == Tracer.FloorZ && !Tracer.bNOGRAVITY)); //Work on flying monsters and non-flying monsters that are in the air for whatever reason.
+	}
+	Static Bool CheckOnGroundFunction(Actor Activator)
+	{
+		If (Activator && Activator.Player)
+		{
+			Return Activator.Player.OnGround;
+		}
+		Return False;
+	}
+	Action Bool CheckInfiniteAmmo()
+	{
+		Return (GetCVar("SV_InfiniteAmmo") || FindInventory("PowerInfiniteAmmo", True));
+	}
+	Static Bool CheckInfiniteAmmoFunction(Actor Activator)
+	{
+		If (Activator && Activator.Player)
+		{
+			Return (Activator.GetCVar("SV_InfiniteAmmo") || Activator.FindInventory("PowerInfiniteAmmo", True));
+		}
+		Return False;
+	}
+	Action Void EOA_SpawnCustomDynamicLight(Name LightID, Int Type = DynamicLight.PointLight, Vector3 RGB = (0, 0, 0), Int Radius1 = 0, Int Radius2 = 0, Int Flags = 0, Int Duration = 8, Vector3 Ofs = (0, 0, 0), Double Param = 0, Double SpotI = 10, Double SpotO = 25, Double SpotP = 0)
+	{
+		EOA_ActorExtensions.SpawnCustomDynamicLight(Self, LightID, Type, RGB, Radius1, Radius2, Flags, Duration, Ofs, Param, SpotI, SpotO, SpotP);
+	}
+	Action Void EOA_SpawnNoiseMaker(Sound WhatToPlay = "Weapons/Pistol", Int Flags = 0, Double Volume = 1.0, Double Attenuation = ATTN_NORM, Double Pitch = 0.0)
+	{
+		EOA_ActorExtensions.SpawnNoiseMaker(Invoker.Owner, WhatToPlay, Invoker.SlotNumber + 10, Flags|CHANF_OVERLAP, Volume, Attenuation, Pitch);
+	}
+	Action Void EOA_SpawnPersistentNoiseMaker(Double ID, Sound WhatToPlay = "Weapons/Pistol", Int Slot = CHAN_BODY, Int Flags = 0, Double Volume = 1.0, Double Attenuation = ATTN_NORM, Double Pitch = 0.0)
+	{
+		Slot += ID * 100;
+		If (!WhatToPlay)
+		{
+			Invoker.Owner.A_StopSound(Slot);
+		}
+		Else
+		{
+			Invoker.Owner.A_StartSound(WhatToPlay, Slot, Flags|CHANF_LISTENERZ, Volume, Attenuation, Pitch);
+			Invoker.Owner.A_SoundVolume(Slot, Volume);
+		}
+	}
+	Action Void EOA_DestroyPersistentNoiseMaker(Double ID, Int Range = 10, Int Offset = 0)
+	{
+		For (Int i = 0; i < Range; i++)
+		{
+			Invoker.Owner.A_StopSound(ID * 100 + i + Offset);
+		}
+	}
+	States
+	{
+	//[DoomKrakken]: For GetSpriteIndex, in order to properly load and set these sprites correctly.
+	IdleState: 
+		RDAI A 1;
+		Loop;
+	FireState:
+		RDAF A 1;
+		Loop;
+	LoadState:
+		RDAL A 1;
+		Loop;
+	RaiseState:
+		RDAR A 1;
+		Loop;
+	TossState:
+		RDAT A 1;
+		Loop;
+	Spawn:
+	Ready:
+	ReadyLoop:
+	ReRaise:
+	Select:
+	Fire:
+		TNT1 A 0 A_TakeInventory("EOA_Weapon");
+	Deselect:
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	LedgeClimb:
+		TNT1 A 0
+		{
+			EOA_SpawnNoiseMaker("Player/Mantle");
+			A_GiveInventory("EOA_MantleCooldown");
+		}
+		MNTL ABCDE 1 A_WeaponOffset(0, 48 + 32 * sin(-Pitch));
+		MNTL FFGGHHIIJKLMN 1
+		{
+			A_WeaponOffset(0, 48 + 32 * sin(-Pitch));
+			If (CountInv("QuickHands"))
+			{
+				If (CountInv("SpeedCounter"))
+				{
+					A_TakeInventory("SpeedCounter");
+				}
+				Else
+				{
+					A_SetTics(0);
+					A_GiveInventory("SpeedCounter");
+				}
+			}
+		}
+		TNT1 A 0
+		{
+			A_TakeInventory("Grabbing_A_Ledge");
+			A_WeaponOffset();
+			Return ResolveState("ReRaise"); //A_Jump(256, "ReRaise");
+		}
+		Goto ReRaise;
+	Melee:
+		"####" "#" 0
+		{
+			EOA_SetMeleeDelay();
+			EOA_MeleeDash();
+		}
+		"####" ACE 1
+		{
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+			If (CountInv("RipAndTear"))
+			{
+				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") * CountInv("SeekAndDestroyII")))));
+				Return ResolveState("GloryKill");
+			}
+			Return ResolveState(Null);
+		}
+		"####" "#" 0 A_GunFlash("MeleeAttack", GFF_NOEXTCHANGE);
+		Goto Budge;
+	UseEquipment:
+		"####" "#" 0 EOA_SetMeleeDelay();
+		"####" ACEEE 1;
+		"####" "#" 0
+		{
+			If (CountInv("FragGrenadeSelected"))
+			{
+				A_GunFlash("FragGrenadeToss", GFF_NOEXTCHANGE);
+			}
+			Else If (CountInv("HologramSelected"))
+			{
+				A_TakeInventory("EquipmentCharge", 1);
+				EOA_SpawnNoiseMaker("Hologram/Click");
+				A_SpawnItemEx("EOA_HologramProjection", 30, Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_SETMASTER);
+				If (CountInv("EquipmentPowerSelected") && !CountInv("EquipmentPowerII"))
+				{
+					A_GiveInventory("EquipmentPowerChallengeCounter");
+				}
+			}
+			Else If (CountInv("SiphonGrenadeSelected"))
+			{
+				A_GunFlash("SiphonGrenadeToss", GFF_NOEXTCHANGE);
+			}
+		}
+	Budge:
+		"####" FGHIJJJJJJIHGFEEEEEEEDCBA 1
+		{
+			If (CountInv("RipAndTear"))
+			{
+				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") * CountInv("SeekAndDestroyII")))));
+				A_GunFlash("Null");
+				Return ResolveState("GloryKill");
+			}
+			If (!EOA_CheckMeleeDelay() && (GetFrame() == 9 || GetFrame() == 4) && (GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !CheckSemiAuto())
+			{
+				A_SetTics(0);
+			}
+			If (!CheckSemiAuto() || ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)))
+			{
+				A_WeaponReady(WRF_NOBOB|WRF_NOSWITCH|WRF_NOFIRE * EOA_CheckMeleeDelay()|WRF_NOFIRE * (GetFrame() > 4)|WRF_NOFIRE * !CheckSemiAuto());
+			}
+			Return ResolveState(Null);
+		}
+		TNT1 A 0 A_Jump(256, "ReadyLoop");
+		Goto ReadyLoop;
+	FragGrenadeToss:
+		GHND ABCDEF 1;
+		"####" "#" 0
+		{
+			EOA_SpawnNoiseMaker("Frag/Pin");
+			A_FireProjectile("EOA_FragGrenadeProjectile", 0, 0, -10, 0, FPF_NOAUTOAIM, -5);
+			A_TakeInventory("EquipmentCharge", 1);
+			If (CountInv("EquipmentPowerSelected") && !CountInv("EquipmentPowerII"))
+			{
+				A_GiveInventory("EquipmentPowerChallengeCounter");
+			}
+		}
+		GHND GHIJKL 1;
+		Stop;
+	SiphonGrenadeToss:
+		GHND ABCDEF 1;
+		"####" "#" 0 
+		{
+			EOA_SpawnNoiseMaker("Frag/Pin");
+			A_FireProjectile("EOA_SiphonGrenadeProjectile", 0, 0, -10, 0, CMF_TRACKOWNER, -5);
+			A_TakeInventory("EquipmentCharge", 1);
+			If (CountInv("EquipmentPowerSelected") && !CountInv("EquipmentPowerII"))
+			{
+				A_GiveInventory("EquipmentPowerChallengeCounter");
+			}
+		}
+		GHND GHIJKL 1;
+		Stop;
+	MeleeAttack:
+		TNT1 A 0 EOA_SpawnNoiseMaker("Punch/Swing");
+		FIST BD 1	
+		{
+			EOA_SetGKRecoilOffset(-5, 3, 3, True);
+			If (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM)
+			{
+				EOA_CheckGloryKill();
+			}
+		}
+		TNT1 A 0 
+		{
+			If (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM)
+			{
+				EOA_CheckGloryKill();
+			}
+			If (!CountInv("RipAndTear"))
+			{
+				A_CustomPunch(15, 1, CPF_NOTURN, "EOA_MeleePuff");
+			}
+		}
+		FIST FGHIK 1
+		{
+			EOA_SetGKRecoilOffset(2, -1);
+			If (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+		}
+		TNT1 AAAAAAAAAAAAAAAAAA 1 //18 tics, the remainder of the 25 in the "Budge" animation.
+		{
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+		}
+		Stop;
+	GloryKill:
+		TNT1 A 0
+		{
+			SetPlayerProperty(0, 1, PROP_TOTALLYFROZEN);
+			bNOTARGET = bNOPAIN = bNODAMAGE = True;
+			bNOGRAVITY = Tracer && Tracer.bNOGRAVITY;
+			If (CountInv("SeekAndDestroySelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/SeekAndDestroy");
+			}
+		}
+	GloryTravel:
+		TNT1 A 1;
+		TNT1 A 0 A_Warp(AAPTR_MASTER, 0, 0, 0, 0, WARPF_TESTONLY, "GloryTravel"); //[DoomKrakken]: The projectile itself has us do the warp.  This is here, doing the same thing, except it merely tests the very same conditions for the warp.  This way, it'll remain idle here until the warp fails.
+		TNT1 A 1 A_JumpIfInventory("DeathFromAbove", 1, "DeathFromAbove");
+		TNT1 A 0
+		{
+			A_SetPitch(0, SPF_INTERPOLATE);
+			A_TransferPointer(AAPTR_DEFAULT, AAPTR_TRACER, AAPTR_DEFAULT, AAPTR_TARGET);
+			A_Stop();
+		}
+		TNT1 A 0
+		{
+			Let Challenges = EOA_ChallengeArchive.Get();
+			If (Challenges)
+			{
+				Challenges.QueueGK = True;
+			}
+			If (CountInv("SavagerySelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/Savagery");
+				If (!CountInv("SavageryII") && SavageryQueue())
+				{
+					A_GiveInventory("SavageryChallengeCounter");
+				}
+			}
+			If (CountInv("SeekAndDestroySelected") && !CountInv("SeekAndDestroyII"))
+			{
+				A_GiveInventory("SeekAndDestroyChallengeCounter");
+			}
+			If (CountInv("BloodFueledSelected") && !CountInv("BloodFueledII") && CountInv("PowerBloodFueledSpeed"))
+			{
+				A_GiveInventory("BloodFueledChallengeCounter");
+			}
+			If (CountInv("SavingThrowSelected") && !CountInv("SavingThrowII") && CountInv("PowerSavingThrow"))
+			{
+				A_GiveInventory("SavingThrowChallengeCounter");
+			}
+			If (CountInv("InFlightMobilitySelected") && !CountInv("InFlightMobilityII") && !CheckTracerOnGround())
+			{
+				A_GiveInventory("InFlightMobilityChallengeCounter");
+			}
+		}
+		//[DoomKrakken]: The following directions are in relation to the monster.
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 0, "GloryKill1"); //Front
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 1, "GloryKill2"); //Front Right
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 2, "GloryKill3"); //Right
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 3, "GloryKill4"); //Rear Right
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 4, "GloryKill5"); //Rear
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 5, "GloryKill6"); //Rear Left
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 6, "GloryKill7"); //Left
+		TNT1 A 0 A_JumpIf(GetGKAngle() == 7, "GloryKill8"); //Front Left
+	GloryKill1: //Left punch, right punch, stomp kick.
+		GKFS AB 1 EOA_SetGKRecoilOffset(-10.5, 7.5, 7.5);
+		TNT1 A 0 
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+		}
+		TNT1 A 2
+		{
+			EOA_SetGKRecoilOffset(-3);
+			EOA_SetGKRecoilOffset(-3);
+			A_SetTics(2 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
+		}
+		GKFS AB 1 EOA_SetGKRecoilOffset(10.5, 7.5, -7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+		}
+		TNT1 A 4
+		{
+			EOA_SetGKRecoilOffset(-3);
+			EOA_SetGKRecoilOffset(-3);
+			A_SetTics(4 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+			A_WeaponOffset(60, 0, WOF_KEEPY);
+		}
+		GKKN ABC 1 EOA_SetGKRecoilOffset(6, -2, -4);
+		GKKN DEF 1 EOA_SetGKRecoilOffset(5, -3, -3.75);
+		TNT1 A 0 
+		{
+			A_WeaponOffset();
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 0);
+		}
+		KICK DF 1 EOA_SetGKRecoilOffset(2, 2, -6);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKickPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		KICK HJLN 1 EOA_SetGKRecoilOffset(2, 2);
+		TNT1 A 6 A_SetTics(6 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+		Goto GloryKillEnd;
+	GloryKill2: //Knee to the face, right punch.
+		TNT1 A 1
+		{
+			A_Overlay(10, "GloryHand");
+			A_Overlay(-10, "GloryHand");
+			A_OverlayFlags(-10, PSPF_FLIP|PSPF_MIRROR, 1);
+			A_FaceTracer(90, 90, 0, 0, FAF_BOTTOM);
+		}
+		GKKN ACE 1 A_SetPitch(Pitch - Pitch / 2, SPF_INTERPOLATE);
+		TNT1 A 0
+		{
+			A_Overlay(10, "GloryFists");
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKickPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		GKKN FF 1 A_SetPitch(Pitch - Pitch / 2, SPF_INTERPOLATE);
+		GKKN F 7
+		{
+			A_SetPitch(0, SPF_INTERPOLATE);
+			A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+		}
+		GKKN DCBA 1;
+		TNT1 A 0 A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
+		GKFS AB 1 EOA_SetGKRecoilOffset(10.5, 7.5, -7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1 EOA_SetGKRecoilOffset(2, -2);
+		TNT1 A 2 EOA_SetGKRecoilOffset(4);
+		Goto GloryKillEnd;
+	GloryKill3: //Left punch, right thrust kick.
+		GKFS AB 1 EOA_SetGKRecoilOffset(-10.5, 7.5, 7.5);
+		TNT1 A 0 
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1 EOA_SetGKRecoilOffset(4, -4);
+		TNT1 A 2 EOA_SetGKRecoilOffset(8);
+		TNT1 A 7
+		{
+			A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+			A_OverlayFlags(1, PSPF_MIRROR|PSPF_FLIP, 1);
+		}
+		KICK AB 1 EOA_SetGKRecoilOffset(6, -4, -3);
+		KICK CD 1 EOA_SetGKRecoilOffset(5, -6, -5);
+		TNT1 A 0 
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKickPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		KICK EF 1 EOA_SetGKRecoilOffset(-1, 1, -3);
+		KICK GHIJKLMNO 1 EOA_SetGKRecoilOffset(-1, 1);
+		Goto GloryKillEnd;
+	GloryKill4: //Left punch, right punch.
+		GKFS AB 1 EOA_SetGKRecoilOffset(-10.5, 7.5, 7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+		}
+		TNT1 A 2
+		{
+			EOA_SetGKRecoilOffset(-3);
+			EOA_SetGKRecoilOffset(-3);
+		}
+		TNT1 A 7
+		{
+			A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
+		}
+		GKFS AB 1 EOA_SetGKRecoilOffset(10.5, 7.5, -7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(1.5, -1.5);
+			EOA_SetGKRecoilOffset(1.5, -1.5);
+		}
+		TNT1 A 2
+		{
+			EOA_SetGKRecoilOffset(3);
+			EOA_SetGKRecoilOffset(3);
+		}
+		Goto GloryKillEnd;
+	GloryKill5: //Left side punch, right punch.
+		TNT1 A 0 EOA_SetGKRecoilOffset(0, 15);
+		GKSF ABC 1 EOA_SetGKRecoilOffset(-7, -2);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		GKSF DEFGH 1 EOA_SetGKRecoilOffset(-2, -2);
+		TNT1 A 7
+		{
+			A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
+		}
+		GKFS AB 1 EOA_SetGKRecoilOffset(10.5, 7.5, -7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(1.5, -1.5);
+			EOA_SetGKRecoilOffset(1.5, -1.5);
+		}
+		TNT1 A 2
+		{
+			EOA_SetGKRecoilOffset(3);
+			EOA_SetGKRecoilOffset(3);
+		}
+		Goto GloryKillEnd;
+	GloryKill6: //Leg stomp, left punch.
+		TNT1 A 1
+		{
+			A_Overlay(10, "GloryHand");
+			A_Overlay(-10, "GloryHand");
+			A_OverlayFlags(-10, PSPF_FLIP|PSPF_MIRROR, 1);
+			A_FaceTracer(90, 90, 0, 0, FAF_BOTTOM);
+		}
+		KICK ADH 1;
+		KICK H 7
+		{
+			A_Overlay(10, "GloryFists");
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKickPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+			A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+		}
+		KICK HGFEDCBA 1 A_SetPitch(Pitch - Pitch / 2, SPF_INTERPOLATE);
+		TNT1 A 0
+		{
+			A_SetPitch(0, SPF_INTERPOLATE);
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
+		}
+		GKFS AB 1 EOA_SetGKRecoilOffset(10.5, 7.5, -7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(-1.5, 1.5);
+			EOA_SetGKRecoilOffset(-1.5, 1.5);
+		}
+		TNT1 A 2
+		{
+			EOA_SetGKRecoilOffset(3);
+			EOA_SetGKRecoilOffset(3);
+		}
+		Goto GloryKillEnd;
+	GloryKill7: //Right side-kick, left punch.
+		TNT1 A 0
+		{
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
+			EOA_SetGKRecoilOffset(-16);
+		}
+		GKKN ACE 1 EOA_SetGKRecoilOffset(4);
+		GKSP CDE 1 EOA_SetGKRecoilOffset(8);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKickPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		GKSP DC 1;
+		GKKN FDB 1;
+		TNT1 A 7
+		{
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 0);
+			A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+		}
+		GKFS AB 1 EOA_SetGKRecoilOffset(-10.5, 7.5, 7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+			EOA_SetGKRecoilOffset(-1.5, -1.5);
+		}
+		TNT1 A 2
+		{
+			EOA_SetGKRecoilOffset(3);
+			EOA_SetGKRecoilOffset(3);
+		}
+		Goto GloryKillEnd;
+	GloryKill8: //Right jab, right punch.
+		FIST NP 1 EOA_SetGKRecoilOffset(7, 5, -5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryPunched", 1, AAPTR_TRACER);
+		}
+		FIST RSTUW 1 EOA_SetGKRecoilOffset(-2, -2);
+		TNT1 A 2 EOA_SetGKRecoilOffset(-4);
+		TNT1 A 7
+		{
+			A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
+		}
+		GKFS AB 1 EOA_SetGKRecoilOffset(10.5, 7.5, -7.5);
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKillPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		GKFS CDEFGH 1
+		{
+			EOA_SetGKRecoilOffset(1.5, -1.5);
+			EOA_SetGKRecoilOffset(1.5, -1.5);
+		}
+		TNT1 A 2
+		{
+			EOA_SetGKRecoilOffset(3);
+			EOA_SetGKRecoilOffset(3);
+		}
+		Goto GloryKillEnd;
+	GloryHand:
+		GRBH DGEI 1;
+		Stop;
+	GloryFists:
+		BFSR DCBAA 1;
+		BFSR A 7 A_SetTics(7 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+		Stop;
+	GloryKillEnd:
+		TNT1 A 0 
+		{
+			A_WeaponOffset();
+			SetPlayerProperty(0, 0, PROP_TOTALLYFROZEN);
+			A_OverlayFlags(1, PSPF_MIRROR|PSPF_FLIP, 0);
+			bNOTARGET = bNOPAIN = bNODAMAGE = bNOGRAVITY = False;
+			A_TakeInventory("RipAndTear");
+			A_TakeInventory("DeathFromAbove");
+			If (CountInv("ArmoredOffensiveSelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/ArmoredOffensive");
+			}
+			If (CountInv("BloodFueledSelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/BloodFueled");
+				If (CountInv("BloodFueledII"))
+				{
+					A_GiveInventory("ExtendedBloodFueledSpeed");
+				}
+				Else
+				{
+					A_GiveInventory("BloodFueledSpeed");
+				}
+			}
+		}
+		TNT1 A 0 A_Jump(256, "ReRaise");
+		Goto ReRaise;
+	DeathFromAbove:
+		TNT1 A 0
+		{
+			A_TransferPointer(AAPTR_DEFAULT, AAPTR_TRACER, AAPTR_DEFAULT, AAPTR_TARGET);
+			A_SetPitch(60, SPF_INTERPOLATE);
+			A_Stop();
+			Let Challenges = EOA_ChallengeArchive.Get();
+			If (Challenges)
+			{
+				Challenges.QueueGK = True;
+			}
+			If (CountInv("SavagerySelected"))
+			{
+				EOA_SpawnNoiseMaker("Rune/Savagery");
+				If (!CountInv("SavageryII") && SavageryQueue())
+				{
+					A_GiveInventory("SavageryChallengeCounter");
+				}
+			}
+			If (CountInv("SeekAndDestroySelected") && !CountInv("SeekAndDestroyII"))
+			{
+				A_GiveInventory("SeekAndDestroyChallengeCounter");
+			}
+			If (CountInv("BloodFueledSelected") && !CountInv("BloodFueledII") && CountInv("PowerBloodFueledSpeed"))
+			{
+				A_GiveInventory("BloodFueledChallengeCounter");
+			}
+			If (CountInv("SavingThrowSelected") && !CountInv("SavingThrowII") && CountInv("PowerSavingThrow"))
+			{
+				A_GiveInventory("SavingThrowChallengeCounter");
+			}
+			If (CountInv("DazedAndConfusedSelected") && !CountInv("DazedAndConfusedII"))
+			{
+				A_GiveInventory("DazedAndConfusedChallengeCounter");
+			}
+			If (CountInv("InFlightMobilitySelected") && !CountInv("InFlightMobilityII"))
+			{
+				A_GiveInventory("InFlightMobilityChallengeCounter");
+			}
+			EOA_SetGKRecoilOffset(0, 0, randompick(-10, 10), True);
+			A_Overlay(-10, "DeathFromAbove2");
+			A_OverlayFlags(-10, PSPF_FLIP|PSPF_MIRROR, True);
+			A_WeaponOffset(-35, 0, WOF_KEEPY);
+			A_OverlayOffset(-10, -5, 0, WOF_KEEPY);
+		}
+		KICK ONML 1;
+		TNT1 A 0
+		{
+			A_CustomPunch(0, 1, CPF_NOTURN, "GloryKickPuff");
+			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
+		}
+		KICK KJIHGFEDCCC 1
+		{
+			A_SetPitch(60, SPF_INTERPOLATE);
+			If (CountInv("SavagerySelected"))
+			{
+				If (CountInv("SavageryII"))
+				{
+					If (CountInv("SpeedCounter") >= 3)
+					{
+						A_TakeInventory("SpeedCounter");
+					}
+					Else
+					{
+						A_SetTics(0);
+						A_GiveInventory("SpeedCounter");
+					}
+				}
+				Else If (CountInv("SpeedCounter"))
+				{
+					A_TakeInventory("SpeedCounter");
+				}
+				Else
+				{
+					A_SetTics(0);
+					A_GiveInventory("SpeedCounter");
+				}
+			}
+		}
+		KICK B 1 A_SetPitch(54, SPF_INTERPOLATE);
+		KICK A 1 A_SetPitch(48, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(42, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(36, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(30, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(24, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(18, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(12, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(6, SPF_INTERPOLATE);
+		TNT1 A 1 A_SetPitch(0, SPF_INTERPOLATE);
+		Goto GloryKillEnd;
+	DeathFromAbove2:
+		KICK ONML 1;
+		KICK KJIHGFEDCCCBA 1
+		{
+			If (CountInv("SavagerySelected"))
+			{
+				If (CountInv("SavageryII"))
+				{
+					If (CountInv("SpeedCounter") >= 3)
+					{
+						A_TakeInventory("SpeedCounter");
+					}
+					Else
+					{
+						A_SetTics(0);
+						A_GiveInventory("SpeedCounter");
+					}
+				}
+				Else If (CountInv("SpeedCounter"))
+				{
+					A_TakeInventory("SpeedCounter");
+				}
+				Else
+				{
+					A_SetTics(0);
+					A_GiveInventory("SpeedCounter");
+				}
+			}
+		}
+		KICK BA 1;
+		Stop;
+	}
+}
+
+Class EOA_InteractWeapon : EOA_Weapon
+{
+	Actor Giver;
+	Class<Weapon> ReselectWeapon;
+	String YieldItem;
+	Double ZoomFactor;
+	Property ZoomFactor : ZoomFactor;
+	Default
+	{
+		EOA_InteractWeapon.ZoomFactor 1.5;
+		Weapon.UpSound "";
+		Weapon.AmmoType1 "None";
+		Weapon.AmmoType2 "None";
+		+WEAPON.CHEATNOTWEAPON
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1;
+		Stop;
+	Select:
+		TNT1 A 0
+		{
+			For (Int i = 0; i <=9; i++)
+			{
+				Int Offset = i ? 0 : 50;
+				EOA_DestroyPersistentNoiseMaker(i, 50, Offset);
+			}
+			If (Invoker.ReselectWeapon)
+			{
+				PowerBerserk BerserkPower = PowerBerserk(FindInventory("PowerBerserk"));
+				If (BerserkPower)
+				{
+					Invoker.ReselectWeapon = BerserkPower.PrevWeapon.GetClass();
+				}
+			}
+			SetPlayerProperty(0, 1, PROP_INSTANTWEAPONSWITCH);
+			SetPlayerProperty(0, 1, PROP_TOTALLYFROZEN);
+			bDONTTHRUST = True;
+			Invoker.FOVScale = 1;
+			A_ZoomFactor(Invoker.ZoomFactor);
+			A_SetCrosshair(99);
+			A_Stop();
+		}
+		TNT1 A 1 A_Raise(60);
+		Wait;
+	Deselect:
+		TNT1 A 1 
+		{
+			bDONTTHRUST = Default.bDONTTHRUST;
+			A_ZoomFactor();
+			If (Invoker.YieldItem)
+			{
+				A_GiveInventory(Invoker.YieldItem);
+			}
+			If (Invoker.ReselectWeapon)
+			{
+				A_SelectWeapon(Invoker.ReselectWeapon, SWF_SELECTPRIORITY);
+			}
+			A_Lower(36);
+			A_TakeInventory(Invoker.GetClassName());
+			SetPlayerProperty(0, 0, PROP_INSTANTWEAPONSWITCH);
+			SetPlayerProperty(0, 0, PROP_TOTALLYFROZEN);
+		}
+		Wait;
+	Ready:
+		Goto Deselect;
+	Fire:
+		Goto Ready;
+	}
+}
+
+Class EOA_MeleePuff : Actor
+{
+	States
+	{
+	XDeath:
+		TNT1 A 1
+		{
+			A_StartSound("Punch/GloryKill", 0);
+			A_StartSound("Punch/Bass", 0);
+		}
+		Stop;
+	Melee:
+	Crash:
+		TNT1 A 1
+		{
+			A_StartSound("Punch/Base", 0);
+			A_StartSound("Punch/Bass", 0);
+		}
+		Stop;
+	}
+}
+
+Class DeathFromAbove : EOA_Token{}
+
+Class GloryKillPuff : BulletPuff
+{
+	Default
+	{
+		+ALWAYSPUFF
+		+PUFFONACTORS
+		+FOILINVUL
+	}
+	States
+	{
+	XDeath:
+		TNT1 A 0
+		{
+			A_StartSound("Punch/GloryKill", 0);
+			A_StartSound("Punch/Bass", 0);
+		}
+		Stop;
+	Melee:
+	Crash:
+		TNT1 A 0
+		{
+			A_StartSound("Punch/GloryKill", 0);
+			A_StartSound("Punch/Bass", 0);
+		}
+		Goto Super::Melee;
+	}
+}
+
+Class GloryKickPuff : GloryKillPuff
+{
+	States
+	{
+	XDeath:
+		TNT1 A 0 
+		{
+			A_StartSound("Punch/GloryKill", 0);
+			A_StartSound("Punch/BoneSnap", 0);
+		}
+		Stop;
+	Melee:
+	Crash:
+		TNT1 A 0 
+		{
+			A_StartSound("Punch/GloryKill", 0);
+			A_StartSound("Punch/BoneSnap", 0);
+		}
+		Goto Super::Melee;
+	}
+}
+
+Class EOA_MantleCooldown : Powerup
+{
+	Default
+	{
+		Powerup.Duration -1;
+	}
+	Override Void Tick()
+	{
+		If (!Owner || EffectTics <= 0)
+		{
+			Destroy();
+			Return;
+		}
+		EffectTics -= 1 + Owner.CountInv("QuickHands");
+	}
+}
+
+Class EOA_PersistentNoiseMaker : Actor
+{
+	Actor Owner;
+	Bool Terminated;
+	Int ID;
+	Default
+	{
+		ReactionTime 35;
+		+DONTBLAST
+		+DONTTHRUST
+		+NOINTERACTION
+		+NOTIMEFREEZE
+	}
+	Override Void Tick()
+	{
+		If (Owner && ReactionTime-- > 0)
+		{
+			Warp(Owner, 0, 0, 0, 0, WARPF_NOCHECKPOSITION|WARPF_COPYINTERPOLATION, 0.5);
+		}
+		Else
+		{
+			Destroy();
+			Return;
+		}
+	}
+}
+
+Class EOA_MeleeThinker : Thinker
+{
+	Actor Owner, Victim;
+	Int Timer;
+	Override Void Tick()
+	{
+		If (!Owner || !Victim || Owner.bKILLED || Victim.bKILLED || Owner.CountInv("RipAndTear") || Timer >= 4)
+		{
+			Destroy();
+			Return;
+		}
+		Else
+		{
+			Bool Miss;
+			Actor Ret;
+			[Miss, Ret] = Owner.TestMobjZ();
+			If (!Miss && Ret == Victim)
+			{
+				Destroy();
+				Return;
+			}
+			Owner.A_Face(Victim, 90);
+			Owner.A_ChangeVelocity(64, Flags: CVF_RELATIVE|CVF_REPLACE);
+			Timer++;
+		}
+	}
+	Override Void OnDestroy()
+	{
+		If (Owner && !Owner.CountInv("RipAndTear"))
+		{
+			Owner.A_Stop();
+		}
+	}
+}
+
+Class EOA_WeaponRecoilThinker : Thinker
+{
+	Actor Owner;
+	Double RecoilAngle;
+	Double RecoilPitch;
+	Double RecoilRoll;
+	Double RecoilFactor;
+	Override Void Tick()
+	{
+		If (!Owner)
+		{
+			Destroy();
+			Return;
+		}
+		If (abs(RecoilAngle) < RecoilFactor * (1 + Owner.CountInv("PowerHaste")) && abs(RecoilPitch) < RecoilFactor * (1 + Owner.CountInv("PowerHaste")) && abs(RecoilRoll) < RecoilFactor * (1 + Owner.CountInv("PowerHaste")))
+		{
+			Owner.A_SetAngle(Owner.Angle - RecoilAngle, SPF_INTERPOLATE);
+			Owner.A_SetPitch(Owner.Pitch - RecoilPitch, SPF_INTERPOLATE);
+			Owner.A_SetRoll(Owner.Roll - RecoilRoll, SPF_INTERPOLATE);
+			Destroy();
+			Return;
+		}
+		Owner.A_SetAngle(Owner.Angle - RecoilAngle / max(1, abs(RecoilAngle)) * RecoilFactor * (1 + Owner.CountInv("PowerHaste")), SPF_INTERPOLATE);
+		Owner.A_SetPitch(Owner.Pitch - RecoilPitch / max(1, abs(RecoilPitch)) * RecoilFactor * (1 + Owner.CountInv("PowerHaste")), SPF_INTERPOLATE);
+		Owner.A_SetRoll(Owner.Roll - RecoilRoll / max(1, abs(RecoilRoll)) * RecoilFactor * (1 + Owner.CountInv("PowerHaste")), SPF_INTERPOLATE);
+		RecoilAngle -= RecoilAngle / max(1, abs(RecoilAngle)) * RecoilFactor * (1 + Owner.CountInv("PowerHaste"));
+		RecoilPitch -= RecoilPitch / max(1, abs(RecoilPitch)) * RecoilFactor * (1 + Owner.CountInv("PowerHaste"));
+		RecoilRoll -= RecoilRoll / max(1, abs(RecoilRoll)) * RecoilFactor * (1 + Owner.CountInv("PowerHaste"));
+	}
+}
+
+Class EOA_GKRecoilThinker : EOA_WeaponRecoilThinker
+{
+	Bool Ignore;
+	Override Void Tick()
+	{
+		If (!Owner)
+		{
+			Destroy();
+			Return;
+		}
+		If (abs(RecoilAngle) < RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII")))) && abs(RecoilPitch) < RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII")))) && abs(RecoilRoll) < RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII")))))
+		{
+			Owner.A_SetAngle(Owner.Angle - RecoilAngle, SPF_INTERPOLATE);
+			Owner.A_SetPitch(Owner.Pitch - RecoilPitch, SPF_INTERPOLATE);
+			Owner.A_SetRoll(Owner.Roll - RecoilRoll, SPF_INTERPOLATE);
+			Destroy();
+			Return;
+		}
+		Owner.A_SetAngle(Owner.Angle - RecoilAngle / max(1, abs(RecoilAngle)) * RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII")))), SPF_INTERPOLATE);
+		Owner.A_SetPitch(Owner.Pitch - RecoilPitch / max(1, abs(RecoilPitch)) * RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII")))), SPF_INTERPOLATE);
+		Owner.A_SetRoll(Owner.Roll - RecoilRoll / max(1, abs(RecoilRoll)) * RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII")))), SPF_INTERPOLATE);
+		RecoilAngle -= RecoilAngle / max(1, abs(RecoilAngle)) * RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII"))));
+		RecoilPitch -= RecoilPitch / max(1, abs(RecoilPitch)) * RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII"))));
+		RecoilRoll -= RecoilRoll / max(1, abs(RecoilRoll)) * RecoilFactor * (!Ignore ? 1 : (1 + 0.5 * Owner.CountInv("SavagerySelected") + (Owner.CountInv("SavagerySelected") * Owner.CountInv("SavageryII"))));
+	}
+}

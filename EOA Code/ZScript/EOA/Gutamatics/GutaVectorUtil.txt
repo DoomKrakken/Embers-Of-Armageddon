@@ -1,0 +1,34 @@
+Class EOA_VectorUtil
+{
+	// Linearly interpolates between two Vector3s, clamping the parameters.
+	Static Vector3 lerpVec3(Vector3 from, Vector3 to, double time)
+	{
+		time = clamp(time, 0, 1);
+		Return lerpUnclampedVec3(from, to, time);
+	}
+	
+	// Linearly interpolates between two Vector3s.
+	Static Vector3 lerpUnclampedVec3(Vector3 from, Vector3 to, double time)
+	{
+		Vector3 ret;
+		Double reverseTime = 1 - time;
+		ret = reverseTime * from + time * to;
+		Return ret;
+	}
+	
+	// Linearly interpolates between two Vector2s, clamping the parameters.
+	Static Vector2 lerpVec2(Vector2 from, Vector2 to, double time)
+	{
+		time = clamp(time, 0, 1);
+		Return lerpUnclampedVec2(from, to, time);
+	}
+	
+	// Linearly interpolates between two Vector2s.
+	Static Vector2 lerpUnclampedVec2(Vector2 from, Vector2 to, double time)
+	{
+		Vector2 ret;
+		Double reverseTime = 1 - time;
+		ret = reverseTime * from + time * to;
+		Return ret;
+	}
+}

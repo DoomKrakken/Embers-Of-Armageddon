@@ -1,0 +1,1708 @@
+//[DoomKrakken]: All sounds were extracted from soundbanks from DOOM that were provided by Xeotroid.
+//All rights reserved, all wrongs reversed. XD
+
+$pitchshiftrange 0
+
+//======================================================================//
+//======================================================================//
+//																		//
+//								Weapons									//
+//																		//
+//======================================================================//
+//======================================================================//
+//				Ripped by Xeotroid, unless otherwise stated.			//
+//======================================================================//
+
+//Generic Stuff
+Weapon/DryFire				DRYFIRE //DoomKrakken
+
+$limit Weapon/DryFire 0
+$volume Weapon/DryFire 0.5
+
+$random Casing/Brass		{Casing/Brass1 Casing/Brass2}
+Casing/Brass1				BULLCAS1
+Casing/Brass2				BULLCAS2
+
+$volume Casing/Brass 0.5
+
+$random Casing/Shell		{Casing/Shell1 Casing/Shell2 Casing/Shell3 Casing/Shell4 Casing/Shell5}
+Casing/Shell1				SHELCAS1
+Casing/Shell2				SHELCAS2
+Casing/Shell3				SHELCAS3
+Casing/Shell4				SHELCAS4
+Casing/Shell5				SHELCAS5
+
+$random Casing/Splash		{Casing/Splash1 Casing/Splash2 Casing/Splash3 Casing/Splash4 Casing/Splash5}
+Casing/Splash1				SPLASH1
+Casing/Splash2				SPLASH2
+Casing/Splash3				SPLASH3
+Casing/Splash4				SPLASH4
+Casing/Splash5				SPLASH5
+
+$random Weapon/Switch		{Weapon/Switch1 Weapon/Switch2 Weapon/Switch3 Weapon/Switch4 Weapon/Switch5 Weapon/Switch6 Weapon/Switch7}
+Weapon/Switch1				WEAPNSW1
+Weapon/Switch2				WEAPNSW2
+Weapon/Switch3				WEAPNSW3
+Weapon/Switch4				WEAPNSW4
+Weapon/Switch5				WEAPNSW5
+Weapon/Switch6				WEAPNSW6
+Weapon/Switch7				WEAPNSW7
+
+$random Projectile/HitFlesh	{Projectile/HitFlesh1 Projectile/HitFlesh2 Projectile/HitFlesh3 Projectile/HitFlesh4 Projectile/HitFlesh5 Projectile/HitFlesh6} //DoomKrakken
+Projectile/HitFlesh1		HITFLSH1
+Projectile/HitFlesh2		HITFLSH2
+Projectile/HitFlesh3		HITFLSH3
+Projectile/HitFlesh4		HITFLSH4
+Projectile/HitFlesh5		HITFLSH5
+Projectile/HitFlesh6		HITFLSH6
+
+$rolloff Projectile/HitFlesh 200 2000
+
+$random Projectile/HitWall	{Projectile/HitWall1 Projectile/HitWall2 Projectile/HitWall3 Projectile/HitWall4 Projectile/HitWall5} //DoomKrakken
+Projectile/HitWall1			HITWALL1
+Projectile/HitWall2			HITWALL2
+Projectile/HitWall3			HITWALL3
+Projectile/HitWall4			HITWALL4
+Projectile/HitWall5			HITWALL5
+
+$rolloff Projectile/HitWall 200 2000
+
+$random Weapon/Loaded		{Weapon/Loaded1 Weapon/Loaded2 Weapon/Loaded3 Weapon/Loaded4}
+Weapon/Loaded1				LOADED1
+Weapon/Loaded2				LOADED2
+Weapon/Loaded3				LOADED3
+Weapon/Loaded4				LOADED4
+
+
+//Melee
+$random Punch/Armor			{Punch/Armor1 Punch/Armor2 Punch/Armor3 Punch/Armor4 Punch/Armor5 Punch/Armor6 Punch/Armor7 Punch/Armor8}
+Punch/Armor1				ARMCLNK1
+Punch/Armor2				ARMCLNK2
+Punch/Armor3				ARMCLNK3
+Punch/Armor4				ARMCLNK4
+Punch/Armor5				ARMCLNK5
+Punch/Armor6				ARMCLNK6
+Punch/Armor7				ARMCLNK7
+Punch/Armor8				ARMCLNK8
+
+$random Punch/Flesh			{Punch/Flesh1 Punch/Flesh2 Punch/Flesh3 Punch/Flesh4 Punch/Flesh5}
+Punch/Flesh1				GKFLESH1
+Punch/Flesh2				GKFLESH2
+Punch/Flesh3				GKFLESH3
+Punch/Flesh4				GKFLESH4
+Punch/Flesh5				GKFLESH5
+
+$random Punch/Bass			{Punch/Bass1 Punch/Bass2 Punch/Bass3 Punch/Bass4 Punch/Bass5 Punch/Bass6}
+Punch/Bass1					BIGGIB01
+Punch/Bass2					BIGGIB02
+Punch/Bass3					BIGGIB03
+Punch/Bass4					BIGGIB04
+Punch/Bass5					BIGGIB05
+Punch/Bass6					BIGGIB06
+
+$random Punch/GloryKill		{Punch/GloryKill1 Punch/GloryKill2 Punch/GloryKill3 Punch/GloryKill4 Punch/GloryKill5 Punch/GloryKill6 Punch/GloryKill7 Punch/GloryKill8}
+Punch/GloryKill1			GKPUNCH1
+Punch/GloryKill2			GKPUNCH2
+Punch/GloryKill3			GKPUNCH3
+Punch/GloryKill4			GKPUNCH4
+Punch/GloryKill5			GKPUNCH5
+Punch/GloryKill6			GKPUNCH6
+Punch/GloryKill7			GKPUNCH7
+Punch/GloryKill8			GKPUNCH8
+
+$limit Punch/GloryKill 0
+$limit Punch/GloryKill1 0
+$limit Punch/GloryKill2 0
+$limit Punch/GloryKill3 0
+$limit Punch/GloryKill4 0
+$limit Punch/GloryKill5 0
+$limit Punch/GloryKill6 0
+$limit Punch/GloryKill7 0
+$limit Punch/GloryKill8 0
+
+
+$random Punch/BoneSnap		{Punch/BoneSnap1 Punch/BoneSnap2 Punch/BoneSnap3 Punch/BoneSnap4 Punch/BoneSnap5 /*Punch/BoneSnap6*/ Punch/BoneSnap7 Punch/BoneSnap8}
+Punch/BoneSnap1				BONSNAP1
+Punch/BoneSnap2				BONSNAP2
+Punch/BoneSnap3				BONSNAP3
+Punch/BoneSnap4				BONSNAP4
+Punch/BoneSnap5				BONSNAP5
+Punch/BoneSnap6				BONSNAP6
+Punch/BoneSnap7				BONSNAP7
+Punch/BoneSnap8				BONSNAP8
+
+$limit Punch/BoneSnap 0
+$limit Punch/BoneSnap1 0
+$limit Punch/BoneSnap2 0
+$limit Punch/BoneSnap3 0
+$limit Punch/BoneSnap4 0
+$limit Punch/BoneSnap5 0
+$limit Punch/BoneSnap6 0
+$limit Punch/BoneSnap7 0
+$limit Punch/BoneSnap8 0
+
+$random Punch/Base			{Punch/Base1 Punch/Base2 Punch/Base3 Punch/Base4 Punch/Base5}
+Punch/Base1					PUNCH1
+Punch/Base2					PUNCH2
+Punch/Base3					PUNCH3
+Punch/Base4					PUNCH4
+Punch/Base5					PUNCH5
+
+$random Hit/Dirt			{Hit/Dirt1 Hit/Dirt2 Hit/Dirt3 Hit/Dirt4 Hit/Dirt5}
+Hit/Dirt1					DIRTFX1
+Hit/Dirt2					DIRTFX2
+Hit/Dirt3					DIRTFX3
+Hit/Dirt4					DIRTFX4
+Hit/Dirt5					DIRTFX5
+
+$random Hit/Metal			{Hit/Metal1 Hit/Metal2 Hit/Metal3 Hit/Metal4 Hit/Metal5}
+Hit/Metal1					METALFX1
+Hit/Metal2					METALFX2
+Hit/Metal3					METALFX3
+Hit/Metal4					METALFX4
+Hit/Metal5					METALFX5
+
+$random Hit/Stone			{Hit/Stone1 Hit/Stone2 Hit/Stone3 Hit/Stone4 Hit/Stone5}
+Hit/Stone1					STONEFX1
+Hit/Stone2					STONEFX2
+Hit/Stone3					STONEFX3
+Hit/Stone4					STONEFX4
+Hit/Stone5					STONEFX5
+
+$random Punch/Swing			{Punch/Swing1 Punch/Swing2 Punch/Swing3 Punch/Swing4 Punch/Swing5 Punch/Swing6 Punch/Swing7}
+Punch/Swing1				MELEESW1
+Punch/Swing2				MELEESW2
+Punch/Swing3				MELEESW3
+Punch/Swing4				MELEESW4
+Punch/Swing5				MELEESW5
+Punch/Swing6				MELEESW6
+Punch/Swing7				MELEESW7
+
+$random Punch/Berserk		{Punch/Berserk1 Punch/Berserk2 Punch/Berserk3 Punch/Berserk4}
+Punch/Berserk1				ZERKHIT1
+Punch/Berserk2				ZERKHIT2
+Punch/Berserk3				ZERKHIT3
+Punch/Berserk4				ZERKHIT4
+
+$limit Punch/Berserk 0
+
+$random Berserk/Swing		{Berserk/Swing1 Berserk/Swing2}
+Berserk/Swing1				ZRKSWNG1
+Berserk/Swing2				ZRKSWNG2
+
+$limit Berserk/Swing 0
+
+//EMG Pistol
+$random EMG/Fire			{EMG/Fire1 EMG/Fire2 EMG/Fire3 EMG/Fire4}
+EMG/Fire1					EMGFIRE1
+EMG/Fire2					EMGFIRE2
+EMG/Fire3					EMGFIRE3
+EMG/Fire4					EMGFIRE4
+
+$limit EMG/Fire 0
+
+$random EMG/ChargeFire		{EMG/ChargeFire1 EMG/ChargeFire2 EMG/ChargeFire3 EMG/ChargeFire4 EMG/ChargeFire5 EMG/ChargeFire6 EMG/ChargeFire7 EMG/ChargeFire8 EMG/ChargeFire9 EMG/ChargeFire10 EMG/ChargeFire11 EMG/ChargeFire12 EMG/ChargeFire13}
+EMG/ChargeFire1				EMGCFR01
+EMG/ChargeFire2				EMGCFR02
+EMG/ChargeFire3				EMGCFR03
+EMG/ChargeFire4				EMGCFR04
+EMG/ChargeFire5				EMGCFR05
+EMG/ChargeFire6				EMGCFR06
+EMG/ChargeFire7				EMGCFR07
+EMG/ChargeFire8				EMGCFR08
+EMG/ChargeFire9				EMGCFR09
+EMG/ChargeFire10			EMGCFR10
+EMG/ChargeFire11			EMGCFR11
+EMG/ChargeFire12			EMGCFR12
+EMG/ChargeFire13			EMGCFR13
+
+$limit EMG/ChargeFire 0
+
+$random EMG/Impact			{EMG/Impact1 EMG/Impact2 EMG/Impact3 EMG/Impact4}
+EMG/Impact1					EMGHIT1
+EMG/Impact2					EMGHIT2
+EMG/Impact3					EMGHIT3
+EMG/Impact4					EMGHIT4
+
+$rolloff EMG/Impact 200 2000
+
+EMG/Charge					EMGCHRG
+EMG/ChargeIdle				EMGCHRGI
+EMG/ChargeBeep				EMGCHRGB
+EMG/Pickup					EMGPICK
+EMG/Vent					EMGVENT
+
+
+//Combat Shotgun
+CSG/Dry						CSGDRY
+
+$random CSG/Fire			{CSG/Fire1 CSG/Fire2 CSG/Fire3 CSG/Fire4 CSG/Fire5}
+CSG/Fire1					CSGFIRE1
+CSG/Fire2					CSGFIRE2
+CSG/Fire3					CSGFIRE3
+CSG/Fire4					CSGFIRE4
+CSG/Fire5					CSGFIRE5
+
+$limit CSG/Fire 0
+
+$random CSG/PumpIn			{CSG/PumpIn1 CSG/PumpIn2}
+CSG/PumpIn1					CSGPMPI1
+CSG/PumpIn2					CSGPMPI2
+
+$random CSG/PumpOut			{CSG/PumpOut1 CSG/PumpOut2}
+CSG/PumpOut1				CSGPMPO1
+CSG/PumpOut2				CSGPMPO2
+
+//Combat Shotgun - Charged Burst
+CSG/ChargeBeep				TRIBEEP //DoomKrakken
+
+$limit CSG/ChargeBeep 0
+
+$random CSG/BurstFire		{CSG/BurstFire1 CSG/BurstFire2 CSG/BurstFire3 CSG/BurstFire4 CSG/BurstFire5}
+CSG/BurstFire1				TRIFIRE1
+CSG/BurstFire2				TRIFIRE2
+CSG/BurstFire3				TRIFIRE3
+CSG/BurstFire4				TRIFIRE4
+CSG/BurstFire5				TRIFIRE5
+
+$limit CSG/BurstFire 0
+
+$random CSG/PowerShot		{CSG/PowerShot1 CSG/PowerShot2 CSG/PowerShot3 CSG/PowerShot4 CSG/PowerShot5}
+CSG/PowerShot1				TRIMFIR1
+CSG/PowerShot2				TRIMFIR2
+CSG/PowerShot3				TRIMFIR3
+CSG/PowerShot4				TRIMFIR4
+CSG/PowerShot5				TRIMFIR5
+
+$limit CSG/BurstFire 0
+
+ChargedBurst/Click			TRIMOD1 //DoomKrakken
+ChargedBurst/Attach			TRIMOD2
+
+//Combat Shotgun - Explosive Shot
+$random ClusterBomb/Explode	{ClusterBomb/Explode1 ClusterBomb/Explode2 ClusterBomb/Explode3 ClusterBomb/Explode4 ClusterBomb/Explode5 ClusterBomb/Explode6}
+ClusterBomb/Explode1		CLSTBMB1
+ClusterBomb/Explode2		CLSTBMB2
+ClusterBomb/Explode3		CLSTBMB3
+ClusterBomb/Explode4		CLSTBMB4
+ClusterBomb/Explode5		CLSTBMB5
+ClusterBomb/Explode6		CLSTBMB6
+
+$rolloff ClusterBomb/Explode 1000 2000
+
+CSG/ZoomIn					CSGZOOMI
+CSG/ZoomOut					CSGZOOMO
+
+$random CSG/ExplosiveFire	{CSG/ExplosiveFire1 CSG/ExplosiveFire2 CSG/ExplosiveFire3 CSG/ExplosiveFire4 CSG/ExplosiveFire5}
+CSG/ExplosiveFire1			EXPFIRE1
+CSG/ExplosiveFire2			EXPFIRE2
+CSG/ExplosiveFire3			EXPFIRE3
+CSG/ExplosiveFire4			EXPFIRE4
+CSG/ExplosiveFire5			EXPFIRE5
+
+$random CSG/ExplosiveAdd	{CSG/ExplosiveAdd1 CSG/ExplosiveAdd2 CSG/ExplosiveAdd3 CSG/ExplosiveAdd4 CSG/ExplosiveAdd5}
+CSG/ExplosiveAdd1			EXPSMOK1
+CSG/ExplosiveAdd2			EXPSMOK2
+CSG/ExplosiveAdd3			EXPSMOK3
+CSG/ExplosiveAdd4			EXPSMOK4
+CSG/ExplosiveAdd5			EXPSMOK5
+
+CSG/MasteryAlert			MASALERT
+$limit CSG/MasteryAlert 1
+
+ExplosiveShot/Click			EXPMOD1 //DoomKrakken
+ExplosiveShot/Attach		EXPMOD2
+ExplosiveShot/Lock			EXPMOD3 //DoomKrakken
+
+
+//Super Shotgun
+$random SSG/Fire			{SSG/Fire1 SSG/Fire2}
+SSG/Fire1					SSGFIRE1
+SSG/Fire2					SSGFIRE2
+
+$limit SSG/Fire 0
+
+$random SSG/Open			{SSG/Open1 SSG/Open2}
+SSG/Open1					SSGOPEN1
+SSG/Open2					SSGOPEN2
+
+$random SSG/Eject			{SSG/Eject1 SSG/Eject2 SSG/Eject3 SSG/Eject4}
+SSG/Eject1					SSGTUBE1
+SSG/Eject2					SSGTUBE2
+SSG/Eject3					SSGTUBE3
+SSG/Eject4					SSGTUBE4
+
+$random SSG/EjectShell		{SSG/EjectShell1 SSG/EjectShell12 SSG/EjectShell3 SSG/EjectShell4}
+SSG/EjectShell1				SSGESHL1
+SSG/EjectShell2				SSGESHL2
+SSG/EjectShell3				SSGESHL3
+SSG/EjectShell4				SSGESHL4
+
+$random SSG/Load			{SSG/Load1 SSG/Load2 SSG/Load3 SSG/Load4}
+SSG/Load1					SSGLOAD1
+SSG/Load2					SSGLOAD2
+SSG/Load3					SSGLOAD3
+SSG/Load4					SSGLOAD4
+
+$random SSG/LoadShell		{SSG/LoadShell1 SSG/LoadShell2 SSG/LoadShell3}
+SSG/LoadShell1				SSGLSHL1
+SSG/LoadShell2				SSGLSHL2
+SSG/LoadShell3				SSGLSHL3
+
+SSG/Close					SSGCLOSE
+SSG/ZoomIn					SSGZOOMI
+SSG/ZoomOut					SSGZOOMO
+
+$volume SSG/ZoomIn 0.5
+$volume SSG/ZoomOut 0.5
+
+//Heavy Assault Rifle
+$random HAR/Fire			{HAR/Fire1 HAR/Fire2 HAR/Fire3 HAR/Fire4}
+HAR/Fire1					HMGFIRE1
+HAR/Fire2					HMGFIRE2
+HAR/Fire3					HMGFIRE3
+HAR/Fire4					HMGFIRE4
+
+$limit HAR/Fire 0
+
+$random HAR/Add				{HAR/Add1 HAR/Add2 HAR/Add3 HAR/Add4}
+HAR/Add1					HMGADD1
+HAR/Add2					HMGADD2
+HAR/Add3					HMGADD3
+HAR/Add4					HMGADD4
+
+$limit HAR/Add 0
+
+$random HAR/Dry				{HAR/Dry1 HAR/Dry2 HAR/Dry3 HAR/Dry4}
+HAR/Dry1					HMGDRY1
+HAR/Dry2					HMGDRY2
+HAR/Dry3					HMGDRY3
+HAR/Dry4					HMGDRY4
+
+//Heavy Assault Rifle - Micro Missiles
+HAR/Deploy					MMOPENS
+HAR/DeployFast				MMOPENF //DoomKrakken
+
+$random MicroMissile/Explode	{MicroMissile/Explode1 MicroMissile/Explode2 MicroMissile/Explode3 MicroMissile/Explode4 MicroMissile/Explode5 MicroMissile/Explode6}
+MicroMissile/Explode1			MMSLEXP1
+MicroMissile/Explode2			MMSLEXP2
+MicroMissile/Explode3			MMSLEXP3
+MicroMissile/Explode4			MMSLEXP4
+MicroMissile/Explode5			MMSLEXP5
+MicroMissile/Explode6			MMSLEXP6
+
+$limit MicroMissile/Explode 0
+
+$random MicroMissile/Stick 	{MicroMissile/Stick1 MicroMissile/Stick2 MicroMissile/Stick3 MicroMissile/Stick4 MicroMissile/Stick5 MicroMissile/Stick6}
+MicroMissile/Stick1			MMSTICK1
+MicroMissile/Stick2			MMSTICK2
+MicroMissile/Stick3			MMSTICK3
+MicroMissile/Stick4			MMSTICK4
+MicroMissile/Stick5			MMSTICK5
+MicroMissile/Stick6			MMSTICK6
+
+$limit MicroMissile/Stick 0
+
+$random HAR/Missile			{HAR/Missile1 HAR/Missile2 HAR/Missile3 HAR/Missile4} //DoomKrakken
+HAR/Missile1				HMMMISL1
+HAR/Missile2				HMMMISL2
+HAR/Missile3				HMMMISL3
+HAR/Missile4				HMMMISL4
+
+$limit HAR/Missile 0
+
+$random HAR/Launch			{HAR/Launch1 HAR/Launch2 HAR/Launch3 HAR/Launch4}
+HAR/Launch1					HMMFIRE1
+HAR/Launch2					HMMFIRE2
+HAR/Launch3					HMMFIRE3
+HAR/Launch4					HMMFIRE4
+
+$limit HAR/Launch 0
+
+HAR/Bass					HMGBASS
+$limit HAR/Bass 0
+
+HAR/Close					MMCLOSE
+
+MicroMissiles/Click			MMSMOD1 //DoomKrakken
+MicroMissiles/Attach		MMSMOD2
+
+//Heavy Assault Rifle - Tactical Scope
+$random HAR/Fire/Uranium	{HAR/UFire1 HAR/UFire2 HAR/UFire3}
+HAR/UFire1					HMSUFIR1
+HAR/UFire2					HMSUFIR2
+HAR/UFire3					HMSUFIR3
+
+$limit HAR/Fire/Uranium 0
+
+$random HAR/Fire/Devastator {HAR/DFire1 HAR/DFire2 HAR/DFire3 HAR/DFire4 HAR/DFire5}
+HAR/DFire1					HMSDFIR1
+HAR/DFire2					HMSDFIR2
+HAR/DFire3					HMSDFIR3
+HAR/DFire4					HMSDFIR4
+HAR/DFire5					HMSDFIR5
+
+$limit HAR/Fire/Devastator 0
+
+HAR/ZoomIn					HMSZOOMI
+HAR/ZoomOut					HMSZOOMO
+
+TacticalScope/Click			TSCMOD1 //DoomKrakken
+TacticalScope/Attach		TSCMOD2 //DoomKrakken
+
+
+//Chaingun
+$random CGN/Fire			{CGN/Fire1 CGN/Fire2 CGN/Fire3 CGN/Fire4 CGN/Fire5 CGN/Fire6}
+CGN/Fire1					CGNFIRE1
+CGN/Fire2					CGNFIRE2
+CGN/Fire3					CGNFIRE3
+CGN/Fire4					CGNFIRE4
+CGN/Fire5					CGNFIRE5
+CGN/Fire6					CGNFIRE6
+
+$limit CGN/Fire 0
+
+CGN/Stop					CGSTOP
+
+//Chaingun - Gatling Rotator
+$random CGN/Fire/Uranium	{CGN/UFire1 CGN/UFire2 CGN/UFire3 CGN/UFire4 CGN/UFire5 CGN/UFire6 CGN/UFire7 CGN/UFire8 CGN/UFire9}
+CGN/UFire1					CGUFIRE1
+CGN/UFire2					CGUFIRE2
+CGN/UFire3					CGUFIRE3
+CGN/UFire4					CGUFIRE4
+CGN/UFire5					CGUFIRE5
+CGN/UFire6					CGUFIRE6
+CGN/UFire7					CGUFIRE7
+CGN/UFire8					CGUFIRE8
+CGN/UFire9					CGUFIRE9
+
+$limit CGN/Fire/Uranium 0
+
+//CGN/GatStart				GATSTART //ZION
+//CGN/GatLoop					GATLOOP //ZION
+//CGN/GatEnd					GATEND //ZION
+CGN/Start					CGSTART //DoomKrakken
+CGN/Spin					CGSPIN
+CGN/Rotor					CGROTOR
+CGN/End						CGEND //DoomKrakken
+
+GatlingRotator/Click		GATMOD1 //DoomKrakken
+GatlingRotator/Attach		GATMOD2
+GatlingRotator/Punch		GATMOD3 //DoomKrakken
+
+//Chaingun - Mobile Turret
+CGN/MTCasings				MTCASING
+CGN/MTOverheat				OVERHEAT
+CGN/MTOpen					TUROPEN
+CGN/MTClose					TURCLOSE
+CGN/MTFire					TURNFIRE
+CGN/MTFire/Uranium			TURUFIRE
+
+MobileTurret/Attach			TURMOD1 //DoomKrakken
+MobileTurret/Lock			TURMOD2
+MobileTurret/Whirr			TURMOD3 //DoomKrakken
+
+$limit CGN/MTOpen 0
+$limit CGN/MTClose 0
+
+
+//Rocket Launcher
+$random RLR/Dry				{RLR/Dry1 RLR/Dry2 RLR/Dry3 RLR/Dry4}
+RLR/Dry1					RLDRY1
+RLR/Dry2					RLDRY2
+RLR/Dry3					RLDRY3
+RLR/Dry4					RLDRY4
+
+$random RLR/Fire			{RLR/Fire1 RLR/Fire2 RLR/Fire3 RLR/Fire4}
+RLR/Fire1					RLFIRE1
+RLR/Fire2					RLFIRE2
+RLR/Fire3					RLFIRE3
+RLR/Fire4					RLFIRE4
+
+$limit RLR/Fire 0
+
+$random RLR/Add				{RLR/Add1 RLR/Add2 RLR/Add3 RLR/Add4}
+RLR/Add1					RLADD1
+RLR/Add2					RLADD2
+RLR/Add3					RLADD3
+RLR/Add4					RLADD4
+
+RLR/LoadStart				RLLOADS1 //DoomKrakken
+RLR/LoadMed					RLLOADS2 //DoomKrakken
+RLR/LoadEnd					RLLOADS3 //DoomKrakken
+RLR/Rotate					RLROTATE //DoomKrakken
+
+$random Rocket/Explode		{Rocket/Explode1 Rocket/Explode2 Rocket/Explode3 Rocket/Explode4 Rocket/Explode5 Rocket/Explode6}
+Rocket/Explode1				RCKTEXP1
+Rocket/Explode2				RCKTEXP2
+Rocket/Explode3				RCKTEXP3
+Rocket/Explode4				RCKTEXP4
+Rocket/Explode5				RCKTEXP5
+Rocket/Explode6				RCKTEXP6
+
+$rolloff Rocket/Explode 200 2000
+$limit Rocket/Explode 0
+
+$random Rocket/Add			{Rocket/Add1 Rocket/Add2 Rocket/Add3 Rocket/Add4}
+Rocket/Add1					RCKTADD1
+Rocket/Add2					RCKTADD2
+Rocket/Add3					RCKTADD3
+Rocket/Add4					RCKTADD4
+
+$volume Rocket/Add 0.5
+
+$rolloff Rocket/Explode 200 2000
+
+Rocket/Fly					RCKTFLY
+
+//Rocket Launcher - Lock-On Burst
+RLR/Locked					LOCKEDON
+RLR/LockFail				LOCKFAIL
+RLR/LockingOn				LOCKBEEP
+RLR/LockLoad				LOCKLOAD
+
+$random RLR/BurstFire		{RLR/BurstFire1 RLR/BurstFire2 RLR/BurstFire3 RLR/BurstFire4} //DoomKrakken
+RLR/BurstFire1				RLBFIRE1
+RLR/BurstFire2				RLBFIRE2
+RLR/BurstFire3				RLBFIRE3
+RLR/BurstFire4				RLBFIRE4
+
+$limit RLR/BurstFire 0
+
+LockOnBurst/Click			LOBMOD1 //DoomKrakken
+LockOnBurst/Attach			LOBMOD2
+
+//Rocket Launcher - Remote Detonation
+$random RLR/Shrapnel		{RLR/Shrapnel1 RLR/Shrapnel2}
+RLR/Shrapnel1				JAGFLAK1
+RLR/Shrapnel2				JAGFLAK2
+
+$rolloff RLR/Shrapnel 200 2000
+$limit RLR/Shrapnel 0
+
+RLR/DetBeep					RDETBP2 //DoomKrakken 
+
+RemoteDetonation/Click		DETMOD1 //DoomKrakken
+RemoteDetonation/Attach		DETMOD2
+
+
+//Plasma Rifle
+PLR/Fire					PLSFIREL //ZION
+PLR/FireEnd					PLSFIRE //ZION
+PLR/Add						PLASADD //DoomKrakken
+
+$limit PLR/Add 0
+
+PLR/Base					PLASBASE //DoomKrakken
+
+$limit PLR/Base 0
+
+$random PLR/Fire1			{PLR/Fire1_1 PLR/Fire1_2 PLR/Fire1_3 PLR/Fire1_4 PLR/Fire1_5} //DoomKrakken
+PLR/Fire1_1					PLSFR1L1
+PLR/Fire1_2					PLSFR2L1
+PLR/Fire1_3					PLSFR3L1
+PLR/Fire1_4					PLSFR4L1
+PLR/Fire1_5					PLSFR5L1
+
+$limit PLR/Fire1 0
+$volume PLR/Fire1 0.7
+
+$random PLR/Fire2			{PLR/Fire2_1 PLR/Fire2_2 PLR/Fire2_3 PLR/Fire2_4 PLR/Fire2_5 PLR/Fire2_6 PLR/Fire2_7 PLR/Fire2_8} //DoomKrakken
+PLR/Fire2_1					PLSFR1L2
+PLR/Fire2_2					PLSFR2L2
+PLR/Fire2_3					PLSFR3L2
+PLR/Fire2_4					PLSFR4L2
+PLR/Fire2_5					PLSFR5L2
+PLR/Fire2_6					PLSFR6L2
+PLR/Fire2_7					PLSFR7L2
+PLR/Fire2_8					PLSFR8L2
+
+$limit PLR/Fire2 0
+$volume PLR/Fire2 0.7
+
+$random PLR/Fire3			{PLR/Fire3_1 PLR/Fire3_2 PLR/Fire3_3 PLR/Fire3_4 PLR/Fire3_5} //DoomKrakken
+PLR/Fire3_1					PLSFR1L3
+PLR/Fire3_2					PLSFR2L3
+PLR/Fire3_3					PLSFR3L3
+PLR/Fire3_4					PLSFR4L3
+PLR/Fire3_5					PLSFR5L3
+
+$limit PLR/Fire3 0
+$volume PLR/Fire3 0.7
+
+$random PLR/Fire4			{PLR/Fire4_1 PLR/Fire4_2 PLR/Fire4_3 PLR/Fire4_4} //DoomKrakken
+PLR/Fire4_1					PLSFR1L4
+PLR/Fire4_2					PLSFR2L4
+PLR/Fire4_3					PLSFR3L4
+PLR/Fire4_4					PLSFR4L4
+
+$limit PLR/Fire4 0
+
+$random PLR/Spin			{PLR/Spin1 PLR/Spin2 PLR/Spin3 PLR/Spin4 PLR/Spin5}
+PLR/Spin1					PLRSPIN1
+PLR/Spin2					PLRSPIN2
+PLR/Spin3					PLRSPIN3
+PLR/Spin4					PLRSPIN4
+PLR/Spin5					PLRSPIN5
+
+$random PlasmaBall/Fly		{PlasmaBall/Fly1 PlasmaBall/Fly2 PlasmaBall/Fly3}
+PlasmaBall/Fly1				PLASFLY1
+PlasmaBall/Fly2				PLASFLY2
+PlasmaBall/Fly3				PLASFLY3
+
+PlasmaBall/Add1				PLASADD1 //DoomKrakken
+PlasmaBall/Add2				PLASADD2
+
+$random PlasmaBall/Impact	{PlasmaBall/Impact1 PlasmaBall/Impact2 PlasmaBall/Impact3 PlasmaBall/Impact4 PlasmaBall/Impact5 PlasmaBall/Impact6 PlasmaBall/Impact7 PlasmaBall/Impact8 PlasmaBall/Impact9 PlasmaBall/Impact10}
+PlasmaBall/Impact1			PLSDTH01
+PlasmaBall/Impact2			PLSDTH02
+PlasmaBall/Impact3			PLSDTH03
+PlasmaBall/Impact4			PLSDTH04
+PlasmaBall/Impact5			PLSDTH05
+PlasmaBall/Impact6			PLSDTH06
+PlasmaBall/Impact7			PLSDTH07
+PlasmaBall/Impact8			PLSDTH08
+PlasmaBall/Impact9			PLSDTH09
+PlasmaBall/Impact10			PLSDTH10
+
+//Plasma Rifle - Heat Blast
+HeatBlast/Charged			HEATCHRG //DoomKrakken
+HeatBlast/Ready				HEATRDY  //DoomKrakken
+PLR/HeatAdd					HEATADD
+
+$random HeatBlast/Fire		{HeatBlast/Fire1 HeatBlast/Fire2 HeatBlast/Fire3}
+HeatBlast/Fire1				PHBLAST1
+HeatBlast/Fire2				PHBLAST2
+HeatBlast/Fire3				PHBLAST3
+
+$random HeatBlast/Add		{HeatBlast/Add1 HeatBlast/Add2 HeatBlast/Add3 HeatBlast/Add4}
+HeatBlast/Add1				PHBADD1
+HeatBlast/Add2				PHBADD2
+HeatBlast/Add3				PHBADD3
+HeatBlast/Add4				PHBADD4
+
+$random HeatBlast/Shrill	{HeatBlast/Shrill1 HeatBlast/Shrill2 HeatBlast/Shrill3}
+HeatBlast/Shrill1			PHBSHRL1
+HeatBlast/Shrill2			PHBSHRL2
+HeatBlast/Shrill3			PHBSHRL3
+
+$random HeatBlast/Distort	{HeatBlast/Distort1 HeatBlast/Distort2 HeatBlast/Distort3 HeatBlast/Distort4}
+HeatBlast/Distort1			HBDSTRT1
+HeatBlast/Distort2			HBDSTRT2
+HeatBlast/Distort3			HBDSTRT3
+HeatBlast/Distort4			HBDSTRT4
+
+PLR/HeatFire				PHBFIREL //ZION
+PLR/HeatFireEnd				PHBFIRE //ZION
+
+HeatBlast/Equip				PRHMOD
+
+//Plasma Rifle - Stun Bomb
+$random StunBomb/Impact		{StunBomb/Impact1 StunBomb/Impact2 StunBomb/Impact3}
+StunBomb/Impact1			STNSHOT1
+StunBomb/Impact2			STNSHOT2
+StunBomb/Impact3			STNSHOT3
+
+$rolloff StunBomb/Impact 1000 2000
+
+$random StunBomb/Explode	{StunBomb/Explode1 StunBomb/Explode2 StunBomb/Explode3 StunBomb/Explode4 StunBomb/Explode5 StunBomb/Explode6}
+StunBomb/Explode1			PRSEXP1
+StunBomb/Explode2			PRSEXP2
+StunBomb/Explode3			PRSEXP3
+StunBomb/Explode4			PRSEXP4
+StunBomb/Explode5			PRSEXP5
+StunBomb/Explode6			PRSEXP6
+
+$rolloff StunBomb/Explode 1000 2000
+
+$random StunBomb/Shock		{StunBomb/Shock1 StunBomb/Shock2 StunBomb/Shock3 StunBomb/Shock4}
+StunBomb/Shock1				PRSSHCK1
+StunBomb/Shock2				PRSSHCK2
+StunBomb/Shock3				PRSSHCK3
+StunBomb/Shock4				PRSSHCK4
+
+$rolloff StunBomb/Shock 1000 2000
+
+StunBomb/Stun				PSBSTUN
+
+$random PRS/Fire			{PRS/Fire1 PRS/Fire2 PRS/Fire3 PRS/Fire4}
+PRS/Fire1					PRSFIRE1
+PRS/Fire2					PRSFIRE2
+PRS/Fire3					PRSFIRE3
+PRS/Fire4					PRSFIRE4
+
+$random PRS/Add				{PRS/Add1 PRS/Add2 PRS/Add3 PRS/Add4}
+PRS/Add1					PRSADD1
+PRS/Add2					PRSADD2
+PRS/Add3					PRSADD3
+PRS/Add4					PRSADD4
+
+StunBomb/Charged			STUNCHRG
+StunBomb/Equip				PRSMOD
+
+//Plasma Rifle - Enemy
+$random PLR/Enemy/Fire		{PLR/Enemy/Fire1 PLR/Enemy/Fire2 PLR/Enemy/Fire3 PLR/Enemy/Fire4}
+PLR/Enemy/Fire1				SLDRPLS1
+PLR/Enemy/Fire2				SLDRPLS2
+PLR/Enemy/Fire3				SLDRPLS3
+PLR/Enemy/Fire4				SLDRPLS4
+
+$limit PLR/Enemy/Fire 0
+$rolloff PLR/Enemy/Fire 512 2048
+
+//Gauss Cannon
+Gauss/Charge				GAUSSCHG //DoomKrakken
+Gauss/Close					GAUSSCLS //DoomKrakken
+Gauss/Damage				GAUSSDMG //DoomKrakken
+Gauss/Idle					GAUSSHUM //DoomKrakken
+Gauss/Mechanism				GAUSSMPM //DoomKrakken
+Gauss/Pickup				GAUSSPCK //DoomKrakken
+Gauss/Cycle					GCNCYCLE //DoomKrakken
+Gauss/Beep					GCNBEEP  //DoomKrakken
+Gauss/Dry					GAUSSDRY
+
+$limit Gauss/Charge 0
+$limit Gauss/Close 0
+$limit Gauss/Damage 0
+$limit Gauss/Idle 0
+$limit Gauss/Mechanism 0
+$limit Gauss/Pickup 0
+$limit Gauss/Cycle 0
+$limit Gauss/Beep 0
+$limit Gauss/Dry 0
+
+$rolloff Gauss/Damage 1000 2000
+
+$random Gauss/Clink			{Gauss/Clink1 Gauss/Clink2 Gauss/Clink3 Gauss/Clink4}
+Gauss/Clink1				GAUSSCL1
+Gauss/Clink2				GAUSSCL2
+Gauss/Clink3				GAUSSCL3
+Gauss/Clink4				GAUSSCL4
+
+Gauss/Fire					GCNFIRE //DoomKrakken
+$limit Gauss/Fire 0
+
+$random Gauss/Add {Gauss/Add1 Gauss/Add2 Gauss/Add3 Gauss/Add4}
+Gauss/Add1					GCNADD1
+Gauss/Add2					GCNADD2
+Gauss/Add3					GCNADD3
+Gauss/Add4					GCNADD4
+
+$limit Gauss/Add 0
+
+$random Gauss/Impact		{Gauss/Impact1 Gauss/Impact2 Gauss/Impact3}
+Gauss/Impact1				GCIMPCT1
+Gauss/Impact2				GCIMPCT2
+Gauss/Impact3				GCIMPCT3
+
+$limit Gauss/Impact 0
+$rolloff Gauss/Impact 500 2000
+
+//Gauss Cannon - Precision Bolt
+Precision/Start				GAUSSPBS
+Precision/Idle				GAUSSPBL
+Precision/End				GAUSSPBE
+Precision/Beep				GCPBEEP
+Precision/Fire				GCPFIRE
+Precision/ZoomIn			GCPZOOMI
+Precision/ZoomOut			GCPZOOMO
+
+PrecisionBolt/Equip			GCPMOD
+
+$limit Precision/Start 0
+$limit Precision/Idle 0
+$limit Precision/End 0
+$limit Precision/Beep 0
+$limit Precision/Fire 0
+$limit Precision/ZoomIn 0
+$limit Precision/ZoomOut 0
+
+$limit PrecisionBolt/Equip 0
+
+//Gauss Cannon - Siege Mode
+Siege/Charge				GCSCHRG
+Siege/Idle					GCSCHRGI
+Siege/Close					GCSCLOSE
+
+$limit Siege/Charge 0
+$limit Siege/Idle 0
+$limit Siege/Close 0
+
+$random Siege/Charge/Start	{Siege/Charge/Start1 Siege/Charge/Start2 Siege/Charge/Start3 Siege/Charge/Start4 Siege/Charge/Start5 Siege/Charge/Start6}
+Siege/Charge/Start1			GCSCHGS1
+Siege/Charge/Start2			GCSCHGS2
+Siege/Charge/Start3			GCSCHGS3
+Siege/Charge/Start4			GCSCHGS4
+Siege/Charge/Start5			GCSCHGS5
+Siege/Charge/Start6			GCSCHGS6
+
+$random Siege/Fire			{Siege/Fire1 Siege/Fire2 Siege/Fire3}
+Siege/Fire1					GCSFIRE1
+Siege/Fire2					GCSFIRE2
+Siege/Fire3					GCSFIRE3
+
+$random Siege/Add			{Siege/Add1 Siege/Add2 Siege/Add3 Siege/Add4}
+Siege/Add1					GCSADD1
+Siege/Add2					GCSADD2
+Siege/Add3					GCSADD3
+Siege/Add4					GCSADD4
+
+SiegeMode/Equip				GCSMOD
+
+$limit Siege/Charge/Start 0
+$limit Siege/Fire 0
+$limit Siege/Add 0
+$limit SiegeMode/Equip 0
+
+//BFG
+BFGAmmo/Pickup				BFGAMMO
+BFGAmmo/Hum					BFGAHUM //DoomKrakken
+
+$limit BFGAmmo/Hum 0
+
+$random BFGAmmo/Rotate		{BFGAmmo/Rotate1 BFGAmmo/Rotate2 BFGAmmo/Rotate3} //DoomKrakken
+BFGAmmo/Rotate1				BFGAROT1
+BFGAmmo/Rotate2				BFGAROT2
+BFGAmmo/Rotate3				BFGAROT3
+
+$limit BFGAmmo/Rotate1 0
+$limit BFGAmmo/Rotate2 0
+$limit BFGAmmo/Rotate3 0
+$random BFG/Ball			{BFG/Ball1 BFG/Ball2 BFG/Ball3}
+BFG/Ball1					BFGBALL1
+BFG/Ball2					BFGBALL2
+BFG/Ball3					BFGBALL3
+
+BFG/Charge					BFGCHRGE 
+BFG/Explode					BFGEXP //DoomKrakken
+
+$rolloff BFG/Explode 2048 4096
+$limit BFG/Explode 0
+
+$random BFG/Explode/Small	{BFG/Explode/Small1 BFG/Explode/Small2 BFG/Explode/Small3 BFG/Explode/Small4 BFG/Explode/Small5 BFG/Explode/Small6}
+BFG/Explode/Small1			BFGEXPS1
+BFG/Explode/Small2			BFGEXPS2
+BFG/Explode/Small3			BFGEXPS3
+BFG/Explode/Small4			BFGEXPS4
+BFG/Explode/Small5			BFGEXPS5
+BFG/Explode/Small6			BFGEXPS6
+
+BFG/Idle					BFGIDLE
+
+$random BFG/Lightning		{BFG/Lightning1 BFG/Lightning2 BFG/Lightning3 BFG/Lightning4 BFG/Lightning5}
+BFG/Lightning1				BFGLGHT1
+BFG/Lightning2				BFGLGHT2
+BFG/Lightning3				BFGLGHT3
+BFG/Lightning4				BFGLGHT4
+BFG/Lightning5				BFGLGHT5
+
+BFG/Raise					BFGRAISE //DoomKrakken
+$limit BFG/Raise 0
+
+$random BFG/Fire			{BFG/Fire1 BFG/Fire2 BFG/Fire3}
+BFG/Fire1					BFGFIRE1
+BFG/Fire2					BFGFIRE2
+BFG/Fire3					BFGFIRE3
+
+BFG/Add						BFGADD
+
+BFG/ZoomIn					BFGZOOMI
+BFG/ZoomLoop				BFGZOOML
+BFG/ZoomOut					BFGZOOMO
+
+BFG/Stun					BFGSTUN
+BFG/StunLightning			BFGSTUNL
+BFG/StunEnd					BFGSTUNE
+
+$rolloff BFG/Stun 1000 2000
+$rolloff BFG/StunLightning 1000 2000
+$rolloff BFG/StunEnd 1000 2000
+
+//Chainsaw
+FuelAmmo/Pickup				FUELAMMO //DoomKrakken
+Chainsaw/Cut				CSAWCUT
+
+$random Chainsaw/Down		{Chainsaw/Down1 Chainsaw/Down2}
+Chainsaw/Down1				CSAWDWN1
+Chainsaw/Down2				CSAWDWN2
+
+Chainsaw/Engine				CSAWENG
+Chainsaw/Idle				CSAWIDLE
+Chainsaw/GK/Mid				CSAWGKMD //DoomKrakken
+Chainsaw/GK/Shoulder		CSAWGKSH //DoomKrakken
+
+$random Chainsaw/GK/Head	{Chainsaw/GK/Head1 Chainsaw/GK/Head2} //DoomKrakken
+Chainsaw/GK/Head1 			CSAWHED1 
+Chainsaw/GK/Head2 			CSAWHED2
+
+Chainsaw/GK/Knight			CSAWGKHK //DoomKrakken
+Chainsaw/GK/Mancubus/Front	CSAWMANF //DoomKrakken
+Chainsaw/GK/Mancubus/Back	CSAWMANB //DoomKrakken
+Chainsaw/Metal				CSAWMTL
+Chainsaw/MetalLoop			CSAWMTLL
+Chainsaw/Grab				CSAWPICK
+Chainsaw/Pull				CSAWPULL
+Chainsaw/Rev				CSAWREV //DoomKrakken
+Chainsaw/Slow				CSAWSLOW //DoomKrakken
+Chainsaw/Stab				CSAWSTAB //DoomKrakken
+Chainsaw/Use				CSAWLOOP //DoomKrakken
+
+$random Chainsaw/Shoulder	{Chainsaw/Shoulder1 Chainsaw/Shoulder2} //DoomKrakken
+Chainsaw/Shoulder1			CSSHLDR1
+Chainsaw/Shoulder2			CSSHLDR2
+
+$random Chainsaw/Roar		{Chainsaw/Roar1 Chainsaw/Roar2}
+Chainsaw/Roar1				CSROAR01
+Chainsaw/Roar2				CSROAR02
+
+$limit Chainsaw/MetalLoop 0
+
+//Equipment
+Equipment/Recharge			RECHARGE //DoomKrakken
+
+//Frag Grenade
+Frag/Prime					FRAGCHRG
+
+$rolloff Frag/Prime 200 2000
+
+$random Frag/Explode		{Frag/Explode1 Frag/Explode2 Frag/Explode3 Frag/Explode4 Frag/Explode5 Frag/Explode6 Frag/Explode7 Frag/Explode8}
+Frag/Explode1				FRAGEXP1
+Frag/Explode2				FRAGEXP2
+Frag/Explode3				FRAGEXP3
+Frag/Explode4				FRAGEXP4
+Frag/Explode5				FRAGEXP5
+Frag/Explode6				FRAGEXP6
+Frag/Explode7				FRAGEXP7
+Frag/Explode8				FRAGEXP8
+
+$rolloff Frag/Explode 500 2000
+
+$random Frag/Add			{Frag/Add1 Frag/Add2 Frag/Add3 Frag/Add4 Frag/Add5 Frag/Add6 Frag/Add7 Frag/Add8}
+Frag/Add1					FRAGFLK1
+Frag/Add2					FRAGFLK2
+Frag/Add3					FRAGFLK3
+Frag/Add4					FRAGFLK4
+Frag/Add5					FRAGFLK5
+Frag/Add6					FRAGFLK6
+Frag/Add7					FRAGFLK7
+Frag/Add8					FRAGFLK8
+
+$random Frag/Bounce			{Frag/Bounce1 Frag/Bounce2 Frag/Bounce3 Frag/Bounce4 Frag/Bounce5}
+Frag/Bounce1				FRAGBNC1
+Frag/Bounce2				FRAGBNC2
+Frag/Bounce3				FRAGBNC3
+Frag/Bounce4				FRAGBNC4
+Frag/Bounce5				FRAGBNC5
+
+$rolloff Frag/Add 500 2000
+
+$random Frag/Pin			{Frag/Pin1 Frag/Pin2 Frag/Pin3 Frag/Pin4 Frag/Pin5}
+Frag/Pin1					FRAGPIN1
+Frag/Pin2					FRAGPIN2
+Frag/Pin3					FRAGPIN3
+Frag/Pin4					FRAGPIN4
+Frag/Pin5					FRAGPIN5
+
+Frag/Pickup					FRAGPICK //DoomKrakken
+
+//Hologram
+Hologram/Click				HOLOCLIK //DoomKrakken
+Hologram/Start				HOLOSTRT //DoomKrakken
+Hologram/End				HOLOEND
+Hologram/Pickup				HOLOPICK //DoomKrakken
+
+//Siphon Grenade
+Siphon/Explode				SPHNEXP
+
+//$rolloff Siphon/Explode 500 2000
+
+$random Siphon/Damage		{Siphon/Damage1 Siphon/Damage2 Siphon/Damage3}
+Siphon/Damage1				SPHNDMG1
+Siphon/Damage2				SPHNDMG2
+Siphon/Damage3				SPHNDMG3
+
+Siphon/Pickup				SPHNPICK
+
+//======================================================================//
+//======================================================================//
+//																		//
+//								 Items									//
+//																		//
+//======================================================================//
+//======================================================================//
+//					   Ripped/Edited by DoomKrakken.	 				//
+//======================================================================//
+
+//Generic Item Stuff
+$random Item/Bounce			{Item/Bounce1 Item/Bounce2 Item/Bounce3 Item/Bounce4}
+Item/Bounce1				ITEMBNC1
+Item/Bounce2				ITEMBNC2
+Item/Bounce3				ITEMBNC3
+Item/Bounce4				ITEMBNC4
+
+Item/Pickup					ITEMPICK
+$limit Item/Pickup 0
+
+Item/Glow					ITEMGLOW
+$limit Item/Glow 0
+$volume Item/Glow 0.75
+$rolloff Item/Glow 128 512
+
+//Field Drone
+$random FieldDrone/Empty/L1	{FieldDrone/Empty/L1_1 FieldDrone/Empty/L1_2 FieldDrone/Empty/L1_3 FieldDrone/Empty/L1_4 FieldDrone/Empty/L1_5 FieldDrone/Empty/L1_6 FieldDrone/Empty/L1_7 FieldDrone/Empty/L1_8 FieldDrone/Empty/L1_9}
+FieldDrone/Empty/L1_1		FDEML101
+FieldDrone/Empty/L1_2		FDEML102
+FieldDrone/Empty/L1_3		FDEML103
+FieldDrone/Empty/L1_4		FDEML104
+FieldDrone/Empty/L1_5		FDEML105
+FieldDrone/Empty/L1_6		FDEML106
+FieldDrone/Empty/L1_7		FDEML107
+FieldDrone/Empty/L1_8		FDEML108
+FieldDrone/Empty/L1_9		FDEML109
+
+$rolloff FieldDrone/Empty/L1 128 512
+
+
+$random FieldDrone/Empty/L2	{FieldDrone/Empty/L2_1 FieldDrone/Empty/L2_2 FieldDrone/Empty/L2_3 FieldDrone/Empty/L2_4 FieldDrone/Empty/L2_5 FieldDrone/Empty/L2_6 FieldDrone/Empty/L2_7 FieldDrone/Empty/L2_8 FieldDrone/Empty/L2_9}
+FieldDrone/Empty/L2_1		FDEML201
+FieldDrone/Empty/L2_2		FDEML202
+FieldDrone/Empty/L2_3		FDEML203
+FieldDrone/Empty/L2_4		FDEML204
+FieldDrone/Empty/L2_5		FDEML205
+FieldDrone/Empty/L2_6		FDEML206
+FieldDrone/Empty/L2_7		FDEML207
+FieldDrone/Empty/L2_8		FDEML208
+FieldDrone/Empty/L2_9		FDEML209
+
+$rolloff FieldDrone/Empty/L2 128 512
+
+
+$random FieldDrone/Hover/L1	{FieldDrone/Hover/L1_1 FieldDrone/Hover/L1_2 FieldDrone/Hover/L1_3 FieldDrone/Hover/L1_4}
+FieldDrone/Hover/L1_1		FDHVL101
+FieldDrone/Hover/L1_2		FDHVL102
+FieldDrone/Hover/L1_3		FDHVL103
+FieldDrone/Hover/L1_4		FDHVL104
+
+$rolloff FieldDrone/Hover/L1 128 512
+
+$random FieldDrone/Hover/L2	{FieldDrone/Hover/L2_1 FieldDrone/Hover/L2_2 FieldDrone/Hover/L2_3 FieldDrone/Hover/L2_4}
+FieldDrone/Hover/L2_1		FDHVL201
+FieldDrone/Hover/L2_2		FDHVL202
+FieldDrone/Hover/L2_3		FDHVL203
+FieldDrone/Hover/L2_4		FDHVL204
+
+$rolloff FieldDrone/Hover/L1 128 512
+
+$random FieldDrone/Talk		{FieldDrone/Talk1 FieldDrone/Talk2 FieldDrone/Talk3 FieldDrone/Talk4 FieldDrone/Talk5 FieldDrone/Talk6 FieldDrone/Talk7 FieldDrone/Talk8 FieldDrone/Talk9}
+FieldDrone/Talk1			FDTALK01
+FieldDrone/Talk2			FDTALK02
+FieldDrone/Talk3			FDTALK03
+FieldDrone/Talk4			FDTALK04
+FieldDrone/Talk5			FDTALK05
+FieldDrone/Talk6			FDTALK06
+FieldDrone/Talk7			FDTALK07
+FieldDrone/Talk8			FDTALK08
+FieldDrone/Talk9			FDTALK09
+
+//Argent Cell
+ArgentCell/Break			ACELLBRK
+ArgentCell/Creak			ACELLCRK
+
+$rolloff ArgentCell/Break 128 512
+$rolloff ArgentCell/Creak 128 512
+
+
+$random ArgentCell/Pick		{ArgentCell/Pick1 ArgentCell/Pick2}
+ArgentCell/Pick1			ACPING1
+ArgentCell/Pick2			ACPING2
+
+$rolloff ArgentCell/Pick 128 512
+
+Argent/Bass					RGNTBASS
+
+$rolloff Argent/Bass 128 512
+
+$random Argent/Energy		{Argent/Energy1 Argent/Energy2 Argent/Energy3}
+Argent/Energy1				RGNTNRG1
+Argent/Energy2				RGNTNRG2
+Argent/Energy3				RGNTNRG3
+
+$rolloff Argent/Energy 128 512
+
+//Argent Cache
+ArgentCache/Motor1			ACMOTOR1
+ArgentCache/Motor2			ACMOTOR2
+
+$rolloff ArgentCache/Motor1 128 512
+$rolloff ArgentCache/Motor2 128 512
+
+$random ArgentCache/Open	{ArgentCache/Open1 ArgentCache/Open2}
+ArgentCache/Open1			ACOPEN1
+ArgentCache/Open2			ACOPEN2
+
+$rolloff ArgentCache/Open1 128 512
+$rolloff ArgentCache/Open2 128 512
+
+$random ArgentCache/Spin	{ArgentCache/Spin1 ArgentCache/Spin2}
+ArgentCache/Spin1			ACSOPEN1
+ArgentCache/Spin2			ACSOPEN2
+
+$rolloff ArgentCache/Spin1 128 512
+$rolloff ArgentCache/Spin2 128 512
+
+$random ArgentCache/Close	{ArgentCache/Close1 ArgentCache/Close2}
+ArgentCache/Close1			ACCLOSE1
+ArgentCache/Close2			ACCLOSE2
+
+$rolloff ArgentCache/Close1 128 512
+$rolloff ArgentCache/Close2 128 512
+
+//Allmap
+Allmap/Pickup				ALLMAP
+
+//Ammo Crate
+$random AmmoCrate/Air		{AmmoCrate/Air1 AmmoCrate/Air2 AmmoCrate/Air3}
+AmmoCrate/Air1				AMCRAIR1
+AmmoCrate/Air2				AMCRAIR2
+AmmoCrate/Air3				AMCRAIR3
+
+$random AmmoCrate/Hit		{AmmoCrate/Hit1 AmmoCrate/Hit2}
+AmmoCrate/Hit1				AMCRHIT1
+AmmoCrate/Hit2				AMCRHIT2
+
+$random AmmoCrate/LockDrop	{AmmoCrate/LockDrop1 AmmoCrate/LockDrop2 AmmoCrate/LockDrop3}
+AmmoCrate/LockDrop1			AMCRLKD1
+AmmoCrate/LockDrop2			AMCRLKD2
+AmmoCrate/LockDrop3			AMCRLKD3
+
+//Armor
+Armor/Shard					ARMRSHRD
+Armor/Pickup				ARMRPICK
+
+$volume Armor/Shard 0.5
+$volume Armor/Pickup 0.7
+$limit Armor/Shard 0
+$limit Armor/Pickup 0
+
+//Berserk
+Berserk/Pickup				BSERKPCK
+//Berserk/Add				BSERKADD
+Berserk/Warn				BSERKWRN
+Berserk/End					BSERKEND
+
+$limit Berserk/Pickup 0
+$limit Berserk/Warn 0
+
+//Haste
+Haste/Pickup				HASTEPCK
+Haste/Add					HASTEADD
+Haste/Loop					HASTELP
+Haste/Warn					HASTEWRN
+Haste/End					HASTEEND
+
+$limit Haste/Pickup 0
+$limit Haste/Warn 0
+
+//Invulnerability
+Invul/Pickup				INVULPCK
+
+$random Invul/Hum 			{Invul/Hum1 Invul/Hum2 Invul/Hum3}
+Invul/Hum1					INVULHM1
+Invul/Hum2					INVULHM2
+Invul/Hum3					INVULHM3
+
+$random Invul/Loop			{Invul/Loop1 Invul/Loop2}
+Invul/Loop1					INVULLP1
+Invul/Loop2					INVULLP2
+
+Invul/Warn					INVULWRN
+
+$volume Invul/Hum 0.75
+$rolloff Invul/Hum 128 512
+$limit Invul/Pickup 0
+$limit Invul/Warn 0
+
+//Quad Damage
+Quad/Pickup					QUADPICK
+Quad/Idle					QUADIDLE
+Quad/Loop					QUADLOOP
+Quad/Voice					QUADVOCL
+Quad/Warn					QUADWARN
+Quad/End					QUADEND
+QuadDamage/Shot				QDMGSHOT
+
+$volume Quad/Idle 0.75
+$rolloff Quad/Idle 128 512
+$limit QuadDamage/Shot 0
+$limit Quad/Pickup 0
+$limit Quad/Warn 0
+
+
+//Health
+Health/Stim					MEDISTIM
+Health/Kit					MEDIKIT
+Health/Pack					MEDIPACK
+Health/Mega					MEGAHLTH
+
+$volume Health/Stim 0.5
+$volume Health/Kit 0.7
+$volume Health/Pack 0.7
+$limit Health/Stim 0
+$limit Health/Kit 0
+$limit Health/Pack 0
+//$volume Health/Mega 0.7
+
+
+//Jump Boots
+Boots/Music					JBMUSIC
+
+$random Boots/Pickup		{Boots/Pickup1 Boots/Pickup2}
+Boots/Pickup1				JBPICK1
+Boots/Pickup2				JBPICK2
+
+//Mod Case
+Mod/Grab					MODGRAB
+
+//Radsuit
+Rad/Crackle					RADCRCKL
+
+//Ammo
+Ammo/Pickup					ITEMPICK
+Ammo/Pickup/Small			SMALLPCK
+
+//Keys
+Skullkey/Pickup				SKULLKEY
+KeyCard/Pickup				TAKECARD
+
+//Praetor Suit Token
+Suit/Token					PSTOKEN
+Suit/GrabToken				SUITTOKN
+
+//======================================================================//
+//======================================================================//
+//																		//
+//								 Player								 	//
+//																		//
+//======================================================================//
+//======================================================================//
+//					   Ripped/Edited by DoomKrakken.			 		//
+//======================================================================//
+
+$random Player/Adjust		{Player/Adjust1 Player/Adjust2 Player/Adjust3 Player/Adjust4 Player/Adjust5 Player/Adjust6}
+Player/Adjust1				ADJUST01
+Player/Adjust2				ADJUST02
+Player/Adjust3				ADJUST03
+Player/Adjust4				ADJUST04
+Player/Adjust5				ADJUST05
+Player/Adjust6				ADJUST06
+
+$random Player/Jump			{Player/Jump1 Player/Jump2 Player/Jump3 Player/Jump4}
+Player/Jump1				JUMP01
+Player/Jump2				JUMP02
+Player/Jump3				JUMP03
+Player/Jump4				JUMP04
+
+$random Player/DoubleJump	{Player/DoubleJump1 Player/DoubleJump2 Player/DoubleJump3 Player/DoubleJump4}
+Player/DoubleJump1			DJUMP1
+Player/DoubleJump2			DJUMP2
+Player/DoubleJump3			DJUMP3
+Player/DoubleJump4			DJUMP4
+
+$random Player/JumpThrust	{Player/JumpThrust1 Player/JumpThrust2 Player/JumpThrust3 Player/JumpThrust4}
+Player/JumpThrust1			DJUMPTH1
+Player/JumpThrust2			DJUMPTH2
+Player/JumpThrust3			DJUMPTH3
+Player/JumpThrust4			DJUMPTH4
+
+$random Player/Footstep		{Player/Footstep1 Player/Footstep2 Player/Footstep3 Player/Footstep4 Player/Footstep5 Player/Footstep6 Player/Footstep7 Player/Footstep8 Player/Footstep9 Player/Footstep10 Player/Footstep11 Player/Footstep12 Player/Footstep13}
+Player/Footstep1			FOOTST01
+Player/Footstep2			FOOTST02
+Player/Footstep3			FOOTST03
+Player/Footstep4			FOOTST04
+Player/Footstep5			FOOTST05
+Player/Footstep6			FOOTST06
+Player/Footstep7			FOOTST07
+Player/Footstep8			FOOTST08
+Player/Footstep9			FOOTST09
+Player/Footstep10			FOOTST10
+Player/Footstep11			FOOTST11
+Player/Footstep12			FOOTST12
+Player/Footstep13			FOOTST13
+
+Player/DeathDrone			DTHDRONE
+Player/PraetorSuit			DOOMSUIT
+Player/HeartbeatIn			HEARTLUB
+Player/HeartbeatOut			HEARTDUB
+
+$random Player/Hit			{Player/Hit1 Player/Hit2 Player/Hit3 Player/Hit4 Player/Hit5}
+Player/Hit1					HITPLAY1
+Player/Hit2					HITPLAY2
+Player/Hit3					HITPLAY3
+Player/Hit4					HITPLAY4
+Player/Hit5					HITPLAY5
+
+$random Player/Whoosh		{Player/Whoosh1 Player/Whoosh2 Player/Whoosh3 Player/Whoosh4}
+Player/Whoosh1				WHOOSH1
+Player/Whoosh2				WHOOSH2
+Player/Whoosh3				WHOOSH3
+Player/Whoosh4				WHOOSH4
+
+$random Player/HeavyWhoosh	{Player/HeavyWhoosh1 Player/HeavyWhoosh2 Player/HeavyWhoosh3}
+Player/HeavyWhoosh1			HEAVYWH1
+Player/HeavyWhoosh2			HEAVYWH2
+Player/HeavyWhoosh3			HEAVYWH3
+
+$random Player/ShortWhoosh	{Player/ShortWhoosh1 Player/ShortWhoosh2 Player/ShortWhoosh3 Player/ShortWhoosh4 Player/ShortWhoosh5}
+Player/ShortWhoosh1			SHORTWH1
+Player/ShortWhoosh2			SHORTWH2
+Player/ShortWhoosh3			SHORTWH3
+Player/ShortWhoosh4			SHORTWH4
+Player/ShortWhoosh5			SHORTWH5
+
+$random Impact/Compensation	{Impact/Compensation1 Impact/Compensation2 Impact/Compensation3 Impact/Compensation4 Impact/Compensation5 Impact/Compensation6}
+Impact/Compensation1		IMPCOMP1
+Impact/Compensation2		IMPCOMP2
+Impact/Compensation3		IMPCOMP3
+Impact/Compensation4		IMPCOMP4
+Impact/Compensation5		IMPCOMP5
+Impact/Compensation6		IMPCOMP6
+
+$random Player/Land			{Player/Land1 Player/Land2 Player/Land3 Player/Land4 Player/Land5}
+Player/Land1				LAND1
+Player/Land2				LAND2
+Player/Land3				LAND3
+Player/Land4				LAND4
+Player/Land5				LAND5
+
+Player/HardLand				HARDLAND
+Player/LowAmmo				LOWAMMO
+Player/LowHealth			LOWHELTH
+Player/Mantle				MANTLING
+
+$volume Player/LowAmmo 0.3
+
+$random Player/Nukemelt		{Player/Nukemelt1 Player/Nukemelt2 Player/Nukemelt3 Player/Nukemelt4 Player/Nukemelt5 Player/Nukemelt6 Player/Nukemelt7 Player/Nukemelt8 Player/Nukemelt9}
+Player/Nukemelt1			NUKEMLT1
+Player/Nukemelt2			NUKEMLT2
+Player/Nukemelt3			NUKEMLT3
+Player/Nukemelt4			NUKEMLT4
+Player/Nukemelt5			NUKEMLT5
+Player/Nukemelt6			NUKEMLT6
+Player/Nukemelt7			NUKEMLT7
+Player/Nukemelt8			NUKEMLT8
+Player/Nukemelt9			NUKEMLT9
+
+$random Player/PowerSurge	{Player/PowerSurge1 Player/PowerSurge2 Player/PowerSurge3}
+Player/PowerSurge1			PWRSCHK1
+Player/PowerSurge2			PWRSCHK2
+Player/PowerSurge3			PWRSCHK3
+
+$random Player/Move			{Player/Move1 Player/Move2 Player/Move3 Player/Move4 Player/Move5 Player/Move6 Player/Move7 Player/Move8 Player/Move9 Player/Move10 Player/Move11 Player/Move12 Player/Move13 Player/Move14 Player/Move15 Player/Move16 Player/Move17 Player/Move18}
+Player/Move1				RUN01
+Player/Move2				RUN02
+Player/Move3				RUN03
+Player/Move4				RUN04
+Player/Move5				RUN05
+Player/Move6				RUN06
+Player/Move7				RUN07
+Player/Move8				RUN08
+Player/Move9				RUN09
+Player/Move10				RUN10
+Player/Move11				RUN11
+Player/Move12				RUN12
+Player/Move13				RUN13
+Player/Move14				RUN14
+Player/Move15				RUN15
+Player/Move16				RUN16
+Player/Move17				RUN17
+Player/Move18				RUN18
+
+Player/Death				PLAYDETH
+
+$random Misc/Gibbed 		{Misc/Gibbed1 Misc/Gibbed2 Misc/Gibbed3 Misc/Gibbed4 Misc/Gibbed5}
+Misc/Gibbed1				XDEATH1
+Misc/Gibbed2				XDEATH2
+Misc/Gibbed3				XDEATH3
+Misc/Gibbed4				XDEATH4
+Misc/Gibbed5				XDEATH5
+
+$random Player/XDeathA		{Player/XDeathA1 Player/XDeathA2 Player/XDeathA3 Player/XDeathA4 Player/XDeathA5}
+Player/XDeathA1				XDEATHA1
+Player/XDeathA2				XDEATHA2
+Player/XDeathA3				XDEATHA3
+Player/XDeathA4				XDEATHA4
+Player/XDeathA5				XDEATHA5
+
+$random Player/XDeathB		{Player/XDeathB1 Player/XDeathB2 Player/XDeathB3 Player/XDeathB4 Player/XDeathB5}
+Player/XDeathB1				XDEATHB1
+Player/XDeathB2				XDEATHB2
+Player/XDeathB3				XDEATHB3
+Player/XDeathB4				XDEATHB4
+Player/XDeathB5				XDEATHB5
+
+//Runes
+RuneTrial/Select			RUNESLCT
+$rolloff RuneTrial/Select 128 512
+$limit RuneTrial/Select 0
+
+RTS/Loop1					RUNCHL1L
+RTS/Loop2					RUNCHL2L
+
+$volume RTS/Loop1 0.75
+$volume RTS/Loop2 0.75
+
+$rolloff RTS/Loop1 128 512
+$rolloff RTS/Loop2 128 512
+
+$limit RTS/Loop1 0
+$limit RTS/Loop2 0
+
+$random RTS/Scream			{RTS/Scream1 RTS/Scream2 RTS/Scream3 RTS/Scream4}
+RTS/Scream1					RSCREAM1
+RTS/Scream2					RSCREAM2
+RTS/Scream3					RSCREAM3
+RTS/Scream4					RSCREAM4
+
+$rolloff RTS/Scream 128 512
+
+$limit RTS/Scream 0
+
+$random RTS/Ambience		{RTS/Ambience1 RTS/Ambience2 RTS/Ambience3 RTS/Ambience4 RTS/Ambience5 RTS/Ambience6}
+RTS/Ambience1				RUNEAMB1
+RTS/Ambience2				RUNEAMB2
+RTS/Ambience3				RUNEAMB3
+RTS/Ambience4				RUNEAMB4
+RTS/Ambience5				RUNEAMB5
+RTS/Ambience6				RUNEAMB6
+
+$rolloff RTS/Ambience 128 512
+
+$limit RTS/Ambience 0
+
+$alias Rune/ArmoredOffensive Armor/Pickup
+$volume Rune/ArmoredOffensive 0.7
+$limit Rune/ArmoredOffensive 0
+//$rolloff Rune/ArmoredOffensive 500 2000
+
+Rune/BloodFueled			BLUDFUEL
+$limit Rune/BloodFueled 0
+//$rolloff Rune/BloodFueled 500 2000
+
+$random Rune/EquipmentPower	{Rune/EquipmentPower1 Rune/EquipmentPower2 Rune/EquipmentPower3 Rune/EquipmentPower4 Rune/EquipmentPower5}
+Rune/EquipmentPower1		EQPOWER1
+Rune/EquipmentPower2		EQPOWER2
+Rune/EquipmentPower3		EQPOWER3
+Rune/EquipmentPower4		EQPOWER4
+Rune/EquipmentPower5		EQPOWER5
+
+Rune/InFlightMobility		INFLIGHT
+$limit Rune/InFlightMobility 0
+//$rolloff Rune/InFlightMobility 500 2000
+
+//$alias Rune/Savagery		Berserk/Add
+Rune/Savagery				SAVAGERY
+$limit Rune/Savagery 0
+//$rolloff Rune/Savagery 500 2000
+
+$random Rune/SavingThrow/In	{Rune/SavingThrow/In1 Rune/SavingThrow/In2 Rune/SavingThrow/In3 Rune/SavingThrow/In4}
+Rune/SavingThrow/In1		SAVTHRI1
+Rune/SavingThrow/In2		SAVTHRI2
+Rune/SavingThrow/In3		SAVTHRI3
+Rune/SavingThrow/In4		SAVTHRI4
+$limit Rune/SavingThrow/In 0
+//$rolloff Rune/SavingThrow/In 500 2000
+
+$random Rune/SavingThrow/Out {Rune/SavingThrow/Out1 Rune/SavingThrow/Out2 Rune/SavingThrow/Out3 Rune/SavingThrow/Out4}
+Rune/SavingThrow/Out1		SAVTHRO1
+Rune/SavingThrow/Out2		SAVTHRO2
+Rune/SavingThrow/Out3		SAVTHRO3
+Rune/SavingThrow/Out4		SAVTHRO4
+$limit Rune/SavingThrow/Out 0
+//$rolloff Rune/SavingThrow/Out 500 2000
+
+$random Rune/SeekAndDestroy {Rune/SeekAndDestroy1 Rune/SeekAndDestroy2 Rune/SeekAndDestroy3 Rune/SeekAndDestroy4}
+Rune/SeekAndDestroy1		SEEKDES1
+Rune/SeekAndDestroy2		SEEKDES2
+Rune/SeekAndDestroy3		SEEKDES3
+Rune/SeekAndDestroy4		SEEKDES4
+$limit Rune/SeekAndDestroy 0
+//$rolloff Rune/SeekAndDestroy 500 2000
+
+Rune/Vacuum					VACUUM
+
+$rolloff Rune/Vacuum 1024 2048
+$limit Rune/Vacuum 0
+
+$playeralias		DoomSlayer	male	*pain100	Projectile/HitFlesh
+$playersounddup     DoomSlayer	male	*pain75		*pain100
+$playersounddup    	DoomSlayer	male	*pain50		*pain100
+$playersounddup     DoomSlayer	male	*pain25		*pain100
+/*
+$playeralias		DoomSlayer	male	*pain100-slime	Player/Nukemelt
+$playersounddup		DoomSlayer	male	*pain75-slime	*pain100-slime
+$playersounddup		DoomSlayer	male	*pain50-slime	*pain100-slime
+$playersounddup		DoomSlayer	male	*pain25-slime	*pain100-slime
+$playeralias		DoomSlayer	male	*pain100-melee	Player/Hit
+$playersounddup		DoomSlayer	male	*pain75-melee	*pain100-melee
+$playersounddup		DoomSlayer	male	*pain50-melee	*pain100-melee
+$playersounddup		DoomSlayer	male	*pain25-melee	*pain100-melee
+*/
+$playeralias		DoomSlayer	male	*death		Player/Death
+$playeralias		DoomSlayer	male	*gibbed		Misc/Gibbed
+$playersounddup     DoomSlayer	male	*crazydeath	*gibbed
+$playeralias		DoomSlayer 	male	*jump		Player/Jump
+$playersound		DoomSlayer	male	*land		DSEMPTY //Player/Land
+$playersound		DoomSlayer	male	*grunt		HARDLAND
+$playersound		DoomSlayer	male	*usefail	LOWAMMO //USEFAIL
+$playersound		DoomSlayer	male	*keytry		KEYTRY
+
+$playeralias		DoomSlayer	female	*pain100	Player/Hit
+$playersounddup     DoomSlayer	female	*pain75		*pain100
+$playersounddup    	DoomSlayer	female	*pain50		*pain100
+/*
+$playersounddup     DoomSlayer	female	*pain25		*pain100
+$playeralias		DoomSlayer	female	*pain100-slime	Player/Nukemelt
+$playersounddup		DoomSlayer	female	*pain75-slime	*pain100-slime
+$playersounddup		DoomSlayer	female	*pain50-slime	*pain100-slime
+$playersounddup		DoomSlayer	female	*pain25-slime	*pain100-slime
+$playeralias		DoomSlayer	female	*pain100-melee	Player/Hit
+$playersounddup		DoomSlayer	female	*pain75-melee	*pain100-melee
+$playersounddup		DoomSlayer	female	*pain50-melee	*pain100-melee
+$playersounddup		DoomSlayer	female	*pain25-melee	*pain100-melee
+*/
+$playeralias		DoomSlayer	female	*death		Player/Death
+$playeralias		DoomSlayer	female	*gibbed		Misc/Gibbed
+$playersounddup     DoomSlayer	female	*crazydeath	*gibbed
+$playeralias		DoomSlayer 	female	*jump		Player/Jump
+$playersound		DoomSlayer	female	*land		DSEMPTY //Player/Land
+$playersound		DoomSlayer	female	*grunt		HARDLAND
+$playersound		DoomSlayer	female	*usefail	LOWAMMO //USEFAIL
+$playersound		DoomSlayer	female	*keytry		KEYTRY
+
+$playeralias		DoomSlayer	other	*pain100	Player/Hit
+$playersounddup     DoomSlayer	other	*pain75		*pain100
+$playersounddup    	DoomSlayer	other	*pain50		*pain100
+$playersounddup     DoomSlayer	other	*pain25		*pain100
+/*
+$playeralias		DoomSlayer	other	*pain100-slime	Player/Nukemelt
+$playersounddup		DoomSlayer	other	*pain75-slime	*pain100-slime
+$playersounddup		DoomSlayer	other	*pain50-slime	*pain100-slime
+$playersounddup		DoomSlayer	other	*pain25-slime	*pain100-slime
+$playeralias		DoomSlayer	other	*pain100-melee	Player/Hit
+$playersounddup		DoomSlayer	other	*pain75-melee	*pain100-melee
+$playersounddup		DoomSlayer	other	*pain50-melee	*pain100-melee
+$playersounddup		DoomSlayer	other	*pain25-melee	*pain100-melee
+*/
+$playeralias		DoomSlayer	other	*death		Player/Death
+$playersounddup     DoomSlayer	other	*crazydeath	*gibbed
+$playeralias		DoomSlayer	other	*gibbed		Misc/Gibbed
+$playeralias		DoomSlayer 	other	*jump		Player/Jump
+$playersound		DoomSlayer	other	*land		DSEMPTY //Player/Land
+$playersound		DoomSlayer	other	*grunt		HARDLAND
+$playersound		DoomSlayer	other	*usefail	LOWAMMO //USEFAIL
+$playersound		DoomSlayer	other	*keytry		KEYTRY
+
+//======================================================================//
+//======================================================================//
+//																		//
+//							  Blood & Gore						 	 	//
+//																		//
+//======================================================================//
+//======================================================================//
+//					   Ripped/Edited by DoomKrakken.			 		//
+//======================================================================//
+
+$random Death/Headshot		{Death/Headshot1 Death/Headshot2 Death/Headshot3 Death/Headshot4}
+Death/Headshot1				BSPRAY01 //HEADBRK1
+Death/Headshot2				BSPRAY02 //HEADBRK2
+Death/Headshot3				BSPRAY03 //HEADBRK3
+Death/Headshot4				BSPRAY04
+
+$limit Death/Headshot 0
+
+//======================================================================//
+//======================================================================//
+//																		//
+//							  Miscellaneous					 	 	 	//
+//																		//
+//======================================================================//
+//======================================================================//
+//					   Ripped/Edited by DoomKrakken.			 		//
+//======================================================================//
+
+Misc/KeyTry					KEYTRY
+$limit Misc/KeyTry 1
+
+$random Switches/NormButn	{Lever/Pull1 Lever/Pull2 Lever/Pull3 Lever/Pull4}
+Lever/Pull1					LEVER01
+Lever/Pull2					LEVER02
+Lever/Pull3					LEVER03
+Lever/Pull4					LEVER04
+
+$random Barrel/Explode		{Barrel/Explode1 Barrel/Explode2 Barrel/Explode3 Barrel/Explode4 Barrel/Explode5}
+Barrel/Explode1				BAREXP1
+Barrel/Explode2				BAREXP2
+Barrel/Explode3				BAREXP3
+Barrel/Explode4				BAREXP4
+Barrel/Explode5				BAREXP5
+
+$limit Barrel/Explode 0
+$rolloff Barrel/Explode 256 1024
+
+$random Barrel/Add		{Barrel/Add1 Barrel/Add2 Barrel/Add3 Barrel/Add4 Barrel/Add5}
+Barrel/Add1				BARADD1
+Barrel/Add2				BARADD2
+Barrel/Add3				BARADD3
+Barrel/Add4				BARADD4
+Barrel/Add5				BARADD5
+
+$limit Barrel/Explode 0
+$rolloff Barrel/Explode 256 1024
+
+$random Barrel/Debris		{Barrel/Debris1 Barrel/Debris2 Barrel/Debris3 Barrel/Debris4 Barrel/Debris5}
+Barrel/Debris1				BARDBR1
+Barrel/Debris2				BARDBR2
+Barrel/Debris3				BARDBR3
+Barrel/Debris4				BARDBR4
+Barrel/Debris5				BARDBR5
+
+$limit Barrel/Debris 0
+$rolloff Barrel/Debris 256 1024
+
+MasteryChallenge/Ticker		TICKER
+SecretFinder/Blip			SECRET
+
+$limit MasteryChallenge/Ticker 0
+
+Menu/Activate				MENUOPN2
+Menu/Backup					MENUCLOS
+Menu/Prompt					MENUOPN2
+Menu/Cursor					MENUCLIK
+Menu/Change					MENUCHNG
+Menu/Invalid				ERROR
+Menu/Dismiss				MENUCLOS
+Menu/Choose					MENUOPN2
+Menu/Clear					MENUCLOS
+Menu/Purchase				UPGRDGET
+
+Challenge/Complete			SELECTED
+
+
+$random Misc/Teleport		{Misc/Teleport1 Misc/Teleport2 Misc/Teleport3}
+Misc/Teleport1				TELEPRT1
+Misc/Teleport2				TELEPRT2
+Misc/Teleport3				TELEPRT3
+
+
+$limit doors/dr1_open 0
+$limit doors/dr1_clos 0
+$limit doors/dr2_open 0
+$limit doors/dr2_clos 0
+$limit plats/pt1_strt 0
+$limit plats/pt1_stop 0
+$limit plats/pt1_mid 0
+$limit misc/teleport 0
+
+//Titlemap (sounds fetched by Strongbelly):
+Doom4/Menu/Intro	    "Sounds/TitleIntro.ogg"
+Doom4/Menu/MenuTheme	"Sounds/MenuTheme.ogg"

@@ -1,0 +1,317 @@
+Class EOA_Quaternion
+{
+	Double w, x, y, z;
+
+	// Initialises the Quaternion.
+	EOA_Quaternion Init(Double w, Double x, Double y, Double z)
+	{
+		Self.W = w;
+		Self.X = x;
+		Self.Y = y;
+		Self.Z = z;
+
+		Return Self;
+	}
+
+	// Initialises the Quaternion in a static context.
+	Static EOA_Quaternion Create(Double w, Double x, Double y, Double z)
+	{
+		Return New("EOA_Quaternion").Init(w, x, y, z);
+	}
+
+	// Sets up the quaternion using axis and angle.
+	Void setAxisAngle(Vector3 axis, Double angle)
+	{
+		Double lengthSquared = axis dot axis;
+		// avoid a division by 0 and just return the identity
+		If (EOA_GlobalMaths.closeEnough(lengthSquared, 0))
+		{
+			Init(1, 0, 0, 0);
+			Return;
+		}
+
+		angle *= 0.5;
+
+		Double sinTheta = sin(angle);
+		Double cosTheta = cos(angle);
+		Double factor = sinTheta / sqrt(lengthSquared);
+
+		w = cosTheta;
+		x = factor * axis.X;
+		y = factor * axis.Y;
+		z = factor * axis.Z;
+	}
+
+	// Initialises the Quaternion using axis and angle.
+	EOA_Quaternion InitFromAxisAngle(Vector3 axis, Double angle)
+	{
+		setAxisAngle(axis, angle);
+		Return self;
+	}
+
+	// Initialises the Quaternion using axis and angle in a Static context.
+	Static EOA_Quaternion createFromAxisAngle(Vector3 axis, Double angle)
+	{
+		Return New("EOA_Quaternion").InitFromAxisAngle(axis, angle);
+	}
+
+	// Sets up the quaternion using euler angles.
+	Void setAngles(Double yaw, Double pitch, Double roll)
+	{
+		EOA_Quaternion zRotation = New("EOA_Quaternion").InitFromAxisAngle((0, 0, 1), yaw);
+		EOA_Quaternion yRotation = New("EOA_Quaternion").InitFromAxisAngle((0, 1, 0), pitch);
+		EOA_Quaternion xRotation = New("EOA_Quaternion").InitFromAxisAngle((1, 0, 0), roll);
+		EOA_Quaternion finalRotation = zRotation.multiplyQuat(yRotation);
+		finalRotation = finalRotation.multiplyQuat(xRotation);
+		Copy(finalRotation);
+	}
+
+	// Initialises the quaternion using euler angles.
+	EOA_Quaternion InitFromAngles(Double yaw, Double pitch, Double roll)
+	{
+		setAngles(yaw, pitch, roll);
+		Return self;
+	}
+
+	// Initialises the quaternion using euler angles in a Static context.
+	Static EOA_Quaternion createFromAngles(Double yaw, Double pitch, Double roll)
+	{
+		Return New("EOA_Quaternion").InitFromAngles(yaw, pitch, roll);
+	}
+
+	// Returns the euler angles from the Quaternion.
+	Double, Double, Double toAngles()
+	{
+		Double singularityTest = z * x - w * y;
+		Double yawY = 2 * (w * z + x * y);
+		Double yawX = (1 - 2 * (y * y + z * z));
+		
+		Double singularityThreshold = 0.4999995;
+		
+		Double yaw = 0;
+		Double pitch = 0;
+		Double roll = 0;
+
+		If (singularityTest < -singularityThreshold)
+		{
+			pitch = 90;
+			yaw = atan2(yawY, yawX);
+			roll = EOA_GlobalMaths.normalize180(yaw + (2 * atan2(x, w)));
+		}
+		Else If (singularityTest > singularityThreshold)
+		{
+			pitch = -90;
+			yaw = atan2(yawY, yawX);
+			roll = EOA_GlobalMaths.normalize180(yaw + (2 * atan2(x, w)));
+		}
+		Else
+		{
+			pitch = -asin(2 * singularityTest);
+			yaw = atan2(yawY, yawX);
+			roll = atan2(2 * (w * x + y * z), (1 - 2 * (x * x + y * y)));
+		}
+
+		Return yaw, pitch, roll;
+	}
+
+	// Returns the conjugate of the Quaternion.
+	EOA_Quaternion conjugate() Const
+	{
+		Return New("EOA_Quaternion").Init(w, -x, -y, -z);
+	}
+
+	// Returns the normalised form of the Quaternion.
+	EOA_Quaternion unit() Const
+	{
+		Double lengthSquared = w * w + x * x + y * y + z * z;
+		If (EOA_GlobalMaths.closeEnough(lengthSquared, 0))
+		{
+			Return zero();
+		}
+		Double factor = 1 / sqrt(lengthSquared);
+		Return New("EOA_Quaternion").Init(w * factor, x * factor, y * factor, z * factor);
+	}
+
+	// Returns the inverse of the Quaternion (equal to conjugate If normalised).
+	EOA_Quaternion inverse()
+	{
+		Double norm = w * w + x * x + y * y + z * z;
+		// If this is a zero quaternion, just Return self
+		If (EOA_GlobalMaths.closeEnough(norm, 0))
+		{
+			Return self;
+		}
+		Double inverseNorm = 1/norm;
+		Return New("EOA_Quaternion").Init(w * inverseNorm, x * -inverseNorm, y * -inverseNorm, z * -inverseNorm);
+	}
+
+	// Adds two Quaternions, returning the result.
+	EOA_Quaternion add(EOA_Quaternion other) Const
+	{
+		Return New("EOA_Quaternion").Init(w + other.W, x + other.X, y + other.Y, z + other.Z);
+	}
+
+	// Subtracts two Quaternions, returning the result.
+	EOA_Quaternion subtract(EOA_Quaternion other) Const
+	{
+		Return New("EOA_Quaternion").Init(w - other.W, x - other.X, y - other.Y, z - other.Z);
+	}
+
+	// Multiplies the Quaternion by a scalar, returning the result.
+	EOA_Quaternion multiplyScalar(Double scalar) Const
+	{
+		Return New("EOA_Quaternion").Init(w * scalar, x * scalar, y * scalar, z * scalar);
+	}
+
+	// Multiplies two Quaternions, returning the result.
+	EOA_Quaternion multiplyQuat(EOA_Quaternion other) Const
+	{
+		Return New("EOA_Quaternion").Init(w * other.W - x * other.X - y * other.Y - z * other.Z,
+		                                   w * other.X + x * other.W + y * other.Z - z * other.Y,
+		                                   w * other.Y + y * other.W + z * other.X - x * other.Z,
+		                                   w * other.Z + z * other.W + x * other.Y - y * other.X );
+	}
+
+	// Negates the Quaternion.
+	EOA_Quaternion negate() Const
+	{
+		Return New("EOA_Quaternion").Init(-w, -x, -y, -z);
+	}
+
+	// Sets the values to 0 If they're close enough to 0.
+	Void clean()
+	{
+		If (EOA_GlobalMaths.closeEnough(w, 0)) w = 0;
+		If (EOA_GlobalMaths.closeEnough(x, 0)) x = 0;
+		If (EOA_GlobalMaths.closeEnough(y, 0)) y = 0;
+		If (EOA_GlobalMaths.closeEnough(z, 0)) z = 0;
+	}
+
+	// Returns the length of the Quaternion squared.
+	Double lengthSquared() Const
+	{
+		Return (w * w + x * x + y * y + z * z);
+	}
+
+	// Returns the length of the Quaternion.
+	Double length() Const
+	{
+		Return sqrt(w * w + x * x + y * y + z * z);
+	}
+
+	// Returns whether the two Quaternions are equal.
+	Bool equals(EOA_Quaternion other) Const
+	{
+		Return EOA_GlobalMaths.closeEnough(w, other.W) && EOA_GlobalMaths.closeEnough(x, other.X) && EOA_GlobalMaths.closeEnough(y, other.Y) && EOA_GlobalMaths.closeEnough(z, other.Z);
+	}
+
+	// Returns If the Quaternion is a 0 Quaternion.
+	Bool isZero() Const
+	{
+		Return EOA_GlobalMaths.closeEnough(w * w + x * x + y * y + z * z, 0);
+	}
+
+	// Returns If the Quaternion is a unit Quaternion.
+	Bool isUnit() Const
+	{
+		Return EOA_GlobalMaths.closeEnough(w * w + x * x + y * y + z * z, 1);
+	}
+
+	// Returns If the Quaternion is an identity Quaternion.
+	Bool isIdentity() Const
+	{
+		Return EOA_GlobalMaths.closeEnough(w, 1) && EOA_GlobalMaths.closeEnough(x, 0) && EOA_GlobalMaths.closeEnough(y, 0) && EOA_GlobalMaths.closeEnough(z, 0);
+	}
+
+	// Returns the dot product of two Quaternions.
+	Double dotProduct(EOA_Quaternion other) Const
+	{
+		Return (w * other.W + x * other.X + y * other.Y + z * other.Z);
+	}
+
+	// Copies another Quaternion into this one.
+	Void copy(EOA_Quaternion other)
+	{
+		w = other.W;
+		x = other.X;
+		y = other.Y;
+		z = other.Z;
+	}
+
+	// Rotates a Vector3 using this Quaternion.
+	Vector3 rotateVector3(Vector3 vec) Const
+	{
+		EOA_Quaternion q = unit();
+
+		Vector3 u = (q.X, q.Y, q.Z);
+		Double s = q.W;
+
+		Return 2 * (u dot vec) * u + (s * s - (u dot u)) * vec + 2 * s * u cross vec;
+	}
+
+	// Linearly interpolates between two Quaternions, clamping the parameters.
+	Static EOA_Quaternion lerp(EOA_Quaternion from, EOA_Quaternion to, Double time)
+	{
+		time = clamp(time, 0, 1);
+		Return lerpUnclamped(from, to, time);
+	}
+
+	// Linearly interpolates between two Quaternions.
+	Static EOA_Quaternion lerpUnclamped(EOA_Quaternion from, EOA_Quaternion to, Double time)
+	{
+		EOA_Quaternion ret = New("EOA_Quaternion");
+		Double reverseTime = 1 - time;
+		ret.X = reverseTime * from.X + time * to.X;
+		ret.Y = reverseTime * from.Y + time * to.Y;
+		ret.Z = reverseTime * from.Z + time * to.Z;
+		ret.W = reverseTime * from.W + time * to.W;
+		ret = ret.unit();
+		Return ret;
+	}
+
+	// Spherically interpolates between two Quaternions, clamping the parameters.
+	Static EOA_Quaternion slerp(EOA_Quaternion from, EOA_Quaternion to, Double time)
+	{
+		time = clamp(time, 0, 1);
+		Return slerpUnclamped(from, to, time);
+	}
+
+	// Spherically interpolates between two Quaternions.
+	Static EOA_Quaternion slerpUnclamped(EOA_Quaternion from, EOA_Quaternion to, Double time)
+	{
+		EOA_Quaternion q3;
+		Double fromToDot = from.dotProduct(to);
+
+		If (fromToDot < 0)
+		{
+			fromToDot = -fromToDot;
+			q3 = to.negate();
+		}
+		Else
+		{
+			q3 = to;
+		}
+
+		If (fromToDot < 0.95)
+		{
+			Double angle = acos(fromToDot);
+			Return ((from.multiplyScalar(sin(angle * (1 - time)))).add(q3.multiplyScalar(sin(angle * time)))).multiplyScalar(1 / sin(angle));
+		}
+		Else
+		{
+			Return lerp(from, q3, time);
+		}
+	}
+
+	// Returns the 0 Quaternion.
+	Static EOA_Quaternion zero()
+	{
+		Return New("EOA_Quaternion").Init(0, 0, 0, 0);
+	}
+
+	// Returns the identity Quaternion.
+	Static EOA_Quaternion identity()
+	{
+		Return New("EOA_Quaternion").Init(1, 0, 0, 0);
+	}
+}

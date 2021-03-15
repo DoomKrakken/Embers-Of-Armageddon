@@ -1,0 +1,18 @@
+AddKeySection "Embers Of Armaggedon" EOA
+AddMenuKey "Use Equipment" +UseEquipment
+Alias +UseEquipment "Use EquipmentTriggerer"
+Alias -UseEquipment "Use EquipmentUnTriggerer"
+
+AddMenuKey "Cycle Equipment (Left)" CycleLeft
+Alias CycleLeft "Use CycleEquipmentLeft"
+//Alias -CycleLeft ""
+
+AddMenuKey "Cycle Equipment (Right)" CycleRight
+Alias CycleRight "Use CycleEquipmentRight"
+//Alias -CycleRight ""
+
+AddMenuKey "Upgrade Menu" EOA_Upgrades
+Alias EOA_Upgrades "OpenMenu UpgradeMenu"
+
+AddMenuKey "Last Weapon Selected" LastWeaponSelected
+Alias LastWeaponSelected "Use EOA_HandlerItem" //"NetEvent LastWeaponSelected"

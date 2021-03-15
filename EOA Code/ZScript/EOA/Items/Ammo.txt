@@ -1,0 +1,880 @@
+//[DoomKrakken]: Do not alter the tags.  They are important for the dynamic pickup messages I made.
+
+//Ammo
+Class EOA_Ammo : Ammo //[DoomKrakken]: This stuff was taken straight from the source.  With a couple tweaks. ;)
+{
+	Bool Dropped;
+	Bool LowAmmo;
+	Int WarnAmount; //[DoomKrakken]: The amount by which it begins to warn you you're beggining to run out of ammo.
+	Int LowAmount; //[DoomKrakken]: The amount by which it warn you you're low on ammo.
+	Actor Collector;
+	Property WarnAmount: WarnAmount;
+	Property LowAmount: LowAmount;
+	Private Int EOA_AmmoFlags;
+	Flagdef Singular: EOA_AmmoFlags, 1; //[DoomKrakken]: Makes it so that ammo names (such as "fuel") remain the same as their singular forms.
+	Flagdef NoDouble: EOA_AmmoFlags, 2; //[DoomKrakken]: Makes the pickup exempt from doubling due to the presence of Ammo Boost.
+	Default
+	{
+		Inventory.PickupSound "Ammo/Pickup";
+		EOA_Ammo.WarnAmount 0;
+		EOA_Ammo.LowAmount 0;
+		+CANBOUNCEWATER
+		+DONTGIB
+		+INVENTORY.NOSCREENFLASH
+		+INVENTORY.UNDROPPABLE
+	}
+	
+	Override Class<EOA_Ammo> GetParentAmmo()
+	{
+		Class<Object> Type = GetClass();
+
+		While (Type.GetParentClass() != "EOA_Ammo" && Type.GetParentClass() != NULL)
+		{
+			Type = Type.GetParentClass();
+		}
+		Return (Class<EOA_Ammo>)(Type);
+	}
+	
+	Action Bool EOA_CheckPlayerInRange(Int Dist)
+	{
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			PlayerInfo Player = Players[i];
+			Let AmmoItem = EOA_Ammo(Self);
+			Bool Check;
+			If (Player && Player.Mo && PlayerInGame[i])
+			{
+				For (Let It = Player.Mo.Inv; It != Null; It = It.Inv)
+				{
+					Weapon Weap = Weapon(It);
+					If (Weap && Weap.AmmoType1 == AmmoItem.GetParentAmmo() && !Player.Mo.CheckInventory(AmmoItem.GetParentAmmo(), 0))
+					{
+						Check = True;
+					}
+				}
+				If (!Check)
+				{
+					Continue;
+				}
+				Dist *= (1 + Player.Mo.CountInv("VacuumSelected")) * (1 + (Player.Mo.CountInv("VacuumSelected") * Player.Mo.CountInv("VacuumII")));
+				If (CheckIfCloser(Player.Mo, Dist))
+				{
+					Tracer = Player.Mo;
+					Return True;
+				}
+			}
+		}
+		Tracer = Null;
+		Return False;
+	}
+	Int CountMaxInv(Class<Inventory> ItemType)
+	{
+		Let Item = FindInventory(ItemType);
+		If (Item)
+		{
+			Return Item.MaxAmount;
+		}
+		Return 0;
+	}
+	Override Void BeginPlay()
+	{
+		Super.BeginPlay();
+		bDROPPED = False;
+	}
+	Override Void DoEffect()
+	{
+		If (Owner)
+		{
+			If (Owner.CountInv(GetClassName()) <= LowAmount)
+			{
+				If (!LowAmmo)
+				{
+					For (Let It = Owner.Inv; It != Null; It = It.Inv)
+					{
+						Weapon Weap = Weapon(It);
+						If (Weap && Weap.AmmoType1 == GetClassName())
+						{
+							LowAmmo = True;
+							If (!Owner.IsActorPlayingSound(20, "Player/LowAmmo"))
+							{
+								EOA_ActorExtensions.SpawnNoiseMaker(Owner, "Player/LowAmmo", 20, CHAN_OVERLAP);
+							}
+							Break;
+						}
+					}
+				}
+			}
+			Else
+			{
+				LowAmmo = False;
+			}
+		}
+		Super.DoEffect();
+	}
+	Override Bool SpecialDropAction(Actor Dropper)
+	{
+		If (Dropper.bISMONSTER || Dropper Is "EOA_AmmoCrate" || Dropper Is "EOA_KillRewardDropper")
+		{
+			Dropped = True;
+			bDROPPED = True;
+		}
+		Return False;
+	}
+	Override Void Touch(Actor Toucher)
+	{
+		Collector = Toucher;
+		Let Player = Toucher.Player;
+
+		// If a voodoo doll touches something, pretend the real player touched it instead.
+		If (Player != Null)
+		{
+			Toucher = Player.Mo;
+		}
+
+		Bool LocalView = Toucher.CheckLocalView(ConsolePlayer);
+		DoPickupSpecial(Toucher); //[DoomKrakken]: See the related entry in EOA_Health.
+		Bool Res;
+		[Res, Toucher] = CallTryPickup(Toucher);
+		If (!Res)
+		{
+			Return;
+		}
+
+		// This is the only situation when a pickup flash should ever play.
+		If (PickupFlash != Null && !ShouldStay())
+		{
+			Spawn(PickupFlash, Pos, ALLOW_REPLACE);
+		}
+
+		If (!bQUIET)
+		{
+			PrintPickupMessage(LocalView, PickupMessage());
+			// Special check so voodoo dolls picking up items cause the real player to make noise.
+			If (Player != Null)
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Player.Mo, PickupSound, 30, CHANF_OVERLAP);
+				If (!bNOSCREENFLASH)
+				{
+					Player.BonusCount = BONUSADD;
+				}
+			}
+			Else
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Toucher, PickupSound, 30, CHANF_OVERLAP);
+			}
+		}							
+
+		// [RH] Execute an attached special (if any)
+		//DoPickupSpecial(Toucher);
+
+		If (bCOUNTITEM)
+		{
+			If (Player != Null)
+			{
+				Player.ItemCount++;
+			}
+			Level.Found_Items++;
+		}
+
+		If (bCOUNTSECRET)
+		{
+			Actor ac = Player != Null ? Actor(Player.Mo) : Toucher;
+			ac.GiveSecret(True, True);
+		}
+
+		//Added by MC: Check if item taken was the roam destination of any bot
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			If (Players[i].Bot != Null && Self == Players[i].Bot.dest)
+			{
+				Players[i].Bot.Dest = Null;
+			}
+		}
+	}
+	Override Bool HandlePickup(Inventory Item)
+	{
+		Let AmmoItem = EOA_Ammo(Item);
+		If (AmmoItem && AmmoItem.GetParentAmmo() == GetClass())
+		{
+			If (Amount < MaxAmount || SV_Unlimited_Pickup)
+			{
+				If (Owner.CountInv("AmmoBoostSelected"))
+				{
+					If (!AmmoItem.bNODOUBLE)
+					{
+						//[DoomKrakken]: Make sure the item doesn't exceed 0x7FFFFFFF after the doubling.
+						If (AmmoItem.Amount <= 0x7FFFFFFF / 2)
+						{
+							AmmoItem.Amount *= 2;
+						}
+						Else
+						{
+							AmmoItem.Amount = 0x7FFFFFFF;
+						}
+					}
+					If (!Owner.CountInv("AmmoBoostII"))
+					{
+						Owner.A_GiveInventory("AmmoBoostChallengeCounter");
+					}
+				}
+				Int Receiving = AmmoItem.Amount;
+				
+				//Extra ammo in I.T.Y.T.D. and Nightmare! modes...
+				//Not necessarily necessary, since I've just made my own base ammo class.
+				//And I'd want to control this manually...
+				/*If (!Item.bIGNORESKILL)
+				{ 
+					Receiving = Int(Receiving * G_SkillPropertyFloat(SKILLP_AMMOFACTOR));
+				}*/
+				Int OldAmount = Amount;
+
+				If (Amount > 0 && Amount + Receiving < 0)
+				{
+					Amount = 0x7FFFFFFF;
+				}
+				Else
+				{
+					Amount += Receiving;
+				}
+				If (Amount > MaxAmount && !SV_Unlimited_Pickup)
+				{
+					Amount = MaxAmount;
+				}
+				Item.bPICKUPGOOD = True;
+
+				//If the player previously had this ammo but ran out, possibly switch to a weapon that uses it, but only if the player doesn't already have a weapon pending.
+				If (OldAmount == 0 && Owner != Null && Owner.Player != Null)
+				{
+					PlayerPawn(Owner).CheckWeaponSwitch(GetClass());
+				}
+				If (AmmoItem Is "EOA_BFGAmmo")
+				{
+					EOA_ActorExtensions.SpawnNoiseMaker(Owner, "BFGAmmo/Pickup", 30, CHANF_OVERLAP);
+				}
+				If (AmmoItem Is "EOA_FuelAmmo")
+				{
+					EOA_ActorExtensions.SpawnNoiseMaker(Owner, "FuelAmmo/Pickup", 30, CHANF_OVERLAP);
+				}
+				If (AmmoItem.Dropped)
+				{
+					EOA_ActorExtensions.SpawnNoiseMaker(Owner, "Ammo/Pickup/Small", 30, CHANF_OVERLAP);
+				}
+			}
+			Return True;
+		}
+		Return False;
+	}
+	Override Inventory CreateCopy(Actor Other)
+	{
+		Inventory Copy;
+		Int Amount = Amount;
+
+		//Extra ammo in I.T.Y.T.D. and Nightmare! modes...
+		//Not necessarily necessary, since I've just made my own base ammo class.
+		//And I'd want to control this manually...
+		/*If (!bIGNORESKILL)
+		{
+			Amount = Int(Amount * G_SkillPropertyFloat(SKILLP_AMMOFACTOR));
+		}*/
+		Let Type = GetParentAmmo();
+		If (GetClass() != Type && Type != Null)
+		{
+			If (!GoAway())
+			{
+				Destroy();
+			}
+			Copy = Inventory(Spawn(Type));
+			Copy.Amount = Amount;
+			Copy.BecomeItem();
+		}
+		Else
+		{
+			Copy = Inventory.CreateCopy(Other); //[DoomKrakken]: Can't call Super, because then it'll go to Ammo's CreateCopy... and we don't want that.  Now, Ammo's CreateCopy calls Super.CreateCopy, and its parent is Inventory... so to achieve the same effect, we'll just call it directly from Inventory.
+			Copy.Amount = Amount;
+		}
+		
+		//Don't pick up more ammo than you're supposed to be able to carry.
+		If (Copy.Amount > Copy.MaxAmount)
+		{ 
+			Copy.Amount = Copy.MaxAmount;
+		}
+		Return Copy;
+	}
+	Override String PickupMessage()
+	{
+		Int TrueMaxAmount;
+		Let Item = Collector.FindInventory(Self.GetParentAmmo());
+		If (Item)
+		{
+			TrueMaxAmount = Item.MaxAmount;
+		}
+		Else
+		{
+			Let Defaults = GetDefaultByType(GetClass());
+			If (Defaults)
+			{
+				TrueMaxAmount = Defaults.MaxAmount;
+			}
+		}
+		If (Amount == 1 || bSINGULAR) //[DoomKrakken]: For singular amounts.
+		{
+			Return String.Format("+%d %s", min(Amount, TrueMaxAmount), GetTag());
+		}
+		Return String.Format("+%d %ss", min(Amount, TrueMaxAmount), GetTag());
+	}
+	Override Void OnDestroy()
+	{
+		A_StopAllSounds();
+		Super.OnDestroy();
+	}
+}
+
+Class EOA_BulletAmmo : EOA_Ammo
+{
+	Default
+	{
+		Inventory.Amount 20;
+		Inventory.MaxAmount 90;
+		Inventory.PickupSound "Item/Pickup";
+		Ammo.DropAmount 20;
+		Ammo.BackpackAmount 0;
+		Ammo.BackpackMaxAmount 90;
+		EOA_Ammo.WarnAmount 30;
+		EOA_Ammo.LowAmount 15;
+		Tag "Bullet";
+	}
+	States
+	{
+	Spawn:
+		BLLB A -1;
+		Stop;
+	}
+}
+
+Class EOA_BulletAmmo1 : EOA_BulletAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+Class EOA_BulletAmmo2 : EOA_BulletAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+Class EOA_ShellAmmo : EOA_Ammo
+{
+	Default
+	{
+		Inventory.Amount 8;
+		Inventory.MaxAmount 20;
+		Inventory.PickupSound "Item/Pickup";
+		Ammo.DropAmount 8;
+		Ammo.BackpackAmount 0;
+		Ammo.BackpackMaxAmount 20;
+		EOA_Ammo.WarnAmount 6;
+		EOA_Ammo.LowAmount 6;
+		Tag "Shell";
+	}
+	States
+	{
+	Spawn:
+		SLLB A -1;
+		Stop;
+	}
+}
+
+Class EOA_ShellAmmo1 : EOA_ShellAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+Class EOA_ShellAmmo2 : EOA_ShellAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+Class EOA_RocketAmmo : EOA_Ammo
+{
+	Default
+	{
+		Scale 0.5;
+		Inventory.Amount 5;
+		Inventory.MaxAmount 15;
+		Inventory.PickupSound "Item/Pickup";
+		Ammo.DropAmount 5;
+		Ammo.BackpackAmount 0;
+		Ammo.BackpackMaxAmount 15;
+		EOA_Ammo.WarnAmount 7;
+		EOA_Ammo.LowAmount 2;
+		Tag "Rocket";
+	}
+	States
+	{
+	Spawn:
+		RKTB A -1;
+		Stop;
+	}
+}
+
+Class EOA_RocketAmmo1 : EOA_RocketAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+Class EOA_RocketAmmo2 : EOA_RocketAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+Class EOA_CellAmmo : EOA_Ammo
+{
+	Default
+	{
+		Scale 0.7;
+		Inventory.Amount 30;
+		Inventory.MaxAmount 150;
+		Inventory.PickupSound "Item/Pickup";
+		Ammo.DropAmount 30;
+		Ammo.BackpackAmount 0;
+		Ammo.BackpackMaxAmount 150;
+		EOA_Ammo.WarnAmount 45;
+		EOA_Ammo.LowAmount 30;
+		Tag "Cell";
+	}
+	States
+	{
+	Spawn:
+		CLLB A -1;
+		Stop;
+	}
+}
+
+Class EOA_CellAmmo1 : EOA_CellAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+Class EOA_CellAmmo2 : EOA_CellAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped)
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+Class EOA_FuelAmmo : EOA_Ammo
+{
+	Default
+	{
+		Scale 0.6;
+		Inventory.Amount 3;
+		Inventory.MaxAmount 3;
+		Inventory.PickupSound "Item/Pickup";
+		Ammo.DropAmount 3;
+		Ammo.BackpackAmount 0;
+		Ammo.BackpackMaxAmount 3;
+		EOA_Ammo.WarnAmount 1;
+		EOA_Ammo.LowAmount 1;
+		Tag "Fuel";
+		+EOA_AMMO.SINGULAR
+		+EOA_AMMO.NODOUBLE
+	}
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped && GetClassName() == "EOA_FuelAmmo")
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+	States
+	{
+	Spawn:
+		FUEL A -1;
+		Stop;
+	}
+}
+
+Class EOA_BFGAmmo : EOA_Ammo
+{
+	Default
+	{
+		Scale 0.5;
+		Inventory.Amount 1;
+		Inventory.MaxAmount 3;
+		Inventory.PickupSound "BFGAmmo/Pickup";
+		Ammo.DropAmount 1;
+		Ammo.BackpackAmount 0;
+		Ammo.BackpackMaxAmount 3;
+		EOA_Ammo.WarnAmount 1;
+		EOA_Ammo.LowAmount 1;
+		Tag "BFG Cell";
+		+EOA_AMMO.NODOUBLE
+	}
+	Override Void Tick()
+	{
+		If (Owner)
+		{
+			A_StopAllSounds();
+		}
+		Else If (!(GetAge() % 24 || Self.GetClassName() == "TempBFGAmmo"))
+		{
+			A_StartSound("BFGAmmo/Rotate", 1, 0, 0.5);
+			A_StartSound("BFGAmmo/Hum", 7, CHANF_LOOP);
+		}
+		Super.Tick();
+	}
+	States
+	{
+	Spawn:
+		BFGA A -1 Bright;
+		Wait;
+	}
+}
+
+Class EOA_BFGCell : EOA_BFGAmmo
+{
+	Override Void PostBeginPlay()
+	{
+		If (bDROPPED && Dropped && GetClassName() == "EOA_BFGAmmo")
+		{
+			Destroy();
+			Return;
+		}
+		Super.PostBeginPlay();
+	}
+}
+
+//Ammo Crate
+Class EOA_AmmoCrate : Actor //[DoomKrakken]: Written by strongbelly, converted to ZScript and edited much further by me.
+{
+	PlayerPawn Opener;
+	Bool CrateOpened;
+	Bool CrateTriggered;
+	Bool DropAmmo;
+	Const BulletAmt = 10;
+	Const ShellAmt = 5;
+	Const RocketAmt = 5;
+	Const CellAmt = 15;
+	Int NumBullets;
+	Int NumShells;
+	Int NumRockets;
+	Int NumCells;
+	Int TicDelay;
+	Int DropDelay;
+	Default
+	{
+		Radius 20;
+		Height 32;
+		XScale 0.65;
+		YScale 0.58;
+		+DONTBLAST
+		+DONTGIB
+		+DONTTHRUST
+		+FLOORCLIP
+		+FORCEXYBILLBOARD
+		+NOBLOOD
+		+NODAMAGE
+		//+SHOOTABLE
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("ArgentCell/Pick");
+		MarkSound("AmmoCrate/Air");
+		MarkSound("AmmoCrate/Hit");
+		MarkSound("AmmoCrate/LockDrop");
+		Super.MarkPrecacheSounds();
+	}
+	Override Bool Used(Actor User)
+	{
+		PlayerInfo Player = User.Player;
+		If (!CrateTriggered && !User.FindInventory("EOA_InteractWeapon", True) && Player && Player.Mo && Player.Mo == User && Distance3D(User) <= Player.Mo.UseRange && Distance3D(User) >= Radius)
+		{
+			Let BulletAmmo = User.FindInventory("EOA_BulletAmmo");
+			Let ShellAmmo = User.FindInventory("EOA_ShellAmmo");
+			Let RocketAmmo = User.FindInventory("EOA_RocketAmmo");
+			Let CellAmmo = User.FindInventory("EOA_CellAmmo");
+			If (BulletAmmo && (User.CountInv("EOA_HeavyAssaultRifle") || User.CountInv("EOA_Chaingun")))
+			{
+				Int BulletDiff = BulletAmmo.MaxAmount - User.CountInv("EOA_BulletAmmo");
+				While (BulletDiff > 0)
+				{
+					BulletDiff -= BulletAmt;
+					NumBullets++;
+				}
+			}
+			If (ShellAmmo && (User.CountInv("EOA_CombatShotgun") || User.CountInv("EOA_SuperShotgun")))
+			{
+				Int ShellDiff = ShellAmmo.MaxAmount - User.CountInv("EOA_ShellAmmo");
+				While (ShellDiff > 0)
+				{
+					ShellDiff -= ShellAmt;
+					NumShells++;
+				}
+			}
+			If (RocketAmmo && User.CountInv("EOA_RocketLauncher"))
+			{
+				Int RocketDiff = RocketAmmo.MaxAmount - User.CountInv("EOA_RocketAmmo");
+				While (RocketDiff > 0)
+				{
+					RocketDiff -= RocketAmt;
+					NumRockets++;
+				}
+			}
+			If (CellAmmo && (User.CountInv("EOA_PlasmaRifle") || User.CountInv("EOA_GaussCannon")))
+			{
+				Int CellDiff = CellAmmo.MaxAmount - User.CountInv("EOA_CellAmmo");
+				While (CellDiff > 0)
+				{
+					CellDiff -= CellAmt;
+					NumCells++;
+				}
+			}
+			If (NumBullets || NumShells || NumRockets || NumCells)
+			{
+				A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);
+				CrateTriggered = True;
+				A_Face(User);
+				Opener = PlayerPawn(User);
+				If (Opener)
+				{
+					For (Int i = 0; i < MAXPLAYERS; i++)
+					{
+						Player = Players[i];
+						If (Player && Player.Mo && Player.Mo == Opener)
+						{
+							Player.Mo.GiveInventory("EOA_CratePunchWeapon", 1);
+							Let CratePunch = EOA_InteractWeapon(Player.Mo.FindInventory("EOA_CratePunchWeapon"));
+							If (CratePunch)
+							{
+								CratePunch.ReselectWeapon = Player.ReadyWeapon.GetClass();
+								CratePunch.Giver = Self;
+								Player.Mo.A_Face(Self, Max_Pitch: 90, Pitch_Offset: 10 * sin(Pitch), Flags: FAF_MIDDLE);
+								Player.PendingWeapon = CratePunch;
+								Player.ReadyWeapon = Null;
+							}
+							Break;
+						}
+					}
+				}
+				Return True;
+			}
+			Return False;
+		}
+		Return False;
+	}
+	Override Void Tick()
+	{
+		Super.Tick();
+		If (CrateTriggered)
+		{
+			TicDelay++;
+			If (TicDelay >= 2)
+			{
+				CrateOpened = True;
+			}
+		}
+		If (DropAmmo)
+		{
+			If (DropDelay >= 3)
+			{
+				DropDelay = 0;
+				If (NumBullets)
+				{
+					For (Int i = 0; i < NumBullets; i++)
+					{
+						Let Item = A_DropItem("TempCrateBulletAmmo");
+						If (Item && Opener)
+						{
+							Item.A_Face(Opener);
+						}
+					}
+					NumBullets = 0;
+					Return;
+				}
+				If (NumShells)
+				{
+					For (Int i = 0; i < NumShells; i++)
+					{
+						Let Item = A_DropItem("TempCrateShellAmmo");
+						If (Item && Opener)
+						{
+							Item.A_Face(Opener);
+						}
+					}
+					NumShells = 0;
+					Return;
+				}
+				If (NumRockets)
+				{
+					For (Int i = 0; i < NumRockets; i++)
+					{
+						Let Item = A_DropItem("TempCrateRocketAmmo");
+						If (Item && Opener)
+						{
+							Item.A_Face(Opener);
+						}
+					}
+					NumRockets = 0;
+					Return;
+				}
+				If (NumCells)
+				{
+					For (Int i = 0; i < NumCells; i++)
+					{
+						Let Item = A_DropItem("TempCrateCellAmmo");
+						If (Item && Opener)
+						{
+							Item.A_Face(Opener);
+						}
+					}
+					NumCells = 0;
+					Return;
+				}
+			}
+			DropDelay++;
+		}
+	}
+	States
+	{
+	Spawn:
+		CRTE A 1 NoDelay A_JumpIf(CrateOpened, "OpenUp");
+		Wait;
+	OpenUp:
+		CRTE B 5
+		{
+			A_SpawnItemEx("EOA_AmmoCrateLock", 20, XVel: 2, Angle: random(-10, 10), Flags: SXF_NOCHECKPOSITION);
+			A_StartSound("ArgentCell/Pick", 1);
+			A_StartSound("AmmoCrate/Air", 2);
+			A_StartSound("AmmoCrate/Hit", 3);
+			A_StartSound("AmmoCrate/LockDrop", 4);
+		}
+		CRTE C 3;
+		CRTE D 2;
+		CRTE D 3 {DropAmmo = True;}
+		CRTE E -1;
+		Stop;
+
+	}
+}
+
+Class EOA_CratePunchWeapon : EOA_InteractWeapon
+{
+	Override Void DoEffect()
+	{
+		PlayerInfo Player = Owner.Player;
+		If (Giver && Player && Player.Mo && Player.Mo == Owner)
+		{
+			Owner.A_Face(Giver, Max_Pitch: 90, Pitch_Offset: 10 * sin(Pitch), Flags: FAF_MIDDLE);
+		}
+		Super.DoEffect();
+	}
+	States
+	{
+	Ready:
+		//TNT1 A 0 A_SetPitch(30, SPF_INTERPOLATE);
+		FIST NP 1 EOA_SetGKRecoilOffset(-7, 5, 5);
+		FIST RSTUW 1 EOA_SetGKRecoilOffset(2, -2);
+		TNT1 A 2 EOA_SetGKRecoilOffset(4);
+		Goto Deselect;
+	}
+}
+
+Class EOA_AmmoCrateLock : Actor //[DoomKrakken]: Code initially written by strongbelly, converted to ZScript and edited further by me.
+{
+	Default
+	{
+		Radius 2;
+		Height 2;
+		Speed 2;
+		Mass 1;
+		Scale 0.6;
+		Gravity 0.75;
+		Bouncetype "Doom";
+		BounceFactor 0.3;
+		BounceCount 2;
+		+BOUNCEONFLOORS
+		+BOUNCEONWALLS
+		+FLOORCLIP
+		+FORCEXYBILLBOARD
+		+MBFBOUNCER
+		+MOVEWITHSECTOR
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		CRLK A 4;
+		CRLK B 0 A_Jump(128, 2);
+		CRLK C 0;
+		CRLK "#" 4;
+		Wait;
+	Crash:	
+	Death:
+		CRLK D 0 A_Jump(128, 2);
+		CRLK E 0;
+		CRLK "#" -1;
+		Stop;
+	}
+}

@@ -1,0 +1,68 @@
+//Berserk
+Texture Optional BRBSRK01
+Pic BRBSRK01 Tics 2.5
+Pic BRBSRK02 Tics 2.5
+Pic BRBSRK03 Tics 2.5
+Pic BRBSRK04 Tics 2.5
+
+//Haste
+Texture Optional BRHSTE01
+Pic BRHSTE01 Tics 2.5
+Pic BRHSTE02 Tics 2.5
+Pic BRHSTE03 Tics 2.5
+Pic BRHSTE04 Tics 2.5
+
+//Invulnerability
+Texture Optional BRINVL01
+Pic BRINVL01 Tics 2.5
+Pic BRINVL02 Tics 2.5
+Pic BRINVL03 Tics 2.5
+Pic BRINVL04 Tics 2.5
+
+//Quad Damage
+Texture Optional BRQDMG01
+Pic BRQDMG01 Tics 2.5
+Pic BRQDMG02 Tics 2.5
+Pic BRQDMG03 Tics 2.5
+Pic BRQDMG04 Tics 2.5
+
+//[Strongbelly]: Menu cursor
+texture optional N_BOXSEL
+pic BOXSEL01 tics 3
+pic BOXSEL02 tics 3
+pic BOXSEL03 tics 3
+pic BOXSEL04 tics 3
+pic BOXSEL05 tics 3
+pic BOXSEL06 tics 3
+pic BOXSEL07 tics 3
+pic BOXSEL08 tics 3
+pic BOXSEL09 tics 3
+pic BOXSEL10 tics 15
+pic BOXSEL09 tics 3
+pic BOXSEL08 tics 3
+pic BOXSEL07 tics 3
+pic BOXSEL06 tics 3
+pic BOXSEL05 tics 3
+pic BOXSEL04 tics 3
+pic BOXSEL03 tics 3
+pic BOXSEL02 tics 3
+
+texture optional N_UPGSEL
+pic UPGSEL01 tics 3
+pic UPGSEL02 tics 3
+pic UPGSEL03 tics 3
+pic UPGSEL04 tics 3
+pic UPGSEL05 tics 3
+pic UPGSEL06 tics 3
+pic UPGSEL07 tics 3
+pic UPGSEL08 tics 3
+pic UPGSEL09 tics 3
+pic UPGSEL10 tics 15
+pic UPGSEL09 tics 3
+pic UPGSEL08 tics 3
+pic UPGSEL07 tics 3
+pic UPGSEL06 tics 3
+pic UPGSEL05 tics 3
+pic UPGSEL04 tics 3
+pic UPGSEL03 tics 3
+pic UPGSEL02 tics 3

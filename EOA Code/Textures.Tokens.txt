@@ -1,0 +1,4 @@
+// just to define the sizes
+define medal0 40 40
+define medal1 40 40
+define medal1GL 80 80

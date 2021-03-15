@@ -1,0 +1,24 @@
+******** Stuff to do (in no particular order) ********
+= Heavy Assault Rifle
+	- Convert ZION's Tactical Scope HUD graphics to ZScript for maximum efficiency.
+= Gauss Cannon
+	- Fix the Siege Trails to turn more inward on each other to look more like they're spiraling.
+= Item brightmaps.
+= Write Moar Credits.
+= Get additional resources from other contributors.
+	- It'd be lovely to have a centered Mobile Turret transformation sequence animation, like the one in DOOM.
+= Integrate Rune Trial maps into the core mod.
+= Impact Compensation.
+= "Low Ammo" indicator.
+= Implement TT-Supermolot font for better HUD recreation accuracy.
+= Implement additional CVar options for manipulating aesthetics/gameplay:
+	- Toaster Mode.
+= Use better friction systems (check with ZMovement).
+= Change sector light levels, damage amounts, and damage intervals on the fly.
+= Implement screen timers for powerups.
+= Implement improved Siphon Grenade effects (in-world and on HUD).
+= Implement dynamic challenge systems for people to write their own challenges or to utilize their own challenge lists.
+= Heretic/Hexen/Strife compatibility.
+= Desaturated translations.
+= Better bullet-time.
+= Plenty of other stuff that I've forgotten to write down. XD

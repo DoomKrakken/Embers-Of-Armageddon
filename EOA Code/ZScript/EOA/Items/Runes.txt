@@ -1,0 +1,993 @@
+//Rune Stones
+Class EOA_RuneTrialStone : Actor
+{
+	Mixin EOA_MapMarkerUser;
+	Bool Interact;
+	Bool StoneUsed;
+	Bool StoneBeingUsed;
+	Int AmbSoundTimer;
+	Default
+	{
+		Radius 10;
+		Height 20;
+		XScale 0.65;
+		YScale 0.56;
+		FloatBobStrength 0.15;
+		EOA_RuneTrialStone.MarkerType "EOA_RuneTrialStoneMarker";
+		+DONTBLAST
+		+DONTGIB
+		+DONTTHRUST
+		+FLOATBOB
+		+NOBLOOD
+		+NODAMAGE
+		+NOGRAVITY
+		+RELATIVETOFLOOR
+	}
+	Override Void BeginPlay()
+	{
+		A_StartSound("RTS/Loop1", 4, CHANF_OVERLAP|CHANF_LOOPING);
+		A_StartSound("RTS/Loop2", 4, CHANF_OVERLAP|CHANF_LOOPING);
+		Super.BeginPlay();
+	}
+	Override Void Tick()
+	{
+		Super.Tick();
+		If (StoneUsed)
+		{
+			Return;
+		}
+		AmbSoundTimer++;
+		If (AmbSoundTimer >= 350)
+		{
+			A_StartSound("RTS/Scream", 4, CHANF_OVERLAP);
+			A_StartSound("RTS/Ambience", 4, CHANF_OVERLAP);
+			AmbSoundTimer = 0;
+		}
+	}
+	Override Void OnDestroy()
+	{
+		A_StopAllSounds();
+	}
+	Override Bool Used(Actor User)
+	{
+		PlayerInfo Player = User.Player;
+		If (Player && Player.Mo && Player.Mo == User && !User.FindInventory("EOA_InteractWeapon", True) && Distance3D(User) <= Player.Mo.UseRange && Distance3D(User) >= Radius)
+		{
+			A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);
+			If (!(User.CountInv("Vacuum") && User.CountInv("DazedAndConfused") && User.CountInv("AmmoBoost") && User.CountInv("EquipmentPower") && User.CountInv("Savagery") && User.CountInv("SeekAndDestroy") && User.CountInv("InFlightMobility") && User.CountInv("ArmoredOffensive") && User.CountInv("BloodFueled") && User.CountInv("IntimacyIsBest") && User.CountInv("RichGetRicher") && User.CountInv("SavingThrow")))
+			{
+				Let Challenges = EOA_ChallengeArchive.Get();
+				If (Challenges && !Interact)
+				{
+					Interact = True;
+					If (Challenges.WalkThePath.Active)
+					{
+						Challenges.WalkThePath.Amount++;
+					}
+					If (Challenges.DoubleTake.Active)
+					{
+						Challenges.DoubleTake.Amount++;
+					}
+				}
+				DoomSlayer StoneUser = DoomSlayer(User);
+				If (StoneUser && (!StoneUsed || !StoneBeingUsed))
+				{
+					StoneBeingUsed = True;
+					Player.Mo.A_GiveInventory("EOA_RuneTrialStoneWeapon", 1);
+					Let RuneHand = EOA_InteractWeapon(User.FindInventory("EOA_RuneTrialStoneWeapon"));
+					If (RuneHand)
+					{
+						RuneHand.ReselectWeapon = Player.ReadyWeapon.GetClass();
+						RuneHand.Giver = Self;
+						Player.Mo.A_Face(Self, Max_Pitch: 90, Pitch_Offset: 10 * sin(Pitch), Flags: FAF_TOP);
+						Player.PendingWeapon = RuneHand;
+						Player.ReadyWeapon = Null;
+					}
+					StoneUser.LastStoneSelected = Self;
+					Return True;
+				}
+			}
+		}
+		Return False;
+	}
+	States
+	{
+	Spawn:
+		RTST ABCDEDCBAFGHGF 6 Bright NoDelay
+		{
+			If (!StoneUsed)
+			{
+				A_SpawnItemEx("RuneSmoke", frandom(-4, 4), random(-5, 5), 25, frandom(-0.1, 0.1), frandom(-0.5, 0.5), frandom(-0.5, 0.5), 0, SXF_NOCHECKPOSITION);
+				A_SpawnItemEx("RuneSmoke", frandom(-4, 4), random(-5, 5), 25, frandom(-0.1, 0.1), frandom(-0.5, 0.5), frandom(-0.5, 0.5), 0, SXF_NOCHECKPOSITION);
+				A_SpawnItemEx("RuneLightning", frandom(-4, 4), frandom(-4, 4), random(25, 28), 0, 0, 0, 0, SXF_NOCHECKPOSITION, 38);
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Dead");
+		}	
+		Loop;
+	Dead:
+		TNT1 A 0
+		{
+			bSOLID = False;
+			bSHOOTABLE = False;
+			bNOGRAVITY = False;
+			FloatBobStrength = 0;
+			A_StopSound(1);
+			A_StopSound(2);
+			A_StopSound(3);
+			A_StopSound(4);
+			If (Marker)
+			{
+				Marker.ItemClaimed = True;
+			}
+		}
+		RNDD B 2;
+		RNDD CDE 3;
+		RNDD A 5 
+		{
+			A_SpawnItemEx("DeadRuneSmoke", random(3, -3), random(5, -5), 20, frandom(0.3, -0.3), frandom(0.3, -0.3), frandom(0.01, 0.3), 0, SXF_NOCHECKPOSITION, 210);
+			A_SpawnItemEx("RuneFlares", random(3, -3), random(7, -7), 20, frandom(0.2, -0.2), frandom(0.5, -0.5), frandom(0.5, 0.8), 0, 0, 140);
+		}
+		Wait;
+	}
+}
+
+Class EOA_RuneTrialStoneWeapon : EOA_InteractWeapon
+{
+	Default
+	{
+		EOA_InteractWeapon.ZoomFactor 1.5;
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("RuneTrial/Select");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void DoEffect()
+	{
+		PlayerInfo Player = Owner.Player;
+		If (Giver && Player && Player.Mo && Player.Mo == Owner)
+		{
+			Owner.A_Face(Giver, Max_Pitch: 90, Pitch_Offset: 10 * sin(Pitch), Flags: FAF_TOP);
+		}
+		Super.DoEffect();
+	}
+	States
+	{
+	Ready:
+		TNT1 A 0
+		{
+			EOA_SpawnNoiseMaker("RuneTrial/Select");
+			If (Invoker.Giver)
+			{
+				Invoker.Giver.bFLOATBOB = False;
+			}
+		}
+		FDLH ABCDEFGHI 1 Bright;
+		RTLH AABBCCDDEEFFGG 1 Bright A_WeaponOffset(random(-2, 2), random(30, 32), WOF_INTERPOLATE);
+		RTLH AABBCCDDEEFFGG 1 Bright A_WeaponOffset(random(-2, 2), random(30, 32), WOF_INTERPOLATE);
+		FDLH IHGFEDCBA 1 Bright;
+		TNT1 A 5
+		{
+			A_ZoomFactor();
+			If (Invoker.Giver)
+			{
+				Invoker.Giver.bFLOATBOB = Invoker.Giver.Default.bFLOATBOB;
+			}
+		}
+		TNT1 A 5
+		{
+			A_WeaponOffset();
+			If (!(CountInv("Vacuum") && CountInv("DazedAndConfused") && CountInv("AmmoBoost") && CountInv("EquipmentPower") && CountInv("Savagery") && CountInv("SeekAndDestroy") && CountInv("InFlightMobility") && CountInv("ArmoredOffensive") && CountInv("BloodFueled") && CountInv("IntimacyIsBest") && CountInv("RichGetRicher") && CountInv("SavingThrow")))
+			{
+				Menu.SetMenu("RunePurchaseMenu");
+			}
+		}
+		Goto Deselect;
+	}
+}
+
+Class RuneSmoke : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Alpha 0.0;
+		Scale 0.2;
+		Translation "0:255=%[0, 0, 0]:[0, 0.5, 0.2]";
+		+NOINTERACTION
+		+CLIENTSIDEONLY
+		+NONETID
+		+FORCEXYBILLBOARD
+		+ROLLSPRITE
+		+ROLLCENTER
+	}
+	States
+	{
+	Spawn:
+		X110 A 0 NODELAY A_SetRoll(random(0, 359));
+		X110 ABCDEFGHIJK 1 Bright A_FadeIn(0.09);
+		X110 LMNOPQRSTUVWXY 1 Bright;
+	Looper:
+		X110 ABCDEFGHIJKLMNOPQRSTUVWXY 1 Bright A_FadeOut(0.03);
+		Loop;
+	}
+}
+
+Class DeadRuneSmoke : RuneSmoke
+{
+	Default
+	{
+		Scale 0.15;
+		Translation "0:255=%[0, 0, 0]:[0.6, 0.6, 0.6]";
+	}
+}
+
+Class RuneLightning : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Scale 0.12;
+		Translation "0:255=%[0, 0, 0]:[0, 0.5, 0.2]";
+		+NOINTERACTION
+		+FORCEXYBILLBOARD
+		+ROLLSPRITE
+		+ROLLCENTER
+		+DONTSPLASH
+		+NOTRIGGER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_SetRoll(random(0, 359));
+		TNT1 A 0 A_Jump(256, random(1, 8));
+		LBLT ABCDEFGH 0 A_Jump(256, "KeepSprite");
+	KeepSprite:
+		LBLT "#" 1 Bright 
+		{
+			A_FadeOut(0.1);
+			A_SetScale(Scale.X * 1.1);
+		}
+		Wait;
+	}
+}
+
+Class RuneFlares : Actor //sprites & coding borrowed from QCDE
+{
+	Default
+	{
+		RenderStyle "Add";
+		Scale 0.05;
+		Translation "0:255=%[0, 0, 0]:[0.8, 0.8, 0.8]";
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		X027 A 0 NoDelay 
+		{
+			If (!random(0, 9))
+			{
+				A_ChangeVelocity(frandom(1.0, -1.0), frandom(1.0, -1.0), 0, CVF_RELATIVE|CVF_REPLACE);
+			}
+		}
+		X027 ABCDEFGHIJK 1 Bright A_FadeOut(0.03);
+		Loop;
+	}
+}
+
+//Runes
+Class EOA_RuneToken : Inventory
+{
+	Class<EOA_RuneToken> RuneItemII;
+	Class<EOA_RuneChallengeCounter> ChallengeCounter;
+	Int Threshold;
+	Property RuneItemII : RuneItemII;
+	Property ChallengeCounter : ChallengeCounter;
+	Default
+	{
+		EOA_RuneToken.RuneItemII "EOA_RuneToken";
+		EOA_RuneToken.ChallengeCounter "EOA_RuneChallengeCounter";
+		Inventory.Amount 1;
+		Inventory.MaxAmount 1;
+		+INVENTORY.ALWAYSPICKUP
+		-INVENTORY.INVBAR
+		+INVENTORY.UNDROPPABLE
+		+INVENTORY.UNTOSSABLE
+	}
+	Override Void AttachToOwner(Actor Other)
+	{
+		Let Item = EOA_RuneChallengeCounter(GetDefaultByType(ChallengeCounter));
+		Threshold = Item ? Item.MaxAmount : 0;
+		Super.AttachToOwner(Other);
+	}
+	Override Void DoEffect()
+	{
+		If (!Owner.CountInv(RuneItemII) && Owner.CountInv(ChallengeCounter) >= Threshold)
+		{
+			Owner.A_GiveInventory(RuneItemII);
+			Owner.A_TakeInventory(ChallengeCounter);
+			Let Messenger = DoomSlayer(Owner);
+			If (Messenger)
+			{
+				Owner.A_StartSound("MasteryChallenge/Ticker", 1000, CHANF_UI|CHANF_LOCAL|CHANF_LISTENERZ);
+				Messenger.PrintUpgradeProgress("Rune Upgrade Challenge", GetTag(), ChallengeCounter.GetClassName(), True);
+			}
+		}
+		Super.DoEffect();
+	}
+}
+
+//Vacuum
+Class Vacuum : EOA_RuneToken //Increases pickup radius for dropped items.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "VacuumII";
+		EOA_RuneToken.ChallengeCounter "VacuumChallengeCounter";
+		Tag "Vacuum";
+	}
+}
+
+Class VacuumII : EOA_RuneToken {} //Further increases pickup radius for dropped items.
+
+//Dazed And Confused
+Class DazedAndConfused : EOA_RuneToken //Increases enemy stagger state duration.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "DazedAndConfusedII";
+		EOA_RuneToken.ChallengeCounter "DazedAndConfusedChallengeCounter";
+		Tag "Dazed And Confused";
+	}
+}
+
+Class DazedAndConfusedII : EOA_RuneToken {} //Further increases enemy stagger state duration.
+
+//Ammo Boost
+Class AmmoBoost : EOA_RuneToken //Increases the value of standard ammo pickups yielded by enemies and items.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "AmmoBoostII";
+		EOA_RuneToken.ChallengeCounter "AmmoBoostChallengeCounter";
+		Tag "Ammo Boost";
+	}
+}
+
+Class AmmoBoostII : EOA_RuneToken {} //BFG ammo has a chance to drop from enemies.
+
+//Equipment Power
+Class EquipmentPower : EOA_RuneToken //Increases the effectiveness of equipment.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "EquipmentPowerII";
+		EOA_RuneToken.ChallengeCounter "EquipmentPowerChallengeCounter";
+		Tag "Equipment Power";
+	}
+}
+
+Class EquipmentPowerII : EOA_RuneToken {} //Further increases the effectiveness of equipment.
+
+//Savagery
+Class Savagery : EOA_RuneToken //Perform Glory Kills faster.
+{
+	Array<SavageryArray> SavageryMastery;
+	Default
+	{
+		EOA_RuneToken.RuneItemII "SavageryII";
+		EOA_RuneToken.ChallengeCounter "SavageryChallengeCounter";
+		Tag "Savagery";
+	}
+}
+
+Class SavageryII : EOA_RuneToken {} //Perform Glory Kills even faster.
+
+//Seek And Destroy
+Class SeekAndDestroy : EOA_RuneToken //Launch into a Glory Kill from much further away.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "SeekAndDestroyII";
+		EOA_RuneToken.ChallengeCounter "SeekAndDestroyChallengeCounter";
+		Tag "Seek And Destroy";
+	}
+}
+
+Class SeekAndDestroyII : EOA_RuneToken {} //Increases the distance "Seek And Destroy" can be initiated.
+
+//In-Flight Mobility
+Class InFlightMobility : EOA_RuneToken //Provides a significant increase in control over in-air movement after a double jump.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "InFlightMobilityII";
+		EOA_RuneToken.ChallengeCounter "InFlightMobilityChallengeCounter";
+		Tag "In-Flight Mobility";
+	}
+}
+
+Class InFlightMobilityII : EOA_RuneToken {} //Applies air control to a single jump.
+
+//Armored Offensive
+Class ArmoredOffensive : EOA_RuneToken //Enemies drop armor upon being Glory Killed.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "ArmoredOffensiveII";
+		EOA_RuneToken.ChallengeCounter "ArmoredOffensiveChallengeCounter";
+		Tag "Armored Offensive";
+	}
+}
+
+Class ArmoredOffensiveII : EOA_RuneToken {} //Enemies drop more armor upon being Glory Killed.
+
+//Blood Fueled
+Class BloodFueled : EOA_RuneToken //Gain a significant boost in speed for a short time after performing a Glory Kill.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "BloodFueledII";
+		EOA_RuneToken.ChallengeCounter "BloodFueledChallengeCounter";
+		Tag "Blood Fueled";
+	}
+}
+
+Class BloodFueledII : EOA_RuneToken {} //Extends the speed boost's duration.
+
+//Intimacy Is Best
+Class IntimacyIsBest : EOA_RuneToken //While staggered, enemies gain a high damage resistance.  As a result, they become more Glory Kill-friendly.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "IntimacyIsBestII";
+		EOA_RuneToken.ChallengeCounter "IntimacyIsBestChallengeCounter";
+		Tag "Intimacy Is Best";
+	}
+}
+
+Class IntimacyIsBestII : EOA_RuneToken {} //Enemies stagger off of less damage.
+
+//Rich Get Richer [DoomKrakken]: It was fun while it lasted, but now I'm kinda tired of this rune... :(
+Class RichGetRicher : EOA_RuneToken //Your standard weapons do not consume ammo while you have 100 or more armor.
+{
+	Default
+	{
+		EOA_RuneToken.RuneItemII "RichGetRicherII";
+		EOA_RuneToken.ChallengeCounter "RichGetRicherChallengeCounter";
+		Tag "Rich Get Richer";
+	}
+	Override Void DoEffect()
+	{
+		If (Owner.CountInv("RichGetRicherSelected") && Owner.CountInv("BasicArmor") >= 100 - 25 * Owner.CountInv("RichGetRicherII") && Owner.Player && !(Owner.Player.ReadyWeapon Is "EOA_BFG" || Owner.Player.ReadyWeapon Is "EOA_Chainsaw"))
+		{
+			If (!Owner.CountInv("PowerRichGetRicherActive"))
+			{
+				Owner.A_GiveInventory("RichGetRicherActive");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("PowerRichGetRicherActive");
+		}
+		Super.DoEffect();
+	}
+}
+
+Class RichGetRicherII : EOA_RuneToken {} //"Rich Get Richer" is applied at 75 or more armor.
+
+
+//Saving Throw
+Class SavingThrow : EOA_RuneToken //Get one chance to survive a death blow and recover health.  This resets on death.
+{
+	Transient CVar NumSavingThrows;
+	Default
+	{
+		EOA_RuneToken.RuneItemII "SavingThrowII";
+		EOA_RuneToken.ChallengeCounter "SavingThrowChallengeCounter";
+		Tag "Saving Throw";
+	}
+	Override Void AttachToOwner(Actor Other)
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player)
+		{
+			NumSavingThrows = NumSavingThrows ? NumSavingThrows : CVar.GetCVar("SavingThrows", Player);
+			NumSavingThrows.SetInt(NumSavingThrows.GetInt() + 1);
+			If (NumSavingThrows.GetInt() > 2)
+			{
+				NumSavingThrows.SetInt(2);
+			}
+			If (NumSavingThrows.GetInt() < 0)
+			{
+				NumSavingThrows.SetInt(0);
+			}
+		}
+		Super.AttachToOwner(Other);
+	}
+	Override Void DoEffect()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player)
+		{
+			NumSavingThrows = NumSavingThrows ? NumSavingThrows : CVar.GetCVar("SavingThrows", Player);
+			If (NumSavingThrows.GetInt() > 2)
+			{
+				NumSavingThrows.SetInt(2);
+			}
+			If (NumSavingThrows.GetInt() < 0)
+			{
+				NumSavingThrows.SetInt(0);
+			}
+		}
+		Super.DoEffect();
+	}
+}
+
+Class SavingThrowII : EOA_RuneToken //Get an additional saving throw per life.
+{
+	Transient CVar NumSavingThrows;
+	Override Void AttachToOwner(Actor Other)
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player)
+		{
+			NumSavingThrows = NumSavingThrows ? NumSavingThrows : CVar.GetCVar("SavingThrows", Player);
+			NumSavingThrows.SetInt(NumSavingThrows.GetInt() + 1);
+			If (NumSavingThrows.GetInt() > 2)
+			{
+				NumSavingThrows.SetInt(2);
+			}
+			If (NumSavingThrows.GetInt() < 0)
+			{
+				NumSavingThrows.SetInt(0);
+			}
+		}
+		Super.AttachToOwner(Other);
+	}
+}
+
+//Rune Menu Items
+Class EOA_RuneSelectedToken : Inventory
+{
+	Class<EOA_RuneToken> RuneItem;
+	Int RuneConst;
+	Property RuneItem : RuneItem;
+	Property RuneConst : RuneConst;
+	EOA_HandlerItem RuneHandler;
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "EOA_RuneToken";
+		EOA_RuneSelectedToken.RuneConst RUNE_NONE;
+		Inventory.Amount 1;
+		Inventory.MaxAmount 1;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.UNDROPPABLE
+		-INVENTORY.INVBAR
+	}
+	Override Void AttachToOwner(Actor Other)
+	{
+		RuneHandler = EOA_HandlerItem(Other.FindInventory("EOA_HandlerItem"));
+		Super.AttachToOwner(Other);
+	}
+	Override Void DoEffect()
+	{
+		If (RuneHandler)
+		{
+			If ((!Owner.CountInv(RuneItem) || (RuneHandler.RuneSlot1 != RuneConst && RuneHandler.RuneSlot2 != RuneConst && RuneHandler.RuneSlot3 != RuneConst)))
+			{
+				Destroy();
+				Return;
+			}
+		}
+		Super.DoEffect();
+	}
+}
+
+Class VacuumSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "Vacuum";
+		EOA_RuneSelectedToken.RuneConst RUNE_VACUUM;
+	}
+}
+
+Class DazedAndConfusedSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "DazedAndConfused";
+		EOA_RuneSelectedToken.RuneConst RUNE_DAZEDANDCONFUSED;
+	}
+}
+
+Class AmmoBoostSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "AmmoBoost";
+		EOA_RuneSelectedToken.RuneConst RUNE_AMMOBOOST;
+	}
+}
+
+Class EquipmentPowerSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "EquipmentPower";
+		EOA_RuneSelectedToken.RuneConst RUNE_EQUIPMENTPOWER;
+	}
+}
+
+Class SavagerySelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "Savagery";
+		EOA_RuneSelectedToken.RuneConst RUNE_SAVAGERY;
+	}
+}
+
+Class SeekAndDestroySelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "SeekAndDestroy";
+		EOA_RuneSelectedToken.RuneConst RUNE_SEEKANDDESTROY;
+	}
+}
+
+Class InFlightMobilitySelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "InFlightMobility";
+		EOA_RuneSelectedToken.RuneConst RUNE_INFLIGHTMOBILITY;
+	}
+}
+
+Class ArmoredOffensiveSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "ArmoredOffensive";
+		EOA_RuneSelectedToken.RuneConst RUNE_ARMOREDOFFENSIVE;
+	}
+}
+
+Class BloodFueledSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "BloodFueled";
+		EOA_RuneSelectedToken.RuneConst RUNE_BLOODFUELED;
+	}
+}
+
+Class IntimacyIsBestSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "IntimacyIsBest";
+		EOA_RuneSelectedToken.RuneConst RUNE_INTIMACYISBEST;
+	}
+}
+
+Class RichGetRicherSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "RichGetRicher";
+		EOA_RuneSelectedToken.RuneConst RUNE_RICHGETRICHER;
+	}
+}
+
+Class SavingThrowSelected : EOA_RuneSelectedToken
+{
+	Default
+	{
+		EOA_RuneSelectedToken.RuneItem "SavingThrow";
+		EOA_RuneSelectedToken.RuneConst RUNE_SAVINGTHROW;
+	}
+}
+
+//Rune Upgrade Counters
+Class EOA_RuneChallengeCounter : Inventory
+{
+	Class<EOA_RuneToken> RuneItem;
+	Property RuneItem : RuneItem;
+	Int OldAmount;
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "EOA_RuneToken";
+		+INVENTORY.UNDROPPABLE
+	}
+	Override Void DoEffect()
+	{
+		Let Messenger = DoomSlayer(Owner);
+		If (Messenger && OldAmount < Amount)
+		{
+			OldAmount = Amount; //Only update if Amount changes.  This way, we can check when Amount changes. :D
+			Owner.A_StartSound("MasteryChallenge/Ticker", 1000, CHANF_UI|CHANF_LOCAL|CHANF_LISTENERZ);
+			Messenger.PrintUpgradeProgress("Rune Upgrade", GetDefaultByType(RuneItem).GetTag(), GetClassName());
+		}
+		Super.DoEffect();
+	}
+}
+
+//Vacuum - Absorb 300 dropped items.
+Class VacuumChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "Vacuum";
+		Inventory.MaxAmount 300;
+	}
+}
+
+//Dazed And Confused - Perform 25 "Death From Above" Glory Kills.
+Class DazedAndConfusedChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "DazedAndConfused";
+		Inventory.MaxAmount 25;
+	}
+}
+
+//Ammo Boost - Pick up 500 ammo items.
+Class AmmoBoostChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "AmmoBoost";
+		Inventory.MaxAmount 500;
+	}
+}
+
+//Equipment Power - Use equipment 30 times.
+Class EquipmentPowerChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "EquipmentPower";
+		Inventory.MaxAmount 30;
+	}
+}
+
+//Savagery - Perform 25 unique Glory Kills on enemies.
+Class SavageryChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "Savagery";
+		Inventory.MaxAmount 25;
+	}
+}
+
+//Seek And Destroy - Perform 75 Glory Kills.
+Class SeekAndDestroyChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "SeekAndDestroy";
+		Inventory.MaxAmount 75;
+	}
+}
+
+//In-Flight Mobility - Kill 30 enemies while midair ("Death From Above" Glory Kills count too).
+Class InFlightMobilityChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "InFlightMobility";
+		Inventory.MaxAmount 30;
+	}
+}
+
+//Armored Offensive - Earn 2500 points of armor (siphoned armor doesn't count).
+Class ArmoredOffensiveChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "ArmoredOffensive";
+		Inventory.MaxAmount 2500;
+	}
+}
+
+//Blood Fueled - Kill 50 monsters while Blood Fueled is active.
+Class BloodFueledChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "BloodFueled";
+		Inventory.MaxAmount 50;
+	}
+}
+
+//Intimacy Is Best - Stagger enemies 100 times.
+Class IntimacyIsBestChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "IntimacyIsBest";
+		Inventory.MaxAmount 100;
+	}
+}
+
+//Rich Get Richer - Fill your armor capacity to its maximum 12 times.
+Class RichGetRicherChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "RichGetRicher";
+		Inventory.MaxAmount 12;
+	}
+}
+
+//Saving Throw - Kill 10 monsters while Saving Throw is active.
+Class SavingThrowChallengeCounter : EOA_RuneChallengeCounter
+{
+	Default
+	{
+		EOA_RuneChallengeCounter.RuneItem "SavingThrow";
+		Inventory.MaxAmount 10;
+	}
+}
+
+//Rune Powerups
+Class BloodFueledSpeed : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerBloodFueledSpeed";
+		Powerup.Duration -5;
+	}
+}
+
+Class ExtendedBloodFueledSpeed : BloodFueledSpeed
+{
+	Default
+	{
+		Powerup.Duration -8;
+	}
+}
+
+Class PowerBloodFueledSpeed : PowerSpeed
+{
+	Default
+	{
+		Speed 1.25;
+		+POWERSPEED.NOTRAIL;
+	}
+}
+
+Class RichGetRicherActive : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerRichGetRicherActive";
+		Powerup.Duration 0x7FFFFFFF;
+	}
+}
+
+Class PowerRichGetRicherActive : PowerInfiniteAmmo
+{
+	Override Void DoEffect()
+	{
+		If (!Owner && !Owner.CountInv("RichGetRicher") && !Owner.CountInv("RichGetRicherSelected"))
+		{
+			Destroy();
+		}
+		Super.DoEffect();
+	}
+}
+
+Class SavingThrowItem : PowerupGiver
+{
+	Default
+	{
+		Powerup.Type "PowerSavingThrow";
+		Powerup.Duration -10;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+}
+
+Class PowerSavingThrow : Powerup
+{
+	Override Void AttachToOwner(Actor Other)
+	{
+		Super.AttachToOwner(Other);
+		A_StartSound("Rune/SavingThrow/In", 4, 0, 1.0, ATTN_NONE);
+	}
+	Override Void InitEffect()
+	{
+		Super.InitEffect();
+
+		If (Owner == Null || Owner.Player == Null)
+		{
+			Return;
+		}
+		//When this powerup is in effect, pause the music.
+		//S_PauseSound(True, True);
+		// [RH]The effect ends one tic after the counter hits zero, so make sure we start at an odd count.
+		EffectTics += !(EffectTics & 1);
+		If ((EffectTics & 1) == 0)
+		{
+			EffectTics++;
+		}
+		// Make sure the effect starts and ends on an even tic.
+		If ((Level.Time & 1) == 0)
+		{
+			Level.SetFrozen(True);
+		}
+		Else
+		{
+			// Compensate for skipped tic, but beware of overflow.
+			If (EffectTics < 0x7fffffff)
+			{
+				EffectTics++;
+			}
+		}
+	}
+
+	Override Void DoEffect()
+	{
+		Super.DoEffect();
+		// [RH] Do not change LEVEL_FROZEN on odd tics, or the Revenant's tracer will get thrown off.
+		// [ED850] Don't change it if the player is predicted either.
+		If (Level.Time & 1 || (Owner != Null && Owner.Player != Null && Owner.Player.Cheats & CF_PREDICTING))
+		{
+			Return;
+		}
+		//[DoomKrakken]: This powerup aims to do a slow-mo effect.  Therefore, it will constantly switch time freezing on and off.
+		Level.SetFrozen(((EffectTics + 1) & 3) != 0);
+	}
+
+	Override Void EndEffect()
+	{
+		Super.EndEffect();
+		Level.SetFrozen(False);
+		S_ResumeSound(False);
+		A_StartSound("Rune/SavingThrow/Out", 4, 0, 1.0, ATTN_NONE);
+	}
+}
+/*
+Class IntimacyIsBestProtectionItem : PowerupGiver
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		Powerup.Type "PowerIntimacyIsBestProtection";
+		Powerup.Duration 2;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+}
+
+Class IntimacyIsBestIIProtectionItem : PowerupGiver
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		Powerup.Type "PowerIntimacyIsBestIIProtection";
+		Powerup.Duration 2;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+}
+
+Class PowerIntimacyIsBestProtection : PowerProtection
+{
+	Default {DamageFactor "Normal", 0.2;}
+}
+
+Class PowerIntimacyIsBestIIProtection : PowerProtection
+{
+	Default {DamageFactor "Normal", 0.34;}
+}
+*/

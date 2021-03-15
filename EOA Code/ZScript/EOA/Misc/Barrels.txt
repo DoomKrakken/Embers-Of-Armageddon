@@ -1,0 +1,85 @@
+Class EOA_ExplosiveBarrel : ExplosiveBarrel
+{
+	Int CountDownTimer;
+	Bool CountDown;
+	Default
+	{
+		Health 8;
+		PushFactor 1.5;
+		+DONTTHRUST
+		+NOBLOOD
+		+PUSHABLE
+	}
+	Override Void Tick()
+	{
+		If (CountDown)
+		{
+			If (CountDownTimer-- <= 0)
+			{
+				SetState(ResolveState("Death"));
+			}
+		}
+		Super.Tick();
+	}
+	Override Int DamageMobj(Actor Inflictor, Actor Source, Int Damage, Name MOD, Int Flags, Double Angle)
+	{
+		CountDown = True;
+		If (Inflictor Is "EOA_ExplosiveBarrel")
+		{
+			Return 0;
+		}
+		CountDownTimer = 1;
+		Return Super.DamageMobj(Inflictor, Source, Damage, MOD, Flags, Angle);
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		If (Target.Player)
+		{
+			Damage /= 2;
+		}
+		Return Damage;
+	}
+	States
+	{
+	Spawn:
+		EXPB A -1 NoDelay
+		{
+			CountDownTimer = 15;
+		}
+		Stop;
+	Death:
+		TNT1 A 1050
+		{
+			CountDown = False;
+			A_Explode(160, 224, 1, 1, 100);
+			A_StartSound("Barrel/Explode", 1, 0, 0.75);
+			A_StartSound("Barrel/Add", 2, 0, 0.75);
+			A_StartSound("Barrel/Debris", 3);
+			A_SpawnItemEx("EOA_ExplosiveBarrelExplosionFX");
+			A_BarrelDestroy();
+		}
+		TNT1 A 5 A_Respawn();
+		Wait;
+	}
+}
+
+Class EOA_ExplosiveBarrelExplosionFX : Actor
+{
+	Default
+	{
+		+BRIGHT
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		DB27 A 0 NoDelay A_Jump(128, 2);
+		DB28 A 0;
+		"####" "#" 0
+		{
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "BarrelLight", DynamicLight.PulseLight, (255, 153, 76), 128, 1, DYNAMICLIGHT.LF_ADDITIVE, 10, (0, 0, 0), 0.33);
+		}
+		"####" ABCDEFGHIJKLMNOPQRSTUVWXYZ 1;
+		Stop;
+	}
+}

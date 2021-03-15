@@ -1,0 +1,1348 @@
+Class GaussCannonSelected : EOA_Token {}
+Class GaussCooldownCounter : EOA_Token {Default {Inventory.MaxAmount 56;} }
+Class GaussCannonSoundCounter : EOA_Token {Default {Inventory.MaxAmount 75;} }
+Class GaussCannonCharged : EOA_Token {}
+Class GaussCannonRecoilFriction : PowerEOA_TempToken {Default {Powerup.Duration 10;} }
+
+//Precision Bolt - Zoom in and fire more powerful shots.
+Class PrecisionBolt : EOA_Token {}
+Class PrecisionBoltSelected : EOA_Token {}
+Class EnergyEfficient : EOA_Token {} //Faster Charge Rate.
+Class GCNLightWeight : EOA_Token {} //Move at full speed while zoomed in.
+
+Class MC_VolatileDischarge : EOA_MasteryChallengeToken //Get 5 headshot kills on Hell Knights with the Precision Bolt.
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "VolatileDischarge";
+		EOA_MasteryChallengeToken.ChallengeCounter "VolatileDischargeMasteryCounter";
+		Tag "Volatile Discharge";
+	}
+}
+
+Class VolatileDischarge : EOA_Token {} //Mastery Upgrade - Enemies killed by the Precision Bolt will explode violently, damaging nearby enemies.
+
+Class PrecisionBoltReady : EOA_Token {}
+Class PrecisionBoltChargeCounter : EOA_Token {Default {Inventory.MaxAmount 105;} }
+Class VolatileDischargeMasteryCounter : EOA_Token {Default {Inventory.MaxAmount 5;} }
+
+//Siege Mode (Gauss Cannon) - Charge a powerful, penetrating shot.  Movement is disabled during this time.
+Class SiegeMode : EOA_Token {}
+Class SiegeModeSelected : EOA_Token {}
+Class OuterBeam : EOA_Token {} //Siege Blasts now have an additional outer area effect.
+Class ReducedChargeTime : EOA_Token {} //As it says on the label...
+
+Class MC_MobileSiege : EOA_MasteryChallengeToken //Kill multiple enemies with one Siege Blast 10 times.
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "MobileSiege";
+		EOA_MasteryChallengeToken.ChallengeCounter "MobileSiegeMasteryCounter";
+		Tag "Mobile Siege";
+	}
+}
+
+Class MobileSiege : EOA_Token {} //Mastery Upgrade - Movement is enabled while in Siege Mode (half speed).
+
+Class SiegeModeReady : EOA_Token {}
+Class SiegeModeChargeCounter : EOA_Token {Default {Inventory.MaxAmount 70;} }
+Class MobileSiegeKillCounter : EOA_Token {Default {Inventory.MaxAmount 3;} } 
+Class MobileSiegeMasteryCounter : EOA_Token {Default {Inventory.MaxAmount 10;} }
+
+Class GCNMods : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("PrecisionBolt");
+			A_GiveInventory("SiegeMode");
+		}
+		Stop;
+	}
+}
+
+Class GCNUpgrades : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EnergyEfficient");
+			A_GiveInventory("GCNLightWeight");
+			A_GiveInventory("OuterBeam");
+			A_GiveInventory("ReducedChargeTime");
+		}
+		Stop;
+	}
+}
+
+Class GaussCycleSound : PowerEOA_TempToken
+{
+	Default
+	{
+		Powerup.Duration 18;
+	}
+	Override Void Tick()
+	{
+		If (!Owner || EffectTics <= 0 || !(Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon Is "EOA_GaussCannon"))
+		{
+			Destroy();
+			Return;
+		}
+		EffectTics -= 1 + Owner.CountInv("PowerHaste");
+	}
+	Override Void EndEffect()
+	{
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon Is "EOA_GaussCannon")
+		{
+			Owner.A_StartSound("Gauss/Cycle", Owner.Player.ReadyWeapon.SlotNumber + 10, CHANF_OVERLAP|CHANF_LISTENERZ);
+		}
+		Super.EndEffect();
+	}
+}
+
+Class EOA_GaussCannon : EOA_Weapon
+{
+	Default
+	{
+		Inventory.Icon "ICONGCN";
+		Weapon.AmmoType "EOA_CellAmmo";
+		Weapon.AmmoUse 15;
+		Weapon.AmmoGive 120;
+		Weapon.SlotNumber 7;
+		EOA_Weapon.MeleeTics 32;
+		Inventory.PickupMessage "Gauss Cannon";
+		Tag "Gauss Cannon";
+		+WEAPON.BFG
+		+EOA_WEAPON.SEMIAUTO
+		//+NOAUTOFIRE //{DoomKrakken]: This way you can activate the mods normally. :)
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("Gauss/Fire");
+		MarkSound("Gauss/Add");
+		MarkSound("Gauss/Cycle");
+		MarkSound("Gauss/Beep");
+		MarkSound("Precision/Beep");
+		MarkSound("Precision/Start");
+		MarkSound("Precision/Idle");
+		MarkSound("Precision/Fire");
+		MarkSound("Precision/End");
+		MarkSound("Precision/ZoomIn");
+		MarkSound("Precision/ZoomOut");
+		MarkSound("Siege/Idle");
+		MarkSound("Siege/Charge/Start");
+		MarkSound("Siege/Charge");
+		MarkSound("Siege/Fire");
+		MarkSound("Siege/Add");
+		MarkSound("Siege/Close");
+		MarkSound("PrecisionBolt/Equip");
+		MarkSound("SiegeMode/Equip");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void DoEffect()
+	{
+		Let Player = Owner.Player;
+		If (!Player)
+		{
+			Super.DoEffect();
+			Return;
+		}
+
+		//Mod not equipped...
+		If ((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !(Owner.GetPlayerInput(INPUT_OLDBUTTONS) & BT_ALTATTACK) && Player.ReadyWeapon == Self && !(Owner.CountInv("PrecisionBoltSelected") || Owner.CountInv("SiegeModeSelected")))
+		{
+			EOA_SpawnNoiseMaker("Weapon/DryFire");
+		}
+
+		//Cooldown
+		Owner.A_TakeInventory("GaussCooldownCounter", 1 + Owner.CountInv("PowerHaste"));
+
+		//Mastery - Volatile Discharge (Precision Bolt)
+		If (!Owner.CountInv("VolatileDischarge") && Owner.CountInv("EnergyEfficient") && Owner.CountInv("GCNLightWeight"))
+		{
+			Owner.A_GiveInventory("MC_VolatileDischarge");
+			If (Owner.CountInv("VolatileDischargeMasteryCounter") >= 5)
+			{
+				Owner.A_GiveInventory("VolatileDischarge");
+				Owner.A_TakeInventory("VolatileDischargeMasteryCounter");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_VolatileDischarge");
+		}
+		
+		//Mastery - Mobile Siege (Siege Mode)
+		If (!Owner.CountInv("MobileSiege") && Owner.CountInv("OuterBeam") && Owner.CountInv("ReducedChargeTime"))
+		{
+			Owner.A_GiveInventory("MC_MobileSiege");
+			If (Owner.CountInv("MobileSiegeMasteryCounter") >= 10)
+			{
+				Owner.A_GiveInventory("MobileSiege");
+				Owner.A_TakeInventory("MobileSiegeMasteryCounter");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_MobileSiege");
+		}
+
+
+		//Gauss Charge Handler
+		If (Player.ReadyWeapon == Self)
+		{
+			If (Owner.CountInv("PrecisionBoltChargeCounter") >= 105 || Owner.CountInv("SiegeModeChargeCounter") >= 70)
+			{
+				If (!Owner.CountInv("GaussCannonCharged"))
+				{
+					EOA_SpawnNoiseMaker("Gauss/Beep", 0, 0.5);
+					Owner.A_GiveInventory("GaussCannonCharged");
+				}
+			}
+			Else
+			{
+				Owner.A_TakeInventory("GaussCannonCharged");
+			}
+			If (!Owner.CountInv("GaussCooldownCounter"))
+			{
+				If (Owner.CountInv("PrecisionBoltReady")) 
+				{
+					If (!Owner.CountInv("PrecisionBoltChargeCounter") && (Owner.CountInv("EOA_CellAmmo") >= 15 || CheckInfiniteAmmo()))
+					{
+						EOA_SpawnNoiseMaker("Precision/Beep");
+						EOA_SpawnPersistentNoiseMaker(SlotNumber, "Precision/Start", 6);
+					}
+					If (Owner.CountInv("GaussCannonSoundCounter") >= 75)
+					{
+						EOA_SpawnPersistentNoiseMaker(SlotNumber, "Precision/Idle", 7, CHANF_LOOPING);
+					}
+					If (Owner.CountInv("EOA_CellAmmo") >= 15 || CheckInfiniteAmmo())
+					{
+						Owner.A_GiveInventory("GaussCannonSoundCounter");
+						Owner.A_GiveInventory("PrecisionBoltChargeCounter", (2 + Owner.CountInv("EnergyEfficient")) * (1 + Owner.CountInv("PowerHaste")));
+					}
+				}
+				If (Owner.CountInv("SiegeModeReady") && (Owner.CountInv("EOA_CellAmmo") >= 30 || CheckInfiniteAmmo()))
+				{
+					If (Owner.CountInv("SiegeModeChargeCounter") >= 70)
+					{
+						EOA_SpawnPersistentNoiseMaker(SlotNumber, "Siege/Idle", 7, CHANF_LOOPING);
+					}
+					Owner.A_GiveInventory("SiegeModeChargeCounter", (2 + Owner.CountInv("ReducedChargeTime")) * (1 + Owner.CountInv("PowerHaste")));
+				}
+			}
+		}
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon != Self)
+		{
+			If (Owner.CountInv("GaussCannonSelected"))
+			{
+				Owner.A_WeaponOffset();
+				Owner.A_TakeInventory("GaussCannonSelected");
+				Owner.A_TakeInventory("GaussCooldownCounter");
+				Owner.A_TakeInventory("PrecisionBoltReady");
+				Owner.A_TakeInventory("PrecisionBoltChargeCounter");
+				Owner.A_TakeInventory("GaussCannonSoundCounter");
+				Owner.A_TakeInventory("SiegeModeReady");
+				Owner.A_TakeInventory("SiegeModeChargeCounter");
+				FOVScale = 1;
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 6);
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 7);
+				SetPlayerProperty(0, 0, PROP_FROZEN);
+			}
+		}
+		Super.DoEffect();
+	}
+	Override Double GetSpeedFactor()
+	{
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon == Self)
+		{
+			If (Owner.CountInv("PrecisionBoltSelected") && Owner.CountInv("PrecisionBoltReady") && !Owner.CountInv("GCNLightWeight")) 
+			{
+				Return 0.5;
+			}
+			Else If (Self Is "EOA_GaussCannon" && Owner.CountInv("SiegeModeSelected") && Owner.CountInv("SiegeModeReady"))
+			{
+				Return 0.5 * Owner.CountInv("MobileSiege");
+			}
+		}
+		Return 1.0;
+	}
+	States
+	{
+	Spawn:
+		GAUS A -1;
+		Stop;
+	Select:
+		TNT1 A 0
+		{
+			Invoker.SemiAutoOverride = True;
+			A_WeaponOffset();
+			A_GiveInventory("GaussCannonSelected");
+			If (GetCVar("EOA_Reticles"))
+			{
+				ACS_NamedExecuteAlways("GCNReticle", 0);
+				A_SetCrosshair(99);
+			}
+			Else
+			{
+				A_SetCrosshair(0);
+			}
+		}
+		TNT1 A 0 A_Raise();
+		Wait;
+	Deselect:
+		GCPR A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCSR A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNR A 0;
+		"####" HFDB 1;
+		TNT1 A 4
+		{
+			A_TakeInventory("GaussCooldownCounter");
+			If (CountInv("PrecisionBoltReady"))
+			{
+				A_WeaponOffset();
+				A_ZoomFactor();
+				A_TakeInventory("PrecisionBoltReady");
+				A_TakeInventory("PrecisionBoltChargeCounter");
+				A_TakeInventory("GaussCannonSoundCounter");
+				EOA_SpawnNoiseMaker("Precision/ZoomOut");
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/End", 7);
+			}
+			If (CountInv("SiegeModeReady"))
+			{
+				A_ZoomFactor();
+				SetPlayerProperty(0, 0, PROP_FROZEN);
+				A_TakeInventory("SiegeModeReady");
+				A_TakeInventory("SiegeModeChargeCounter");
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Siege/Close", 7, 0, 0.25);
+			}
+			A_TakeInventory("GaussCannonSelected");
+			A_SetTics(4 * !CountInv("Adept") * !CountInv("PowerBerserk"));
+		}
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	Ready:
+		TNT1 A 0
+		{
+			If (Level.Time && !(CountInv("PrecisionBoltSwitch") || CountInv("SiegeModeSwitch")))
+			{
+				EOA_SpawnNoiseMaker("Weapon/Switch");
+				EOA_SpawnNoiseMaker("BFG/Raise", 0, 0.5);
+			}
+		}
+		GCPR A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCSR A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNR A 0;
+		"####" ACEG 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			If (CountInv("PrecisionBoltSwitch"))
+			{
+				A_TakeInventory("PrecisionBoltSwitch");
+				Return ResolveState("PrecisionBoltMod");
+			}
+			Else If (CountInv("SiegeModeSwitch"))
+			{
+				A_TakeInventory("SiegeModeSwitch");
+				Return ResolveState("SiegeModeMod");
+			}
+			Return ResolveState(Null);
+		}
+		Goto ReadyLoop;
+	ReRaise:
+		GCPR A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCSR A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNR A 0;
+		"####" CDEFGH 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+	ReadyLoop:
+		GCPI A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCSI A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNI A 0;
+		"####" AAABBB 1
+		{
+			EOA_WeaponReady(WRF_NOSWITCH * Invoker.SemiAutoOverride|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK) * !Invoker.SemiAutoOverride|WRF_NOSECONDARY * (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected"))|WRF_ALLOWRELOAD * ((CountInv("PrecisionBolt") && CountInv("SiegeMode")) || ((CountInv("PrecisionBolt") || CountInv("SiegeMode")) && (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			Invoker.SemiAutoOverride = False;
+			If (CountInv("PrecisionBoltSwitch"))
+			{
+				A_TakeInventory("PrecisionBoltSwitch");
+				Return ResolveState("SwitchToPrecisionBolt");
+			}
+			Else If (CountInv("SiegeModeSwitch"))
+			{
+				A_TakeInventory("SiegeModeSwitch");
+				Return ResolveState("SwitchToSiegeMode");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	Fire:
+		GCPF A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCSF A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNF A 0;
+		"####" A 0
+		{
+			A_GiveInventory("GaussCannonRecoilFriction");
+			A_ChangeVelocity(-10.5 * cos(Pitch), 0, 0, CVF_RELATIVE);
+			If (Vel.Z < 0 && Pitch > 0)
+			{
+				A_ChangeVelocity(Vel.X, Vel.Y, 10.5 * sin(Pitch), CVF_REPLACE);
+			}
+			Else
+			{
+				A_ChangeVelocity(0, 0, 10.5 * sin(Pitch), CVF_RELATIVE);
+			}
+			A_AlertMonsters();
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "GaussCannonProjectile", -5 + GetViewZ(), 12 + GetRelVelY() / 4);
+			EOA_SetWeaponRecoilOffset(0, -6, 0, 0.5);
+			EOA_SpawnCustomDynamicLight("GCNLight", DynamicLight.PulseLight, (25, 204, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 8, (0, 0, Height / 2), 0.2);
+			EOA_SpawnNoiseMaker("Gauss/Fire");
+			EOA_SpawnNoiseMaker("Gauss/Add");
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			A_GiveInventory("GaussCycleSound");
+			A_GiveInventory("GaussCooldownCounter", 56);
+		}
+		"####" ABCDEFG 1 EOA_WeaponReady(WRF_NOSWITCH|WRF_NOFIRE, EOA_ALLOWMANTLE);
+		GCPL A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCSL A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNL A 0;
+		"####" ABCDEFGHIJK 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * ((CountInv("PrecisionBolt") && CountInv("SiegeMode")) || ((CountInv("PrecisionBolt") || CountInv("SiegeMode")) && (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected")))), EOA_ALLOWMANTLE);
+		//"####" "#" 0 EOA_SpawnNoiseMaker("Gauss/Cycle");
+		"####" LMNOPQR 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * ((CountInv("PrecisionBolt") && CountInv("SiegeMode")) || ((CountInv("PrecisionBolt") || CountInv("SiegeMode")) && (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && CountInv("PrecisionBoltSelected"))	
+			{
+				Return ResolveState("PrecisionPrime");
+			}
+			Return ResolveState(Null);
+		}		
+		"####" STTUUUTTTUUUTTTUUUTTTUVWXYZ 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * ((CountInv("PrecisionBolt") && CountInv("SiegeMode")) || ((CountInv("PrecisionBolt") || CountInv("SiegeMode")) && (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK))
+			{
+				If (CountInv("PrecisionBoltSelected"))	
+				{
+					Return ResolveState("PrecisionPrime");
+				}
+				Else If (CountInv("SiegeModeSelected"))
+				{
+					Return ResolveState("SiegePrime");
+				}
+			}
+			Return ResolveState(Null);
+		}		
+		Goto ReadyLoop;
+	AltFire:
+		TNT1 A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, "PrecisionPrime");
+		TNT1 A 0 A_JumpIfInventory("SiegeModeSelected", 1, "SiegePrime");
+		Goto ReadyLoop;
+	PrecisionPrime:
+		TNT1 A 0 
+		{
+			If (!CountInv("PrecisionBoltReady"))
+			{
+				EOA_SpawnNoiseMaker("Precision/ZoomIn", 0, 0.5);
+			}
+			A_ZoomFactor(2, ZOOM_NOSCALETURNING);
+			A_GiveInventory("PrecisionBoltReady");
+			//A_SetSpeed(0.5 * (1 + CountInv("GCNLightWeight")));
+		}
+	PrecisionReady:
+		TNT1 A 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK) && (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("GaussCooldownCounter") && CountInv("PrecisionBoltSelected") && CountInv("EOA_CellAmmo") >= 15)
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+				A_TakeInventory("GaussCannonSoundCounter");
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/End", 7);
+				Return ResolveState("PrecisionFire");
+			}
+			Else If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("PrecisionBoltSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")) || (Invoker.Owner && Invoker.Owner.Player && Invoker.Owner.Player.PendingWeapon != WP_NOCHANGE))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+				A_TakeInventory("GaussCannonSoundCounter");
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 7);
+				If (CountInv("PrecisionBoltSelected") && !CountInv("GaussCooldownCounter"))
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/End", 7);
+				}
+				Return ResolveState("PrecisionEnd");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	PrecisionFire:
+		TNT1 A 0
+		{
+			A_AlertMonsters();
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "PrecisionBoltProjectile", -5 + GetViewZ(), 0 + GetRelVelY() / 3);
+			EOA_SetWeaponRecoilOffset(0, -7, 0, 0.5);
+			EOA_SpawnCustomDynamicLight("GCNLight", DynamicLight.PulseLight, (25, 204, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 8, (0, 0, Height / 2), 0.2);
+			A_TakeInventory("EOA_CellAmmo", 15, TIF_NOTAKEINFINITE);
+			EOA_SpawnNoiseMaker("Precision/Fire");
+			EOA_SpawnNoiseMaker("Gauss/Fire");
+			EOA_SpawnNoiseMaker("Gauss/Add");
+			A_GiveInventory("GaussCycleSound");
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			A_GiveInventory("GaussCooldownCounter", 56 / (1 + CountInv("EnergyEfficient")));
+		}
+		TNT1 AAAAAAA 1
+		{
+			EOA_WeaponReady(WRF_NOSWITCH|WRF_NOFIRE);
+			If (CountInv("Grabbing_A_Ledge") || !CountInv("PrecisionBoltSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)))
+			{
+				Return ResolveState("PrecisionEnd");
+			}
+			Return ResolveState(Null);
+		}
+		TNT1 A 0 A_TakeInventory("PrecisionBoltChargeCounter");
+		GCPL UTUTUTUTUTU 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY * (CountInv("GaussCooldownCounter") > 0)|WRF_NOPRIMARY * CountInv("PrecisionBoltReady")|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY|WRF_ALLOWRELOAD * ((CountInv("PrecisionBolt") && CountInv("SiegeMode")) || ((CountInv("PrecisionBolt") || CountInv("SiegeMode")) && (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected")))) * !CountInv("PrecisionBoltReady")|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) * !CountInv("PrecisionBoltReady"), EOA_WEAPSPEEDUPGRADE * CountInv("EnergyEfficient"));
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("PrecisionBoltReady")) 
+			{
+				A_ZoomFactor(2, ZOOM_NOSCALETURNING);
+				A_GiveInventory("PrecisionBoltReady");
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/ZoomIn", 5, 0, 0.5);
+			}
+			Else If ((!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && CountInv("PrecisionBoltReady")) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("PrecisionBoltSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_ZoomFactor(1, ZOOM_INSTANT * !CountInv("PrecisionBoltSelected"));
+				A_TakeInventory("PrecisionBoltReady");
+				If (CountInv("PrecisionBoltSelected"))
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/ZoomOut", 5);
+				}
+				Else
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5); //[DoomKrakken]: In case the zoom-in sound is being played and we've already detached the Precision Bolt module.
+				}
+				Return ResolveState("PrecisionEnd");
+			}
+			If (CountInv("PrecisionBoltReady"))
+			{
+				A_WeaponOffset(0, 160);
+			}
+			Return ResolveState(Null);
+		}
+		//GCPL A 0 EOA_SpawnNoiseMaker("Gauss/Cycle");
+	PrecisionEnd:
+		TNT1 A 0
+		{
+			A_TakeInventory("PrecisionBoltChargeCounter");
+			If (!CountInv("GaussCooldownCounter"))
+			{
+				Return ResolveState("PrecisionCancel");
+			}
+			/*If (CountInv("GaussCooldownCounter") >= 38 || !IsActorPlayingSound(Invoker.SlotNumber + 10, "Gauss/Cycle"))
+			{
+				EOA_SpawnNoiseMaker("Gauss/Cycle");
+			}*/
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				If (CountInv("PrecisionBoltReady"))
+				{
+					A_ZoomFactor(1, ZOOM_INSTANT * !CountInv("PrecisionBoltSelected"));
+					A_TakeInventory("PrecisionBoltReady");
+					If (CountInv("PrecisionBoltSelected"))
+					{
+						EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/ZoomOut", 5);
+					}
+					Else
+					{
+						EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5); //[DoomKrakken]: In case the zoom-in sound is being played and we've already detached the Precision Bolt module.
+					}
+				}
+				Return ResolveState("Zoom");
+			}
+			Return ResolveState(Null);
+		}
+		GCPL TTUUTTUUTTUUUTTTUUUTTTUUUTTTUVWXYZ 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY * (CountInv("GaussCooldownCounter") > 0)|WRF_NOPRIMARY * CountInv("PrecisionBoltReady")|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY|WRF_ALLOWRELOAD * ((CountInv("PrecisionBolt") && CountInv("SiegeMode")) || ((CountInv("PrecisionBolt") || CountInv("SiegeMode")) && (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected")))) * !CountInv("PrecisionBoltReady")|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) * !CountInv("PrecisionBoltReady"), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("EnergyEfficient"));
+			If ((!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && CountInv("PrecisionBoltReady")) || CountInv("Grabbing_A_Ledge") || !CountInv("PrecisionBoltSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_ZoomFactor(1, ZOOM_INSTANT * !CountInv("PrecisionBoltSelected"));
+				A_TakeInventory("PrecisionBoltReady");
+				If (CountInv("PrecisionBoltSelected"))
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/ZoomOut", 5);
+				}
+				Else
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5); //[DoomKrakken]: In case the zoom-in sound is being played and we've already detached the Precision Bolt module.
+				}
+			}
+			If (!CountInv("PrecisionBoltSelected"))
+			{
+				Return ResolveState("ReadyLoop");
+			}
+			Else If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !(CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")) || (Invoker.Owner && Invoker.Owner.Player && Invoker.Owner.Player.PendingWeapon != WP_NOCHANGE))) 
+			{
+				Return ResolveState("PrecisionPrime");
+			}
+			Return ResolveState(Null);
+		}
+		TNT1 A 0 A_JumpIf((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && CountInv("PrecisionBoltReady"), "PrecisionReady");
+		Goto ReadyLoop;
+	PrecisionCancel:
+		TNT1 A 0
+		{
+			A_ZoomFactor(1, ZOOM_INSTANT * !CountInv("PrecisionBoltSelected"));
+			If (CountInv("PrecisionBoltReady"))
+			{
+				A_TakeInventory("PrecisionBoltReady");
+				If (CountInv("PrecisionBoltSelected"))
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Precision/ZoomOut", 5);
+				}
+				Else
+				{
+					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5); //[DoomKrakken]: In case the zoom-in sound is being played and we've already detached the Precision Bolt module.
+				}
+			}
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				Return ResolveState("Zoom");
+			}
+			Return ResolveState(Null);
+		}
+		GCPI ABABABABABABABAABBAABBAABBAABBAABBAABB 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY * (CountInv("GaussCooldownCounter") > 0)|WRF_NOPRIMARY * CountInv("PrecisionBoltReady")|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY|WRF_ALLOWRELOAD * ((CountInv("PrecisionBolt") && CountInv("SiegeMode")) || ((CountInv("PrecisionBolt") || CountInv("SiegeMode")) && (!CountInv("PrecisionBoltSelected") && !CountInv("SiegeModeSelected")))) * !CountInv("PrecisionBoltReady")|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) * !CountInv("PrecisionBoltReady"), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("EnergyEfficient"));
+			If (!CountInv("PrecisionBoltSelected"))
+			{
+				Return ResolveState("ReadyLoop");
+			}
+			Else If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !(CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")) || (Invoker.Owner && Invoker.Owner.Player && Invoker.Owner.Player.PendingWeapon != WP_NOCHANGE))) 
+			{
+				Return ResolveState("PrecisionPrime");
+			}
+			Return ResolveState(Null);
+		}
+		Goto ReadyLoop;
+	SiegePrime:
+		TNT1 A 0
+		{
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "EMG/Charge", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Siege/Charge/Start", 5, 0, 0.25);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Siege/Charge", 6);
+			EOA_SetWeaponRecoilOffset(0, 0, 5, 0.5);
+			A_GiveInventory("SiegeModeReady");
+			If (!CountInv("MobileSiege"))
+			{
+				SetPlayerProperty(0, 1, PROP_FROZEN);
+			}
+			If (CountInv("PowerHaste") || CountInv("ReducedChargeTime"))
+			{
+				If (CountInv("PowerHaste") && CountInv("ReducedChargeTime"))
+				{
+					Return ResolveState("FasterSiegePrime");
+				}
+				Else
+				{
+					Return ResolveState("FastSiegePrime");
+				}
+			}
+			Return ResolveState(Null);
+		}
+		//[DoomKrakken]: I'm having it jump to a faster animation AND having it do the usual tic manipulation here.  The only reason why I'd have it jump to another state sequence is so that I can carefully select the sprite frames where the turbine alternates.  That being said, the only reason why I'd have it do the typical tic manipulation stuff here is so that it'll speed up if one just so happens to get either speed buff during the animation's duration.  It'll look off that one time, in that one situation, but it's better than waiting the whole time if there's a speed buff present. ;)
+		GSMC ABCDEFGHIJIJIJKLMNOPOPQRSTUVWXWXWXYZ 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_WEAPSPEEDUPGRADE * CountInv("ReducedChargeTime"));
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Return ResolveState(Null);
+		}
+		GSM2 ABCDEFGH 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_WEAPSPEEDUPGRADE * CountInv("ReducedChargeTime"));
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Return ResolveState(Null);
+		}
+		Goto SiegeWait;
+	FastSiegePrime:
+		GSMC ADEHILMPQTUXY 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("ReducedChargeTime") * CountInv("PowerHaste"));
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Return ResolveState(Null);
+		}
+		GSM2 ABCDEFGH 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("ReducedChargeTime") * CountInv("PowerHaste"));
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Return ResolveState(Null);
+		}
+		Goto SiegeWait;
+	FasterSiegePrime:
+		GSMC BEJMRUZ 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_DISABLEHASTE);
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Return ResolveState(Null);
+		}
+		GSM2 CH 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_DISABLEHASTE);
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Return ResolveState(Null);
+		}
+		Goto SiegeWait;
+	SiegeWait:
+		GSM2 GH 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_DISABLEHASTE);
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Else If (CountInv("SiegeModeChargeCounter") >= 70)
+			{
+				Return ResolveState("SiegeReady");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	SiegeReady:
+		GSMI ABCDEF 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_DISABLEHASTE);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK) && (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK))
+			{
+				Return ResolveState("SiegeFire");
+			}
+			Else If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || !CountInv("SiegeModeSelected") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("SiegeClose");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	SiegeFire:
+		TNT1 A 0
+		{
+			SetPlayerProperty(0, 0, PROP_FROZEN);
+			A_ChangeVelocity(-10.5 * cos(Pitch), 0, 0, CVF_RELATIVE);
+			If (Vel.Z < 0)
+			{
+				A_ChangeVelocity(Vel.X, Vel.Y, 10.5 * sin(Pitch), CVF_REPLACE);
+			}
+			Else
+			{
+				A_ChangeVelocity(0, 0, 10.5 * sin(Pitch));
+			}
+			A_AlertMonsters();
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "SiegeModeProjectile", -5 + GetViewZ(), 12 + GetRelVelY() / 4);
+			EOA_SetWeaponRecoilOffset(0, 0, 7, 0.5);
+			EOA_SetWeaponRecoilOffset(0, -7);
+			If (GetCVar("EOA_APRRecoil"))
+			{
+				A_ZoomFactor(0.98, ZOOM_NOSCALETURNING);
+			}
+			EOA_SpawnCustomDynamicLight("GCNLight", DynamicLight.PulseLight, (25, 204, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 8, (0, 0, Height / 2), 0.2);
+			A_TakeInventory("EOA_CellAmmo", 30, TIF_NOTAKEINFINITE);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Gauss/Fire", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Siege/Fire", 5);
+			EOA_SpawnNoiseMaker("Gauss/Add");
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Siege/Add", 6, 0, 0.5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 7);
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			A_TakeInventory("SiegeModeReady");
+			A_TakeInventory("SiegeModeChargeCounter");
+		}
+		GSMF ABCDEFG 1 EOA_WeaponReady(WRF_NOFIRE, EOA_ALLOWMANTLE);
+		GSML ABABABCDEFG 1
+		{
+			A_ZoomFactor();
+			EOA_WeaponReady(WRF_NOFIRE, EOA_ALLOWMANTLE);
+		}
+		Goto ReadyLoop;
+	SiegeClose:
+		TNT1 A 0
+		{
+			SetPlayerProperty(0, 0, PROP_FROZEN);
+			A_TakeInventory("SiegeModeReady");
+			A_TakeInventory("SiegeModeChargeCounter");
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 7);
+			If (CountInv("SiegeModeSelected"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "Siege/Close", 7, 0, 0.25);
+			}
+		}
+		GSM2 HC 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			If (!CountInv("SiegeModeSelected"))
+			{
+				Return ResolveState("ReadyLoop");
+			}
+			Return ResolveState(Null);
+		}
+		GSMC ZURMJEB 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			If (!CountInv("SiegeModeSelected"))
+			{
+				Return ResolveState("ReadyLoop");
+			}
+			Return ResolveState(Null);
+		}
+		Goto ReadyLoop;
+	Reload:
+		TNT1 A 0 A_JumpIf(CountInv("PrecisionBolt") && !CountInv("PrecisionBoltSelected"), "SwitchToPrecisionBolt");
+		TNT1 A 0 A_JumpIf(CountInv("SiegeMode") && !CountInv("SiegeModeSelected"), "SwitchToSiegeMode");
+		Goto ReadyLoop;
+	SwitchToPrecisionBolt:
+		GCSR A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNR A 0;
+		"####" HGFEDCBA 1;
+	PrecisionBoltMod:
+		TNT1 A 0 
+		{
+			A_GiveInventory("PrecisionBoltSelected");
+			A_TakeInventory("SiegeModeSelected");
+		}
+		GCPM ABCDEFGHIJKLMNOPQRST 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("PrecisionBolt/Equip");
+		GCPM UUUUUUUUUUUUUUU 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		GCPM VVVVVVVVVVVVVVVWXYZ 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("SiegeMode"), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		GCP2 ABCDEFGHIJKLMNOP 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("SiegeMode"), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		GCPI AAABBB 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("SiegeMode"), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+ 		Goto ReadyLoop;
+	SwitchToSiegeMode:
+		GCPR A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 2);
+		GCNR A 0;
+		"####" HGFEDCBA 1;
+	SiegeModeMod:
+		TNT1 A 0 
+		{
+			A_GiveInventory("SiegeModeSelected");
+			A_TakeInventory("PrecisionBoltSelected");
+		}
+		GCSM ABCDEFGHIJKLMNOPQRS 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("SiegeMode/Equip");
+		GCSM TUVWWXXXWWWXXXYZ 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		GCS2 ABBBAAABBBAAABCDEFGHIJKLMNOPQRS 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("PrecisionBolt"), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		GCSI AAABBB 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("PrecisionBolt"), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		Goto ReadyLoop;
+	Zoom:
+		GCPT A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCST A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNT A 0;
+		"####" "#" 0;
+		Goto Super::Melee;
+	UseEquipment:
+		GCPT A 0 A_JumpIfInventory("PrecisionBoltSelected", 1, 3);
+		GCST A 0 A_JumpIfInventory("SiegeModeSelected", 1, 2);
+		GCNT A 0;
+		"####" "#" 0;
+		Goto Super::UseEquipment;
+	}
+}
+
+Class GaussCannonProjectile : EOA_FastProjectile
+{
+	Default
+	{
+		Radius 5;
+		Height 5;
+		DamageFunction 252;
+		Decal "Scorch";
+		Scale 3;
+		RenderStyle "Add";
+		EOA_Projectile.PuffType "GaussCannonProjectilePuff";
+		+BRIGHT
+		+BLOODLESSIMPACT
+		+DONTBLAST
+		+DONTREFLECT
+		+EXTREMEDEATH
+	}
+	States
+	{
+	Spawn:
+		TRAC A 1 NoDelay EOA_SpawnCustomDynamicLight("GCNLight", DynamicLight.PointLight, (25, 204, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, Tics, (0, 0, Height / 2));
+		Wait;
+	XDeath:
+		TNT1 A 0 A_StartSound("Gauss/Damage", 1);
+	Death:
+	Crash:
+		TNT1 A 1
+		{
+			A_Explode(32 * !(Self.GetClassName() == "SiegeModeProjectile"), 80, 0, 1, 80);
+			//Radius_Quake(5, 10, 0, 10, 0);
+			A_StartSound("Gauss/Impact", 2);
+		}
+		Stop;
+	}
+}
+
+Class PrecisionBoltProjectile : GaussCannonProjectile
+{
+	Double PBCharge;
+	Default
+	{
+		DamageFunction 120;
+	}
+	Override Void PostBeginPlay()
+	{
+		PBCharge = CountInv("PrecisionBoltChargeCounter", AAPTR_TARGET) * 120 / 105;
+		Super.PostBeginPlay();
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		If (!GetAge())
+		{
+			PBCharge = CountInv("PrecisionBoltChargeCounter", AAPTR_TARGET) * 120 / 105;
+		}
+		Damage += 3 * PBCharge;
+		Return Super.DoSpecialDamage(Target, Damage, DamageType);
+	}
+	Override Void Tick()
+	{
+		Super.Tick();
+		If (GetAge() == 1 && !(InStateSequence(CurState, ResolveState("Death")) || InStateSequence(CurState, ResolveState("XDeath")) || InStateSequence(CurState, ResolveState("Crash")))) //This occurs only once, after the first tic has passed.  This way, we can see the projectile "exiting" the muzzle.
+		{
+			Vel = Vel.Unit() * TrueSpeed * (1.0 + PBCharge / 33.3);
+		}
+	}
+	States
+	{
+	XDeath:
+	Death:
+	Crash:
+		TNT1 A 1
+		{
+			A_StartSound("Gauss/Impact", 2);
+			//Radius_Quake(5, 10, 0, 10, 0);
+		}
+		Stop;
+	}
+}
+
+Class SiegeModeProjectile : GaussCannonProjectile
+{
+	Int OuterBeamCounter;
+	Default
+	{
+		DamageFunction 672;
+		Decal "BigScorch";
+		Scale 3;
+		EOA_Projectile.PuffType "";
+		+RIPPER
+	}
+	Override Void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		If (MoveMode == FastProjectile && !(InStateSequence(CurState, ResolveState("Death")) || InStateSequence(CurState, ResolveState("XDeath")) || InStateSequence(CurState, ResolveState("Crash"))))
+		{
+			Vel = Vel.Unit() * 35;
+		}
+	}
+	Override Actor StepEffects(Vector3 InitialPos, Vector3 StepDiff, Vector3 RealVel)
+	{
+		If (Self Is "GaussCannonProjectile")
+		{
+			Vector3 StepPos = InitialPos + StepDiff;
+			Vector3 OldPos = Pos;
+			SetOrigin(StepPos, False);
+			//The weave trail for Siege Mode's projectiles.  It spawns eight weaving trails, 45 degrees from each other.
+			If (GetAge() >= 1)
+			{
+				For (Int i = 0; i <= 7; i++)
+				{
+					A_SpawnItemEx("SiegeWeaveTrailFX", (10 * (1 + 1 * CountInv("OuterBeam", AAPTR_TARGET))) * sin(Pitch) * sin(45 * i + WeaveAngle), (10 * (1 + 1 * CountInv("OuterBeam", AAPTR_TARGET))) * cos(45 * i + WeaveAngle), (10 * (1 + 1 * CountInv("OuterBeam", AAPTR_TARGET))) * cos(Pitch) * sin(45 * i + WeaveAngle), Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH);
+				}
+				WeaveAngle += 10;
+			}
+			//To achieve the Outer Beam effect, I used distance/direction/damage code from A_HeatBlast and the array queue from CanCollideWith, and applied it to this custom FastProjectile's StepEffects virtual.
+			BlockThingsIterator It = BlockThingsIterator.Create(Self, 96);
+			Bool HitMonster;
+			While (It.Next())
+			{
+				Actor Mo = It.Thing;
+				If (Mo == Self || Mo == Target || !Mo.bSHOOTABLE || !CheckIfCloser(Mo, 8 * (1 + 7 * CountInv("OuterBeam", AAPTR_TARGET))) || Mo.CurSector.PortalGroup != CurSector.PortalGroup || !CheckSight(Mo))
+				{
+					Continue;
+				}
+				Vector3 PosDif = Self.Vec3To(Mo); //Difference in position between inflictor and victim.
+				Double RelAngle = AbsAngle(Self.Angle, atan2(posDif.Y, posDif.X)); //Difference in angle between inflictor and victim.
+				If (RelAngle < 90.0)
+				{
+					Continue;
+				}
+				If (AlreadyRipped.Find(Mo) == AlreadyRipped.Size() && GetAge() > 0 && (GetClassName() == "SiegeModeProjectile" || !(InStateSequence(CurState, ResolveState("Death")) || InStateSequence(CurState, ResolveState("XDeath")) || InStateSequence(CurState, ResolveState("Crash"))))) //[DoomKrakken]: If it's the last one in the array (a.k.a. it hadn't been damaged or ripped through before by this projectile), then it'll damage the monster and add it to the array, making sure it doesn't get damaged twice. ;)
+				{
+					Mo.DamageMobj(Self, Target, GetMissileDamage(0, 1), "Normal", DMG_EXPLOSION);
+					AlreadyRipped.Push(Mo);
+				}
+			}
+			SetOrigin(OldPos, False);
+		}
+		Return Super.StepEffects(InitialPos, StepDiff, RealVel);
+	}
+	States
+	{
+	Spawn:
+		TRAC A 1 NoDelay
+		{
+			EOA_SpawnCustomDynamicLight("GCNLight", DynamicLight.PointLight, (25, 204, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, Tics, (0, 0, Height / 2));
+			A_SpawnItemEx("SiegeModeFX", Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH);
+			A_SpawnItemEx("SiegeModeFX", Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH);
+			A_SpawnItemEx("SiegeModeFX", Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_TRANSFERPITCH);
+		}
+		Wait;
+	Death:
+	Crash:
+		TNT1 A 0 A_SpawnItemEx("GaussCannonProjectilePuff", Flags: SXF_NOCHECKPOSITION);
+		Goto Super::Death;
+	}
+}
+
+Class GaussCannonProjectilePuff : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SpawnItemEx("GaussImpactFX", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("GaussImpactFX", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("GaussCannonImpactShockWave", Flags: SXF_NOCHECKPOSITION|SXF_SETTARGET|SXF_ORIGINATOR);
+			A_SpawnItemEx("GaussCannonImpactShockWave", Flags: SXF_NOCHECKPOSITION|SXF_SETTARGET|SXF_ORIGINATOR);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "GCNAddLight", DynamicLight.PulseLight, (25, 204, 255), 128, 1, DYNAMICLIGHT.LF_ADDITIVE, 8, (0, 0, Height / 2), 1.0 * 8 / TICRATE);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "GCNAttLight", DynamicLight.PulseLight, (25, 204, 255), 128, 1, DYNAMICLIGHT.LF_ATTENUATE, 8, (0, 0, Height / 2), 1.0 * 8 / TICRATE);
+		}
+		TNT1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 0 A_SpawnProjectile("GaussCannonImpactSpark", 5, 0, Random(1, 360), CMF_AIMDIRECTION, random(-90, 45));
+		TNT1 A 8;
+		Stop;
+	}
+}
+
+Class SiegeModeProjectilePuff : GaussCannonProjectilePuff
+{
+	States
+	{
+	Spawn:
+		TNT1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 0 A_SpawnProjectile("GaussCannonImpactSpark", 5, 0, Random(1, 360), CMF_AIMDIRECTION, random(-90, 45)); //[DoomKrakken]: Spawn twice as many sparks. :D
+		Goto Super::Spawn;
+	}
+}
+
+Class GaussImpactFX : Actor
+{
+	Bool LargeScale;
+	Default
+	{
+		Radius 1;
+		Height 1;
+		Gravity 0.66;
+		Scale 0.2;
+		Alpha 0.99;
+		RenderStyle "Add";
+		+BRIGHT
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+NOINTERACTION
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		BNO2 A 0 NoDelay 
+		{
+			A_SetRoll(random(0, 359));
+			If (Target && Target.GetClassName() == "SiegeModeProjectile")
+			{
+				LargeScale = True;
+				A_SetScale(Scale.X * 1.5);
+			}
+			Return A_Jump(256, random(1, 8));
+		}
+		BNO2 ABCDEFGH 0 A_Jump(256, "Fade");
+	Fade:
+		"####" "########" 1 A_SetScale(Scale.X * 1.18);
+		"####" "#" 1
+		{
+			A_SetScale(Scale.X * 1.18);
+			A_FadeOut(0.25 / (1 + LargeScale));
+		}
+		Wait;
+	}
+}
+
+Class GaussCannonImpactShockWave : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		Gravity 0.66;
+		Scale 0.2;
+		Alpha 0.99;
+		ReactionTime 5;
+		RenderStyle "Add";
+		+BRIGHT
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+NOINTERACTION
+		+NOTRIGGER
+		+ROLLCENTER
+		+ROLLSPRITE
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		BSW2 B 0 NoDelay 
+		{
+			A_SetRoll(random(0, 359));
+		}
+		BSW2 B 1 
+		{
+			A_SetScale(Scale.X * 1.25);
+			A_CountDown();
+		}
+		Wait;
+	Death:
+		BSW2 B 1
+		{
+			A_SetScale(Scale.X * 1.25);
+			A_FadeOut(0.25);
+		}
+		Wait;
+	}
+}
+
+Class GaussCannonImpactSpark : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		Scale 0.5;
+		Translation "0:255=%[0, 0, 0]:[1.07, 1.65, 2]";
+		Gravity 0.33;
+		Speed 7;
+		RenderStyle "Add";
+		+BRIGHT
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+MISSILE 
+		+NOINTERACTION
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		NULL A 3 NoDelay
+		{
+			A_ScaleVelocity(frandom(0.75, 1.1));
+			A_SetScale(Scale.X * frandom(0.75, 1.2));
+		}
+	Fade:
+		NULL A 1
+		{
+			If (Scale.X > 0)
+			{
+				A_SetScale(Scale.X - 0.05);
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Null");
+		}
+		Loop;
+	}
+}
+
+Class VolatileDischargeExplosion : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Translation "0:255=%[0, 0, 0]:[0.6, 1, 1.2]";
+		Alpha 0.99;
+		+BRIGHT
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCERADIUSDMG
+		+FORCEXYBILLBOARD
+		+NOINTERACTION
+		+NOTRIGGER
+		+ROLLCENTER
+		+ROLLSPRITE
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1 NoDelay 
+		{
+			A_SetRoll(random(0, 359));
+			A_Explode(320, 192, 0, 1, 192);
+			A_SpawnItemEx("VolatileDischargeExplosionFX", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERROLL);
+			A_SpawnItemEx("VolatileDischargeExplosionFX", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERROLL);
+		}
+		Stop;
+	}
+}
+
+Class VolatileDischargeExplosionFX : VolatileDischargeExplosion
+{
+	States
+	{
+	Spawn:
+		VDXP A 1 NoDelay
+		{
+			A_SetScale(Scale.X + 0.75);
+			A_FadeOut(0.075);
+			If (Scale.X >= 6)
+			{
+				Return ResolveState("Null");
+			}
+			Return ResolveState(Null);
+		}
+		Wait;
+	}
+}
+
+Class SiegeModeFX : Actor
+{
+	Default
+	{
+		RenderStyle "AddShaded";
+		StencilColor "Cyan";
+		Scale 0.3;
+		+BRIGHT
+		+DONTSPLASH
+		+FLATSPRITE
+		+FORCEXYBILLBOARD
+		+NOINTERACTION
+		+NOTRIGGER
+		+ROLLCENTER
+		+ROLLSPRITE
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SetPitch(Pitch + 90);
+			A_SetRoll(frandom(0, 359));
+		}
+		SGFX A 1
+		{
+			A_FadeOut(0.15);
+			A_SetScale(Scale.X + 0.3);
+		}
+		Wait;
+	}
+}
+
+Class SiegeWeaveTrail1 : EOA_FastProjectile
+{
+	Default
+	{
+		Radius 0;
+		Height 0;
+		MissileHeight 8;
+		MissileType "SiegeWeaveTrailFX";
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1 A_JumpIf(!Tracer, "Null");
+		Loop;
+	Death:
+		TNT1 A 0 A_JumpIf(Tracer, "Spawn");
+		Stop;
+	}
+}
+
+Class SiegeWeaveTrail2 : SiegeWeaveTrail1 {}
+Class SiegeWeaveTrail3 : SiegeWeaveTrail1 {}
+Class SiegeWeaveTrail4 : SiegeWeaveTrail1 {}
+Class SiegeWeaveTrail5 : SiegeWeaveTrail1 {}
+Class SiegeWeaveTrail6 : SiegeWeaveTrail1 {}
+Class SiegeWeaveTrail7 : SiegeWeaveTrail1 {}
+Class SiegeWeaveTrail8 : SiegeWeaveTrail1 {}
+
+Class SiegeWeaveTrailFX : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		//Scale 2;
+		Translation "0:255=%[0, 0, 0]:[0.25, 1, 1]";
+		RenderStyle "Add";
+		+BRIGHT
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+MISSILE 
+		+NOGRAVITY
+		+NOINTERACTION
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		NULL A 3;
+	Fade:
+		NULL A 1
+		{
+			If (Scale.X <= 0.1)
+			{
+				Return ResolveState("Null");
+			}
+			Else
+			{
+				A_SetScale(Scale.X - 0.33);
+				Return ResolveState(Null);
+			}
+		}
+		Loop;
+	}
+}

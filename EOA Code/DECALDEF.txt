@@ -1,0 +1,206 @@
+//[DoomKrakken]: Taken from D4T.
+Fader GoAwayBulletGlow
+{
+	DecayStart 0.5
+	DecayTime 1.0
+}
+
+ColorChanger ToBlackFaster
+{
+	FadeStart 0.5
+	FadeTime 0.5
+}
+
+Decal NewBulletChip1
+{
+	Pic Bullet1
+	X-Scale 0.15
+	Y-Scale 0.15
+	RandomFlipX
+	RandomFlipY
+	Translucent 0.85
+	Shade "00 00 00"
+}
+
+Decal NewBulletChip2
+{
+	Pic Bullet2
+	X-Scale 0.15
+	Y-Scale 0.15
+	RandomFlipX
+	RandomFlipY
+	Translucent 0.85
+	Shade "00 00 00"
+}
+Decal NewBulletChip3
+{
+	Pic Bullet3
+	X-Scale 0.15
+	Y-Scale 0.15
+	RandomFlipX
+	RandomFlipY
+	Translucent 0.85
+	Shade "00 00 00"
+}
+Decal NewBulletChip4
+{
+	Pic Bullet4
+	X-Scale 0.15
+	Y-Scale 0.15
+	RandomFlipX
+	RandomFlipY
+	Translucent 0.85
+	Shade "00 00 00"
+}
+Decal NewBulletChip5
+{
+	Pic Bullet5
+	X-Scale 0.15
+	Y-Scale 0.15
+	RandomFlipX
+	RandomFlipY
+	Translucent 0.85
+	Shade "00 00 00"
+}
+
+Decal NewBulletChip1Glow	//Glowing spot
+{
+	Pic X003B0
+	X-Scale 0.051
+	Y-Scale 0.051
+	RandomFlipX
+	RandomFlipY
+	Shade "ff4e00"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "NewBulletChip1"
+}
+Decal NewBulletChip2Glow
+{
+	Pic X003B0
+	X-Scale 0.051
+	Y-Scale 0.051
+	RandomFlipX
+	RandomFlipY
+	Shade "ff4e00"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "NewBulletChip2"
+}
+Decal NewBulletChip3Glow
+{
+	Pic X003B0
+	X-Scale 0.051
+	Y-Scale 0.051
+	RandomFlipX
+	RandomFlipY
+	Shade "ff4e00"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "NewBulletChip3"
+}
+Decal NewBulletChip4Glow
+{
+	Pic X003B0
+	X-Scale 0.051
+	Y-Scale 0.051
+	RandomFlipX
+	RandomFlipY
+	Shade "ff4e00"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "NewBulletChip4"
+}
+Decal NewBulletChip5Glow
+{
+	Pic X003B0
+	X-Scale 0.051
+	Y-Scale 0.051
+	RandomFlipX
+	RandomFlipY
+	Shade "ff4e00"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "NewBulletChip5"
+}
+
+/*DecalGroup BulletChip //only the black part
+{
+	NewBulletChip1 1
+	NewBulletChip2 1
+	NewBulletChip3 1
+	NewBulletChip4 1
+	NewBulletChip5 1
+}*/
+
+DecalGroup BulletChip //with glowy stuff
+{
+	NewBulletChip1Glow 1
+	NewBulletChip2Glow 1
+	NewBulletChip3Glow 1
+	NewBulletChip4Glow 1
+	NewBulletChip5Glow 1
+}
+
+Decal EMGPuffScorch //dark background
+{
+	Pic X003B0
+	X-Scale 0.05
+	Y-Scale 0.05
+	RandomFlipX
+	RandomFlipY
+	Shade "96C2FF"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "NewBulletChip5"
+}
+
+Decal EMGPuffBigChip
+{
+	Pic Bullet5
+	X-Scale 0.3
+	Y-Scale 0.3
+	RandomFlipX
+	RandomFlipY
+	Translucent 0.85
+	Shade "00 00 00"
+}
+
+Decal EMGPuffBigScorch //dark background
+{
+	Pic X003B0
+	X-Scale 0.11
+	Y-Scale 0.11
+	RandomFlipX
+	RandomFlipY
+	Shade "96C2FF"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "EMGPuffBigChip"
+}
+
+Decal EMGPuffBigScorchRed //dark background
+{
+	Pic X003B0
+	X-Scale 0.11
+	Y-Scale 0.11
+	RandomFlipX
+	RandomFlipY
+	Shade "FF4E00"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "EMGPuffBigChip"
+}
+
+Decal ChaingunPuffUraniumScorch //dark background
+{
+	Pic X003B0
+	X-Scale 0.05
+	Y-Scale 0.05
+	RandomFlipX
+	RandomFlipY
+	Shade "FFFFFF"
+	FullBright
+	Animator GoAwayBulletGlow
+	LowerDecal "NewBulletChip5"
+}

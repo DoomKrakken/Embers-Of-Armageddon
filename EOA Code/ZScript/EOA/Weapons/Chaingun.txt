@@ -1,0 +1,1657 @@
+Class ChaingunSelected : EOA_Token {}
+
+Class ChaingunSpinCounter : EOA_Token {Default {Inventory.MaxAmount 36;} }
+
+Class ChaingunFireCounter : EOA_Token {Default {Inventory.MaxAmount 8;} }
+
+Class ChaingunSpinupCounter : EOA_Token {}
+
+Class ChaingunSpindownCounter : EOA_Token {}
+
+//Gatling Rotator - Allows you to spin up the barrels without needing to fire.
+Class GatlingRotator : EOA_Token {}
+Class GatlingRotatorSelected : EOA_Token {}
+Class ImprovedTorque : EOA_Token {} //Barrels spin up much faster with the Gatling Rotator.
+Class GRUraniumCoating : EOA_Token {} //Shots penetrate enemies.
+
+Class MC_IncendiaryRounds : EOA_MasteryChallengeToken //Kill 5 enemies within 5 seconds (using the Chaingun with the Gatling Rotator equipped, of course).
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "IncendiaryRounds";
+		EOA_MasteryChallengeToken.ChallengeCounter "IncendiaryRounds";
+		Tag "Incendiary Rounds";
+	}
+}
+
+Class IncendiaryRounds : EOA_Token {} //Mastery Upgrade - Shots deal more damage once maximum fire rate has been achieved.
+
+Class IncendiaryRoundsKillCounter1 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerIncendiaryRoundsKillCounter1";
+		Powerup.Duration -5;
+	}
+}
+
+Class IncendiaryRoundsKillCounter2 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerIncendiaryRoundsKillCounter2";
+		Powerup.Duration -5;
+	}
+}
+
+Class IncendiaryRoundsKillCounter3 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerIncendiaryRoundsKillCounter3";
+		Powerup.Duration -5;
+	}
+}
+
+Class IncendiaryRoundsKillCounter4 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerIncendiaryRoundsKillCounter4";
+		Powerup.Duration -5;
+	}
+}
+
+Class IncendiaryRoundsKillCounter5 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerIncendiaryRoundsKillCounter5";
+		Powerup.Duration -5;
+	}
+}
+
+Class PowerIncendiaryRoundsKillCounter1 : PowerEOA_TempToken {}
+Class PowerIncendiaryRoundsKillCounter2 : PowerEOA_TempToken {}
+Class PowerIncendiaryRoundsKillCounter3 : PowerEOA_TempToken {}
+Class PowerIncendiaryRoundsKillCounter4 : PowerEOA_TempToken {}
+Class PowerIncendiaryRoundsKillCounter5 : PowerEOA_TempToken {}
+
+//Mobile Turret - Allows you to fire twice as fast and immediately.  Prone to stalling from extended periods of usage.
+Class MobileTurret : EOA_Token {}
+Class MobileTurretSelected : EOA_Token {}
+Class RapidDeployment : EOA_Token {} //Faster Deployment.
+Class MTUraniumCoating : EOA_Token {} //Shots penetrate enemies.
+
+Class MC_UltimateCooling : EOA_MasteryChallengeToken //Kill 4 or more enemies in one deployment 5 times.
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "UltimateCooling";
+		EOA_MasteryChallengeToken.ChallengeCounter "UltimateCoolingMasteryCounter";
+		Tag "Ultimate Cooling";
+	}
+}
+
+Class UltimateCooling : EOA_Token {} //Mastery Upgrade - The Mobile Turret will no longer overheat.
+
+Class MobileTurretHeatCounter : EOA_Token {Default {Inventory.MaxAmount 105;} } //3 sec.
+
+Class MobileTurretOverheatCounter : EOA_Token {}
+Class MobileTurretReady : EOA_Token {}
+Class MobileTurretBarrelCounter : EOA_Token {Default {Inventory.MaxAmount 3;} }
+Class UltimateCoolingKillCounter : EOA_Token {Default {Inventory.MaxAmount 4;} }
+Class UltimateCoolingMasteryCounter : EOA_Token {Default {Inventory.MaxAmount 5;} }
+//Class UltimateCoolingKillSuppressor : EOA_Token {} //So that we're not spammed with mastery ticking sounds once we reach 4 kills with the Mobile Turret.
+
+Class CGNMods : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("GatlingRotator");
+			A_GiveInventory("MobileTurret");
+		}
+		Stop;
+	}
+}
+
+Class CGNUpgrades : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("ImprovedTorque");
+			A_GiveInventory("GRUraniumCoating");
+			A_GiveInventory("RapidDeployment");
+			A_GiveInventory("MTUraniumCoating");
+		}
+		Stop;
+	}
+}
+
+Class EOA_Chaingun : EOA_Weapon
+{
+	State MT_FireState;
+	Default
+	{
+		Inventory.Icon "ICONCGN";
+		Weapon.AmmoType "EOA_BulletAmmo";
+		Weapon.AmmoUse 1;
+		Weapon.AmmoGive 90;
+		Weapon.SlotNumber 8;
+		Inventory.PickupMessage "Delta-12 Chaingun";
+		Tag "Delta-12 Chaingun";
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("CGN/Fire");
+		MarkSound("CGN/Fire/Uranium");
+		MarkSound("CGN/Stop");
+		MarkSound("CGN/MTOverheat");
+		MarkSound("CGN/Rotor");
+		MarkSound("CGN/Spin");
+		MarkSound("CGN/MTOpen");
+		MarkSound("CGN/MTClose");
+		MarkSound("CGN/MTFire");
+		MarkSound("CGN/MTFire/Uranium");
+		MarkSound("CGN/MTCasings");
+		MarkSound("GatlingRotator/Click");
+		MarkSound("GatlingRotator/Attach");
+		MarkSound("GatlingRotator/Punch");
+		MarkSound("MobileTurret/Attach");
+		MarkSound("MobileTurret/Lock");
+		MarkSound("MobileTurret/Whirr");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void BeginPlay()
+	{
+		MT_FireState = FindState("TurretFire");
+		Super.BeginPlay();
+	}
+	Override Void DoEffect()
+	{
+		Let Player = Owner.Player;
+		If (!Player)
+		{
+			Super.DoEffect();
+			Return;
+		}
+
+		//Mod not equipped...
+		If ((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !(Owner.GetPlayerInput(INPUT_OLDBUTTONS) & BT_ALTATTACK) && Player.ReadyWeapon == Self && !(Owner.CountInv("GatlingRotatorSelected") || Owner.CountInv("MobileTurretSelected")))
+		{
+			EOA_SpawnNoiseMaker("Weapon/DryFire");
+		}
+
+		//Cooldown
+		Owner.A_TakeInventory("MobileTurretHeatCounter", 1 + Owner.CountInv("PowerHaste"));
+
+		//Mastery - Incendiary Rounds (Gatling Rotator)
+		If (!Owner.CountInv("IncendiaryRounds") && Owner.CountInv("ImprovedTorque") && Owner.CountInv("GRUraniumCoating"))
+		{
+			Owner.A_GiveInventory("MC_IncendiaryRounds");
+			If (Owner.CountInv("PowerIncendiaryRoundsKillCounter1") && Owner.CountInv("PowerIncendiaryRoundsKillCounter2") && Owner.CountInv("PowerIncendiaryRoundsKillCounter3") && Owner.CountInv("PowerIncendiaryRoundsKillCounter4") && Owner.CountInv("PowerIncendiaryRoundsKillCounter5") && !Owner.CountInv("IncendiaryRounds"))
+			{
+				Owner.A_GiveInventory("IncendiaryRounds");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_IncendiaryRounds");
+		}
+		
+		//Mastery - Ultimate Cooling (Mobile Turret)
+		If (!Owner.CountInv("UltimateCooling") && Owner.CountInv("RapidDeployment") && Owner.CountInv("MTUraniumCoating"))
+		{
+			Owner.A_GiveInventory("MC_UltimateCooling");
+			If (Owner.CountInv("UltimateCoolingMasteryCounter") >= 5)
+			{
+				Owner.A_GiveInventory("UltimateCooling");
+				Owner.A_TakeInventory("UltimateCoolingMasteryCounter");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_UltimateCooling");
+		}
+		If (Owner.CountInv("MobileTurretOverheatCounter"))
+		{
+			Owner.A_TakeInventory("UltimateCoolingKillCounter");
+		}
+		
+		//Spin Handler
+		If (Player.ReadyWeapon == Self)
+		{
+			If (((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || ((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && Owner.CountInv("GatlingRotatorSelected"))) && Owner.CountInv("ChaingunSpinupCounter") && (!Owner.CountInv("MobileTurretReady") || !Owner.CountInv("MobileTurretOverheatCounter")))
+			{
+				If (((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(Owner.GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)) || ((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !(Owner.GetPlayerInput(INPUT_OLDBUTTONS) & BT_ALTATTACK) && Owner.CountInv("GatlingRotatorSelected") && !Owner.CountInv("MobileTurretSelected")) || !Owner.CountInv("ChaingunSpinCounter"))
+				{
+					Owner.A_TakeInventory("ChaingunSpindownCounter");
+				}
+				Owner.A_GiveInventory("ChaingunSpinCounter", 1 + (Owner.CountInv("GatlingRotatorSelected") && Owner.CountInv("ImprovedTorque") && (Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK)));
+			}
+			Else
+			{
+				If (Owner.CountInv("ChaingunSpinCounter") && !Owner.CountInv("ChaingunSpindownCounter"))
+				{
+					Owner.A_GiveInventory("ChaingunSpindownCounter");
+				}
+				If (!Owner.CountInv("ChaingunSpinCounter"))
+				{
+					Owner.A_TakeInventory("ChaingunSpindownCounter");
+				}
+				Owner.A_TakeInventory("ChaingunSpinCounter", 1);
+			}
+			If (Owner.CountInv("MobileTurretReady") && (Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && (Owner.CountInv("EOA_BulletAmmo") || CheckInfiniteAmmo()) && !Owner.CountInv("MobileTurretOverheatCounter"))
+			{
+				Owner.A_GiveInventory("MobileTurretHeatCounter", 2 * (1 + Owner.CountInv("PowerHaste")));
+				If (Owner.CountInv("UltimateCooling")) //[DoomKrakken]: The counter increments, but will never reach its maximum.
+				{
+					If ((Owner.CountInv("MobileTurretHeatCounter") >= 39 && !(Owner.CountInv("MobileTurretBarrelCounter") % randompick(1, 1, 3))) || (Owner.CountInv("MobileTurretHeatCounter") >= 65 && !(Owner.CountInv("MobileTurretBarrelCounter") % randompick(1, 1, 1, 3))) || (Owner.CountInv("MobileTurretHeatCounter") >= 78 && !(Owner.CountInv("MobileTurretBarrelCounter") % randompick(1, 1, 2))) || (Owner.CountInv("MobileTurretHeatCounter") >= 95 && !(Owner.CountInv("MobileTurretBarrelCounter") % randompick(1, 1, 1, 2))))
+					{
+						Owner.A_TakeInventory("MobileTurretHeatCounter", 1 + Owner.CountInv("PowerHaste"));
+					}
+				}
+			}
+			If (Owner.CountInv("MobileTurretHeatCounter") >= 105 && !Owner.CountInv("UltimateCooling"))
+			{
+				EOA_SpawnNoiseMaker("CGN/MTOverheat");
+				Owner.A_GiveInventory("MobileTurretOverheatCounter");
+			}
+			If (!Owner.CountInv("MobileTurretHeatCounter"))
+			{
+				Owner.A_TakeInventory("MobileTurretOverheatCounter");
+			}
+			If (Owner.CountInv("ChaingunSpinCounter"))
+			{
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "CGN/Rotor", 6, CHANF_OVERLAP|CHANF_LOOPING, 0.125 * Owner.CountInv("ChaingunSpinCounter") / 36);
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "CGN/Spin", 6, CHANF_OVERLAP|CHANF_LOOPING, 0.125 * Owner.CountInv("ChaingunSpinCounter") / 36);
+			}
+			Else If (Owner.IsActorPlayingSound(SlotNumber * 100 + 6, "CGN/Rotor") || Owner.IsActorPlayingSound(SlotNumber * 100 + 6, "CGN/Spin"))
+			{
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 6);
+			}
+		}
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon != Self)
+		{
+			If (Owner.CountInv("ChaingunSelected"))
+			{
+				Owner.A_TakeInventory("ChaingunSelected");
+				Owner.A_TakeInventory("ChaingunSpinCounter");
+				Owner.A_TakeInventory("MobileTurretReady");
+				Owner.A_TakeInventory("UltimateCoolingKillCounter");
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 1);
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 5);
+				EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 6);
+				FOVScale = 1;
+			}
+		}
+		Super.DoEffect();
+	}
+	Override Double GetSpeedFactor()
+	{
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon == Self)
+		{
+			Let PSP = Owner.Player.FindPSprite(PSP_WEAPON);
+			If (PSP && InStateSequence(PSP.CurState, MT_FireState))
+			{
+				Return 0.5;
+			}
+		}
+		Return 1.0;
+	}
+	States
+	{
+	Spawn:
+		CGUN A -1;
+		Stop;
+	Select:
+		TNT1 A 0
+		{
+			Invoker.SemiAutoOverride = True;
+			A_WeaponOffset();
+			A_GiveInventory("ChaingunSelected");
+			If (GetCVar("EOA_Reticles"))
+			{
+				ACS_NamedExecuteAlways("CGNReticle", 0);
+				A_SetCrosshair(99);
+			}
+			Else
+			{
+				A_SetCrosshair(0);
+			}
+			A_GiveInventory("ChaingunSpinupCounter");
+		}
+		TNT1 A 0 A_Raise();
+		Wait;
+	Deselect:
+		TNT1 A 0 A_JumpIfInventory("MobileTurretReady", 1, "TurretClose");
+		CGRR A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMR A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNR A 0;
+		"####" HFDB 1;
+		TNT1 A 4
+		{
+			A_ZoomFactor();
+			A_TakeInventory("ChaingunSelected");
+			A_TakeInventory("ChaingunSpinCounter");
+			A_TakeInventory("MobileTurretReady");
+			A_TakeInventory("UltimateCoolingKillCounter");
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+			A_SetTics(4 * !CountInv("Adept") * !CountInv("PowerBerserk"));
+		}
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	Ready:
+		TNT1 A 0
+		{
+			If (Level.Time && !(CountInv("GatlingRotatorSwitch") || CountInv("MobileTurretSwitch")))
+			{
+				EOA_SpawnNoiseMaker("Weapon/Switch");
+			}
+		}
+		CGRR A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMR A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNR A 0;
+		"####" ACEG 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			If (CountInv("GatlingRotatorSwitch"))
+			{
+				A_TakeInventory("GatlingRotatorSwitch");
+				Return ResolveState("GatlingRotatorMod");
+			}
+			Else If (CountInv("MobileTurretSwitch"))
+			{
+				A_TakeInventory("MobileTurretSwitch");
+				Return ResolveState("MobileTurretMod");
+			}
+			Return ResolveState(Null);
+		}
+		Goto ReadyLoop;
+	ReRaise:
+		"####" "#" 0 A_GiveInventory("ChaingunSpinupCounter");
+		CGRR A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMR A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNR A 0;
+		"####" CDEFGH 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+	ReadyLoop:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" "#" 1 
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY * (((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && CountInv("GatlingRotatorSelected")) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter")))|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			If (CountInv("GatlingRotatorSwitch"))
+			{
+				A_TakeInventory("GatlingRotatorSwitch");
+				Return ResolveState("SwitchToGatlingRotator");
+			}
+			Else If (CountInv("MobileTurretSwitch"))
+			{
+				A_TakeInventory("MobileTurretSwitch");
+				Return ResolveState("SwitchToMobileTurret");
+			}
+			Else If (((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && CountInv("GatlingRotatorSelected")) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+				Return ResolveState("SpinAnim1");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	Fire:
+		CGRU A 0 A_JumpIf(CountInv("GatlingRotatorSelected") && CountInv("GRUraniumCoating"), 5);
+		CGMU A 0 A_JumpIf(CountInv("MobileTurretSelected") && CountInv("MTUraniumCoating"), 4);
+		CGRF A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMF A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNF A 0;
+		"####" "#" 0
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("SoundCounter") >= 4)
+			{
+				A_TakeInventory("SoundCounter");
+			}
+			A_GiveInventory("SoundCounter");
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+			If (CountInv("IncendiaryRounds") && CountInv("ChaingunSpinCounter") >= 36 && CountInv("GatlingRotatorSelected"))
+			{
+				EOA_FireBullets(CountInv("ChaingunSpinCounter") / 12.0, CountInv("ChaingunSpinCounter") / 12.0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "ChaingunIncendiarySlug", -3 + GetViewZ(), 5 + GetRelVelY() / 3);
+			}
+			Else
+			{
+				EOA_FireBullets(CountInv("ChaingunSpinCounter") / 12.0, CountInv("ChaingunSpinCounter") / 12.0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "ChaingunSlug", -3 + GetViewZ(), 5 + GetRelVelY() / 3);
+			}
+			If (GetCVar("EOA_APRRecoil"))
+			{
+				A_ZoomFactor(0.99, ZOOM_NOSCALETURNING);
+			}
+			A_FireProjectile("EOA_ChaingunBrass", -60, 0, 3, 2, 0, -(5 + Pitch / 2));
+			A_AlertMonsters();
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			If ((CountInv("GatlingRotatorSelected") && CountInv("GRUraniumCoating")) || (CountInv("MobileTurretSelected") && CountInv("MTUraniumCoating")))
+			{
+				EOA_SpawnCustomDynamicLight("CGNLight", DynamicLight.PulseLight, (25, 153, 255), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 3, (0, 0, Height / 2), 0.1);
+			}
+			Else
+			{
+				EOA_SpawnCustomDynamicLight("CGNLight", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 3, (0, 0, Height / 2), 0.1);
+			}
+			If (CountInv("GatlingRotatorSelected") && CountInv("GRUraniumCoating"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/Fire/Uranium", 1 + CountInv("SoundCounter"));
+			}
+			Else
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/Fire", 1 + CountInv("SoundCounter"));
+			}
+		}
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 8, "FireAnim8");
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 7, "FireAnim7");
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 6, "FireAnim6");
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 5, "FireAnim5");
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 4, "FireAnim4");
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 3, "FireAnim3");
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 2, "FireAnim2");
+		"####" "#" 0 A_JumpIfInventory("ChaingunFireCounter", 1, "FireAnim1");
+	FireAnim1:
+		"####" AB 1
+		{
+			If (GetFrame() == 1)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" C 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" D 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim2;
+	FireAnim2:
+		"####" DE 1
+		{
+			If (GetFrame() == 4)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" F 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" G 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim3;
+	FireAnim3:
+		"####" GH 1
+		{
+			If (GetFrame() == 7)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" A 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" B 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim4;
+	FireAnim4:
+		"####" BC 1
+		{
+			If (GetFrame() == 2)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" D 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" E 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim5;
+	FireAnim5:
+		"####" EF 1
+		{
+			If (GetFrame() == 5)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" G 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" H 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim6;
+	FireAnim6:
+		"####" HA 1
+		{
+			If (GetFrame() == 0)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" B 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" C 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim7;
+	FireAnim7:
+		"####" CD 1
+		{
+			If (GetFrame() == 3)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" E 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" F 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim8;
+	FireAnim8:
+		"####" FG 1
+		{
+			If (GetFrame() == 6)
+			{
+				A_ZoomFactor(1, ZOOM_NOSCALETURNING);
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		}
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" H 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" A 1
+		{
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+		}
+		"####" "#" 0 A_ReFire();
+		Goto SpinAnim1;
+	SpinAnim1:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" ABC 1
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+		}
+		"####" "#" 0
+		{
+			//[DoomKrakken]: Using A_SetInventory will ensure that the correct amount of counters are present so that it'll go to the correct firing animation state sequence.  They'll be offset by 1 because counters are given when the Chaingun actually fires.
+			A_SetInventory("ChaingunFireCounter", 0);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim2"); //Because you're able to spin your barrels, but you can't fire if the Mobile Turret is stalled.  If you reeeeaaaally want to fire sooner, switch over to the Gatling Rotator... or watch your heat more carefully. ;)
+			}
+			Else
+			{
+				EOA_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+	SpinAnim2:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" DEF 1
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+		}
+		"####" "#" 0
+		{
+			A_SetInventory("ChaingunFireCounter", 1);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim3");
+			}
+			Else
+			{
+				A_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+	SpinAnim3:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" GHA 1 //[DoomKrakken]: Shoutout to my boi, XSlayer! :D
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+			If (CountInv("ChaingunSpinCounter") <= 6 && GetFrame() == 0)
+			{
+				Return ResolveState("SpinHalt");
+			}
+			Return ResolveState(Null);
+		}
+		"####" "#" 0
+		{
+			A_SetInventory("ChaingunFireCounter", 2);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim4");
+			}
+			Else
+			{
+				EOA_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+	SpinAnim4:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" BCD 1
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+		}
+		"####" "#" 0
+		{
+			A_SetInventory("ChaingunFireCounter", 3);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim5");
+			}
+			Else
+			{
+				EOA_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+	SpinAnim5:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" EFG 1
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+		}
+		"####" "#" 0
+		{
+			A_SetInventory("ChaingunFireCounter", 4);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim6");
+			}
+			Else
+			{
+				EOA_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+	SpinAnim6:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" HAB 1
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+			If (CountInv("ChaingunSpinCounter") <= 6 && GetFrame() == 0)
+			{
+				Return ResolveState("SpinHalt");
+			}
+			Return ResolveState(Null);
+		}
+		"####" "#" 0
+		{
+			A_SetInventory("ChaingunFireCounter", 5);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim7");
+			}
+			Else
+			{
+				EOA_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+	SpinAnim7:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" CDE 1
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+		}
+		"####" "#" 0
+		{
+			A_SetInventory("ChaingunFireCounter", 6);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim8");
+			}
+			Else
+			{
+				EOA_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+	SpinAnim8:
+		CGRS A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMS A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNS A 0;
+		"####" FGH 1
+		{
+			A_GiveInventory("ChaingunSpinupCounter");
+			If (CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !CountInv("MobileTurretSelected")|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected"))))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			If (CountInv("PowerHaste"))
+			{
+				If (GetSpeedCounter() >= 2)
+				{
+					SetSpeedCounter(0);
+				}
+				Else
+				{
+					SetSpeedCounter(GetSpeedCounter() + 1);
+				}
+			}
+			A_SetTics(4 - (CountInv("PowerHaste") && GetSpeedCounter()) - CountInv("ChaingunSpinCounter") / 12);
+			If (CountInv("ChaingunFireCounter") >= 8)
+			{
+				A_TakeInventory("ChaingunFireCounter");
+			}
+			A_GiveInventory("ChaingunFireCounter");
+		}
+		"####" "#" 0
+		{
+			A_SetInventory("ChaingunFireCounter", 7);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && CountInv("MobileTurretSelected") && CountInv("MobileTurretOverheatCounter"))
+			{
+				A_ReFire("SpinAnim1");
+			}
+			Else
+			{
+				A_WeaponReady(WRF_NOSECONDARY|WRF_ALLOWZOOM|WRF_ALLOWRELOAD * ((CountInv("GatlingRotator") && CountInv("MobileTurret")) || ((CountInv("GatlingRotator") || CountInv("MobileTurret")) && (!CountInv("GatlingRotatorSelected") && !CountInv("MobileTurretSelected")))));
+			}
+		}
+		"####" "#" 0 A_JumpIf(CountInv("ChaingunSpinCounter") <= 6, "SpinHalt");
+		Goto SpinAnim1;
+	SpinHalt:
+		"####" "#" 1
+		{
+			EOA_SpawnNoiseMaker("CGN/Stop");
+			A_TakeInventory("ChaingunFireCounter");
+			EOA_WeaponReady(WRF_NOFIRE, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+		}
+		Goto ReadyLoop;
+	AltFire:
+		TNT1 A 0 A_JumpIfInventory("MobileTurretSelected", 1, "TurretPrime");
+		Goto ReadyLoop;
+	TurretPrime:
+		TNT1 A 0 EOA_SpawnNoiseMaker("CGN/MTOpen");
+		CGTM AABBBBBBCCDDDDEE 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_WEAPSPEEDUPGRADE * CountInv("RapidDeployment"));
+			If (!CountInv("MobileTurretSelected"))
+			{
+				Return ResolveState("TurretClose");
+			}
+			Else If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("TurretClose");
+			}
+			Return ResolveState(Null);
+		}
+		CGTS AAAAA 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_WEAPSPEEDUPGRADE * CountInv("RapidDeployment"));
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("TurretClose");
+			}
+			Return ResolveState(Null);
+		}
+	TurretReady:
+		CGTS A 1
+		{
+			A_GiveInventory("MobileTurretReady");
+			EOA_WeaponReady(WRF_NOFIRE);
+			If (!CountInv("MobileTurretSelected"))
+			{
+				Return ResolveState("TurretClose");
+			}
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("MobileTurretOverheatCounter") && (CountInv("EOA_BulletAmmo") || CheckInfiniteAmmo()))
+			{
+				If (CountInv("MTUraniumCoating"))
+				{
+					EOA_SpawnNoiseMaker("CGN/Fire/Uranium");
+				}
+				Else
+				{
+					EOA_SpawnNoiseMaker("CGN/Fire");
+				}
+				Return ResolveState("TurretFire");
+			}
+			Else If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("TurretClose");
+			}
+			Else
+			{
+				If (CountInv("MobileTurretHeatCounter") && CountInv("MobileTurretHeatCounter") % 3 == 0)
+				{
+					A_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+					A_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+					A_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				}
+				Return ResolveState(Null);
+			}
+		}
+		Wait;
+	TurretFire:
+		CGTU A 0 A_JumpIfInventory("MTUraniumCoating", 1, 2);
+		CGTF A 0;
+		"####" "#" 0 
+		{
+			If (CountInv("MobileTurretBarrelCounter") >= 3)
+			{
+				A_TakeInventory("MobileTurretBarrelCounter");
+			}
+			A_GiveInventory("MobileTurretBarrelCounter");
+			If (CountInv("MobileTurretBarrelCounter") == 1)
+			{
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), -4 + GetRelVelY() / 3, 2.5);
+			}
+			Else If (CountInv("MobileTurretBarrelCounter") == 2)
+			{
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", -5 + GetViewZ(), 0 + GetRelVelY() / 3, 2.5);
+			}
+			Else If (CountInv("MobileTurretBarrelCounter") == 3)
+			{
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), 4 + GetRelVelY() / 3, 2.5);
+			}
+			If (CountInv("MobileTurretSelected") && CountInv("MTUraniumCoating"))
+			{
+				EOA_SpawnCustomDynamicLight("CGNLight", DynamicLight.PulseLight, (25, 153, 255), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 2, (0, 0, Height / 2), 0.1);
+			}
+			Else
+			{
+				EOA_SpawnCustomDynamicLight("CGNLight", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 2, (0, 0, Height / 2), 0.1);
+			}
+			A_FireProjectile("EOA_ChaingunBrassLeft", 60, 0, -5, 2, 0, -(5 + Pitch / 2));
+			A_FireProjectile("EOA_ChaingunBrass", -60, 0, 5, 2, 0, -(5 + Pitch / 2));
+			A_AlertMonsters();
+			A_TakeInventory("EOA_BulletAmmo", 1, TIF_NOTAKEINFINITE);
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			If (CountInv("MTUraniumCoating"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/MTFire/Uranium", 1, CHANF_LOOPING);
+			}
+			Else
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/MTFire", 1, CHANF_LOOPING);
+			}
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/MTCasings", 5, CHANF_LOOPING, 0.5);
+		}
+		"####" AB 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE);
+			A_WeaponOffset(frandom(-1, 1), frandom(32, 34));
+			If (GetFrame() == 0)
+			{
+				EOA_SetWeaponRecoilOffset(0, 0, 1.25 * (1 + CountInv("PowerHaste")), 0.125);
+				If (GetCVar("EOA_APRRecoil"))
+				{
+					A_ZoomFactor(0.995, ZOOM_NOSCALETURNING);
+				}
+			}
+			Else
+			{
+				A_ZoomFactor();
+			}
+			If (CountInv("Grabbing_A_Ledge") || CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
+			{
+				Return ResolveState("TurretClose");
+			}
+			Return ResolveState(Null);
+		}
+		"####" "#" 0 A_ZoomFactor();
+		"####" "#" 0 A_JumpIf(!CountInv("MobileTurretSelected"), "TurretClose");
+		"####" "#" 0 A_JumpIf(!(GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || !(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || CountInv("MobileTurretOverheatCounter"), "TurretPreSpindown");
+		"####" "#" 0
+		{
+			If (CountInv("MobileTurretBarrelCounter") >= 3)
+			{
+				A_TakeInventory("MobileTurretBarrelCounter");
+			}
+			A_GiveInventory("MobileTurretBarrelCounter");
+			If (CountInv("MobileTurretBarrelCounter") == 1)
+			{
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), -4 + GetRelVelY() / 3, 2.5);
+			}
+			Else If (CountInv("MobileTurretBarrelCounter") == 2)
+			{
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", -5 + GetViewZ(), 0 + GetRelVelY() / 3, 2.5);
+			}
+			Else If (CountInv("MobileTurretBarrelCounter") == 3)
+			{
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), 4 + GetRelVelY() / 3, 2.5);
+			}
+			If (CountInv("MobileTurretSelected") && CountInv("MTUraniumCoating"))
+			{
+				EOA_SpawnCustomDynamicLight("CGNLight", DynamicLight.PulseLight, (25, 153, 255), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 2, (0, 0, Height / 2), 0.1);
+			}
+			Else
+			{
+				EOA_SpawnCustomDynamicLight("CGNLight", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 2, (0, 0, Height / 2), 0.1);
+			}
+			A_FireProjectile("EOA_ChaingunBrassLeft", 60, 0, -5, 2, 0, -(5 + Pitch / 2));
+			A_FireProjectile("EOA_ChaingunBrass", -60, 0, 5, 2, 0, -(5 + Pitch / 2));
+			A_AlertMonsters();
+			A_TakeInventory("EOA_BulletAmmo", 1, TIF_NOTAKEINFINITE);
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			If (CountInv("MTUraniumCoating"))
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/MTFire/Uranium", 1, CHANF_LOOPING);
+			}
+			Else
+			{
+				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/MTFire", 1, CHANF_LOOPING);
+			}
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "CGN/MTCasings", 5, CHANF_LOOPING, 0.5);
+		}
+		"####" CD 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE);
+			A_WeaponOffset(frandom(-1, 1), frandom(32, 34));
+			If (GetFrame() == 2)
+			{
+				EOA_SetWeaponRecoilOffset(0, 0, -1.25 * (1 + CountInv("PowerHaste")), 0.125);
+				If (GetCVar("EOA_APRRecoil"))
+				{
+					A_ZoomFactor(0.995, ZOOM_NOSCALETURNING);
+				}
+			}
+		}
+		"####" "#" 0 A_ZoomFactor();
+		"####" "#" 0 A_JumpIf(!CountInv("MobileTurretSelected"), "TurretClose");
+		"####" "#" 0 A_JumpIf((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && (CountInv("EOA_BulletAmmo") || CheckInfiniteAmmo()) && !CountInv("MobileTurretOverheatCounter"), "TurretFire");
+		Goto TurretSpindown;
+	TurretPreSpindown:
+		TNT1 A 0 
+		{
+			A_TakeInventory("MobileTurretReady");
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5);
+		}
+		CGTS CD 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE);
+			If (CountInv("MobileTurretHeatCounter") && CountInv("MobileTurretHeatCounter") % 3 == 0)
+			{
+				A_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				A_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				A_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+			}
+			If (CountInv("Grabbing_A_Ledge") || CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
+			{
+				Return ResolveState("TurretClose");
+			}
+			Return ResolveState(Null);
+		}
+	TurretSpindown:
+		TNT1 A 0 
+		{
+			A_TakeInventory("MobileTurretReady");
+			A_ZoomFactor();
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5);
+		}
+		CGTS ABCD 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE);
+			If (CountInv("MobileTurretHeatCounter") && CountInv("MobileTurretHeatCounter") % 3 == 0)
+			{
+				A_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				A_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				A_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+			}
+			If (CountInv("Grabbing_A_Ledge"))
+			{
+				EOA_SpawnNoiseMaker("CGN/MTClose");
+				A_TakeInventory("MobileTurretReady");
+				A_TakeInventory("UltimateCoolingKillCounter");
+				Return ResolveState("LedgeClimb");
+			}
+			Return ResolveState(Null);
+		}
+		"####" "#" 0 EOA_SpawnNoiseMaker("CGN/Stop");
+		Goto TurretReady;
+	TurretClose:
+		TNT1 A 0
+		{
+			A_ZoomFactor();
+			A_TakeInventory("MobileTurretReady");
+			A_TakeInventory("UltimateCoolingKillCounter");
+			If (CountInv("MobileTurretSelected"))
+			{
+				EOA_SpawnNoiseMaker("CGN/MTClose");
+			}
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 5);
+			Return A_JumpIf(!CountInv("MobileTurretSelected"), "ReadyLoop");
+		}
+		CGTM EEDDDDCCBBBBBBAA 1
+		{
+			If (CountInv("Grabbing_A_Ledge") || CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
+			{
+				A_TakeInventory("ChaingunFireCounter");
+				EOA_SpawnNoiseMaker("CGN/MTClose");
+			}
+			EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM, EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+		}
+		TNT1 A 0 A_TakeInventory("ChaingunSpinCounter"); //We take this so that the Chaingun doesn't fire at top speed once the turret closes, since it still gives counters.
+		Goto ReadyLoop;
+	Reload:
+		TNT1 A 0 A_JumpIf(CountInv("GatlingRotator") && !CountInv("GatlingRotatorSelected"), "SwitchToGatlingRotator");
+		TNT1 A 0 A_JumpIf(CountInv("MobileTurret") && !CountInv("MobileTurretSelected"), "SwitchToMobileTurret");
+		Goto ReadyLoop;
+	SwitchToGatlingRotator:
+		CGMR A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNR A 0;
+		"####" HGFEDCBA 1;
+	GatlingRotatorMod:
+		"####" "#" 0 
+		{
+			A_GiveInventory("GatlingRotatorSelected");
+			A_TakeInventory("MobileTurretSelected");
+			A_TakeInventory("ChaingunSpinupCounter");
+			A_TakeInventory("ChaingunFireCounter");
+			A_TakeInventory("ChaingunSpinCounter");
+		}
+		CGRM ABCDEFGHIJKLM 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("GatlingRotator/Click");
+		CGRM OOOOOOOOOOOO 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("GatlingRotator/Attach");
+		CGRM PPQQ 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		CGRM RSTUVWXYZ 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MobileTurret"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		CGR2 ABCDEFGHHHHHHHHH 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MobileTurret"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("GatlingRotator/Punch");
+		CGR2 IIIIIIJJJJ 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MobileTurret"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		CGR2 KLMN 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("MobileTurret"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		Goto ReadyLoop;
+	SwitchToMobileTurret:
+		CGRR A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 2);
+		CGNR A 0;
+		"####" HGFEDCBA 1;
+	MobileTurretMod:
+		"####" "#" 0 
+		{
+			A_GiveInventory("MobileTurretSelected");
+			A_TakeInventory("GatlingRotatorSelected");
+			A_TakeInventory("ChaingunSpinupCounter");
+			A_TakeInventory("ChaingunFireCounter");
+			A_TakeInventory("ChaingunSpinCounter");
+		}
+		TNT1 A 0 EOA_SpawnNoiseMaker("MobileTurret/Attach");
+		CGMM ABCDEFGHIJKLMNOPQRSSSSSSSSSS 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("MobileTurret/Lock");
+		CGMM TTUUVWXY 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("GatlingRotator"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		CGM2 AAAAAAAA 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("GatlingRotator"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("HotSwap"));
+		TNT1 A 0 EOA_SpawnNoiseMaker("MobileTurret/Whirr");
+		CGM2 ABCDABCDABCDAAAEEE 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWRELOAD * CountInv("GatlingRotator"), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		Goto ReadyLoop;
+	LedgeClimb:
+		TNT1 A 0
+		{
+			A_TakeInventory("ChaingunSpinCounter");
+			A_TakeInventory("ChaingunFireCounter");
+			A_TakeInventory("ChaingunSpinupCounter");
+		}
+		Goto Super::LedgeClimb;
+	Zoom:
+		CGRT A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMT A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNT A 0;
+		"####" "#" 0
+		{
+			A_TakeInventory("ChaingunSpinCounter");
+			A_TakeInventory("ChaingunFireCounter");
+			A_TakeInventory("ChaingunSpinupCounter");
+		}
+		Goto Super::Melee;
+	UseEquipment:
+		CGRT A 0 A_JumpIfInventory("GatlingRotatorSelected", 1, 3);
+		CGMT A 0 A_JumpIfInventory("MobileTurretSelected", 1, 2);
+		CGNT A 0;
+		"####" "#" 0
+		{
+			A_TakeInventory("ChaingunSpinCounter");
+			A_TakeInventory("ChaingunFireCounter");
+			A_TakeInventory("ChaingunSpinupCounter");
+		}
+		Goto Super::UseEquipment;
+	}
+}
+
+Class ChaingunSlug : HARTracer //[DoomKrakken]: Remember that it fires 15mm tungsten slugs instead of 12.7mm (.50 cal) FMJ rounds, even though it draws from the same ammo pool as the Heavy Assault Rifle.  I assume that it's because it's being made with Argent Energy, so it's actually being crafted from a form of Argent that creates bullet-type rounds, regardless of the caliber.  
+{
+	Default
+	{
+		DamageFunction 30;
+		Scale 0.5;
+		Decal "";
+		EOA_Projectile.PuffType "ChaingunPuff";
+	}
+	Override Void PostBeginPlay()
+	{
+		If (Target)
+		{
+			If ((Target.CountInv("GRUraniumCoating") && Target.CountInv("GatlingRotatorSelected")) || (Target.CountInv("MTUraniumCoating") && Target.CountInv("MobileTurretSelected")))
+			{
+				If (!Target.CountInv("PowerQDMG") && !Target.CountInv("MobileTurretSelected"))
+				{
+					A_SetTranslation("Silver");
+				}
+				bRIPPER = True;
+			}
+			If (Target.CountInv("MobileTurretSelected"))
+			{
+				A_GiveInventory("MobileTurretSelected");
+			}
+			If (Target.CountInv("MobileTurretReady"))
+			{
+				A_GiveInventory("MobileTurretReady");
+			}
+		}
+		EOA_Projectile.PostBeginPlay();
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		//[DoomKrakken]: Copied over from PostBeginPlay, in case the projectile "dies" before it's fully spawned.
+		If (!GetAge())
+		{
+			If (Self.Target)
+			{
+				If ((Self.Target.CountInv("GRUraniumCoating") && Self.Target.CountInv("GatlingRotatorSelected")) || (Self.Target.CountInv("MTUraniumCoating") && Self.Target.CountInv("MobileTurretSelected")))
+				{
+					If (!Self.Target.CountInv("PowerQDMG") && !Self.Target.CountInv("MobileTurretSelected"))
+					{
+						A_SetTranslation("Silver");
+					}
+					If (!bRIPPER)
+					{
+						Damage = 0;
+					}
+					bRIPPER = True;
+				}
+				If (Self.Target.CountInv("MobileTurretSelected"))
+				{
+					A_GiveInventory("MobileTurretSelected");
+				}
+				If (Self.Target.CountInv("MobileTurretReady"))
+				{
+					A_GiveInventory("MobileTurretReady");
+				}
+			}
+		}
+		If (CountInv("MobileTurretReady"))
+		{
+			Damage += 5;
+		}
+		Return EOA_Projectile.DoSpecialDamage(Target, Damage, DamageType);
+	}
+	States
+	{
+	Death:
+	Crash:
+		TNT1 A 1 A_StartSound("Projectile/HitWall");
+		Stop;
+	XDeath:
+		TNT1 A 1 A_StartSound("Projectile/HitFlesh");
+		Stop;
+	}
+}
+
+Class ChaingunIncendiarySlug : ChaingunSlug
+{
+	Default
+	{
+		DamageFunction 38;
+		Decal "ChaingunPuffUraniumScorch";
+		EOA_Projectile.PuffType "ChaingunIncendiaryPuff";
+	}
+	States
+	{
+	Death:
+	Crash:
+		TNT1 A 1 A_StartSound("Projectile/HitWall");
+		Stop;
+	XDeath:
+		TNT1 A 1 A_StartSound("Projectile/HitFlesh");
+		Stop;
+	}
+}
+
+Class MobileTurretSmokeSpawner : Actor
+{
+	Default
+	{
+		+ALWAYSPUFF
+		+BLOODLESSIMPACT
+		+NOTRIGGER
+		+PUFFGETSOWNER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1 NoDelay A_SpawnItemEx("MobileTurretSmoke", 0, 0, 0, 0, 0, 1, 0, SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION);
+		Stop;
+	}
+}
+
+Class MobileTurretSmoke : FragGrenadeSmoke
+{
+	Default
+	{
+		Scale 0.01;
+		+DONTBLAST
+		+DONTTHRUST
+		+NOINTERACTION
+		+NOTRIGGER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			A_SetRoll(frandom(0.0, 359.0));
+			If (CountInv("MobileTurretOverheatCounter", AAPTR_TARGET))
+			{
+				A_SetScale(Scale.X * 5);
+			}
+			Return A_Jump(256, random(1, 24));
+		}
+		GSMK ABCDEFGHIJKLMNOPQRSTUVWX 0 A_Jump(256, "SetSprite");
+	SetSprite:
+		"####" "#" 1
+		{
+			A_FadeOut(0.02);
+			A_SetScale(Scale.X + 0.01);
+		}
+		Loop;
+	}
+}
+
+Class EOA_ChaingunBrass : EOA_EmptyBrass
+{
+	Default
+	{
+		Radius 3;
+		Height 3;
+		Scale 0.15;
+	}
+}
+
+Class EOA_ChaingunBrassLeft : EOA_ChaingunBrass
+{
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_ChangeVelocity(0, frandom(0.0, -2.0), frandom(0.0, 2.0), CVF_RELATIVE);
+		Goto SpawnLoop;
+	}
+}
+
+Class ChaingunPuff : HARPuff
+{
+	States
+	{
+	Spawn:
+		TNT1 AAAAAAAAAAAAAAAAAAAA 0 NoDelay 
+		{
+			If (CountInv("GRUraniumCoating", AAPTR_TARGET) && CountInv("GatlingRotatorSelected", AAPTR_TARGET))
+			{
+				A_SpawnProjectile("ChaingunUraniumPuffSpark", 0, 0, random(1, 360), CMF_AIMDIRECTION, random(-90, 45));
+				EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "CGNAddLight", DynamicLight.PulseLight, (25, 153, 255), 32, 1, DYNAMICLIGHT.LF_ADDITIVE, 6, (0, 0, Height / 2), 0.2);
+				EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "CGNAttLight", DynamicLight.PulseLight, (25, 153, 255), 32, 1, DYNAMICLIGHT.LF_ATTENUATE, 6, (0, 0, Height / 2), 0.2);
+			}
+			Else
+			{
+				A_SpawnProjectile("ChaingunPuffSpark", 0, 0, random(1, 360), CMF_AIMDIRECTION, random(-90, 45));
+				EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "CGNAddLight", DynamicLight.PulseLight, (255, 153, 76), 32, 1, DYNAMICLIGHT.LF_ADDITIVE, 6, (0, 0, Height / 2), 0.2);
+				EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "CGNAttLight", DynamicLight.PulseLight, (255, 153, 76), 32, 1, DYNAMICLIGHT.LF_ATTENUATE, 6, (0, 0, Height / 2), 0.2);
+			}
+		}
+		TNT1 A 6
+		{
+			If (CountInv("GRUraniumCoating", AAPTR_TARGET) && CountInv("GatlingRotatorSelected", AAPTR_TARGET))
+			{
+				A_SprayDecal("ChaingunPuffUraniumScorch", 5);
+			}
+			Else
+			{
+				A_SprayDecal("BulletChip", 5);
+			}
+		}
+		Stop;
+	}
+}
+
+Class ChaingunIncendiaryPuff : ChaingunPuff
+{
+	States
+	{
+	Spawn:
+		TNT1 AAAAAAAAAAAAAAAAAAAA 0 NoDelay A_SpawnProjectile("ChaingunIncendiaryPuffSpark", 0, 0, random(1, 360), CMF_AIMDIRECTION, random(-90, 45));
+		TNT1 A 6
+		{
+			A_SpawnItemEx("EMGPuffPlain", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("EMGPuffFXSmall", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("ChaingunIncendiaryPuffFX", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("ChaingunIncendiaryExplosionFX", Flags: SXF_NOCHECKPOSITION);
+			A_SetScale(0.04);
+			A_SpawnItemEx("GaussCannonImpactShockwave", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSCALE);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "CGNAddLight", DynamicLight.PulseLight, (25, 153, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE, 6, (0, 0, Height / 2), 0.15);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "CGNAttLight", DynamicLight.PulseLight, (25, 153, 255), 64, 1, DYNAMICLIGHT.LF_ATTENUATE, 6, (0, 0, Height / 2), 0.15);
+		}
+		Stop;
+	}
+}
+
+Class ChaingunUraniumPuffSpark : GaussCannonImpactSpark
+{
+	Default
+	{
+		Scale 0.2;
+		Speed 5;
+	}
+}
+
+Class ChaingunPuffSpark : ChaingunUraniumPuffSpark
+{
+	Default
+	{
+		Translation "Normal";
+	}
+}
+
+Class ChaingunIncendiaryPuffSpark : GaussCannonImpactSpark
+{
+	Default
+	{
+		Scale 0.3;
+	}
+}
+
+Class ChaingunIncendiaryExplosionFX : EMGPuffFXSmall
+{
+	Default
+	{
+		Translation "Cyan";
+		Alpha 0.5;
+	}
+}
+
+Class ChaingunIncendiaryPuffFX : EMGPuffPlain
+{
+	Default
+	{
+		Translation "0:255=%[0, 0, 0]:[1.07, 1.65, 2]";
+		Alpha 0.5;
+	}
+}
+
+//Enemy Plasma
+Class RedPlasmaPuffSpark : ChaingunPuffSpark
+{
+	Default
+	{
+		Translation "Red";
+	}
+}

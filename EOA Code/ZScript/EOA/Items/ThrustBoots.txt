@@ -1,0 +1,193 @@
+Class EOA_ThrustBootsGiver : Inventory
+{
+	Default
+	{
+		Scale 0.25;
+		Tag "Delta V Thrust Boots";
+		Inventory.PickupMessage "Delta V Thrust Boots";
+		Inventory.PickupSound "";
+		-INVENTORY.INVBAR
+		+INVENTORY.NOSCREENFLASH
+		+INVENTORY.ALWAYSPICKUP
+	}
+	Override Bool TryPickup(In Out Actor Toucher)
+	{
+		If (Super.TryPickup(Toucher))
+		{
+			PlayerInfo ThisPlayer = Toucher.Player;
+			For (Int i = 0; i < MAXPLAYERS; i++)
+			{
+				PlayerInfo Player = Players[i];
+				If (Player && Player.Mo)
+				{
+					Player.Mo.A_GiveInventory("EOA_ThrustBoots");
+				}
+			}
+			Return True;
+		}
+		Return False;
+	}
+	Override Void Touch(Actor Toucher)
+	{
+		Let Player = Toucher.Player;
+
+		// If a voodoo doll touches something, pretend the real player touched it instead.
+		If (Player != Null)
+		{
+			Toucher = Player.Mo;
+		}
+
+		Bool LocalView = Toucher.CheckLocalView(ConsolePlayer);
+
+		Bool Res;
+		[Res, Toucher] = CallTryPickup(Toucher);
+		If (!Res)
+		{
+			Return;
+		}
+
+		// This is the only situation when a pickup flash should ever play.
+		If (PickupFlash != Null && !ShouldStay())
+		{
+			Spawn(PickupFlash, Pos, ALLOW_REPLACE);
+		}
+
+		If (!bQUIET)
+		{
+			PrintPickupMessage(LocalView, PickupMessage());
+
+			// Special check so voodoo dolls picking up items cause the
+			// real player to make noise.
+			S_StartSound("Boots/Music", 0, CHANF_OVERLAP, 1, ATTN_NONE);
+			If (Player != Null)
+			{
+				If (!bNOSCREENFLASH)
+				{
+					Player.BonusCount = BONUSADD;
+				}
+			}
+		}							
+
+		// [RH] Execute an attached special (if any)
+		DoPickupSpecial(Toucher);
+
+		If (bCOUNTITEM)
+		{
+			If (Player != Null)
+			{
+				Player.ItemCount++;
+			}
+			Level.Found_Items++;
+		}
+
+		If (bCOUNTSECRET)
+		{
+			Actor ac = Player != Null? Actor(Player.Mo) : Toucher;
+			ac.GiveSecret(True, True);
+		}
+
+		//Added by MC: Check if item taken was the roam destination of any bot
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			If (Players[i].Bot != Null && Self == Players[i].Bot.dest)
+			{
+				Players[i].Bot.Dest = Null;
+			}
+		}
+	}
+	States
+	{
+	Spawn:
+		DVTB A -1;
+		Stop;
+	}
+}
+
+Class EOA_ThrustBoots : Inventory
+{
+	Default
+	{
+		Scale 0.25;
+		Tag "Delta V Thrust Boots";
+		Inventory.PickupMessage "Delta V Thrust Boots";
+		Inventory.PickupSound "";
+		-INVENTORY.INVBAR
+		+INVENTORY.NOSCREENFLASH
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.UNDROPPABLE
+	}
+	Override Void Touch(Actor Toucher)
+	{
+		Let Player = Toucher.Player;
+
+		// If a voodoo doll touches something, pretend the real player touched it instead.
+		If (Player != Null)
+		{
+			Toucher = Player.Mo;
+		}
+
+		Bool LocalView = Toucher.CheckLocalView(ConsolePlayer);
+
+		Bool Res;
+		[Res, Toucher] = CallTryPickup(Toucher);
+		If (!Res)
+		{
+			Return;
+		}
+
+		// This is the only situation when a pickup flash should ever play.
+		If (PickupFlash != Null && !ShouldStay())
+		{
+			Spawn(PickupFlash, Pos, ALLOW_REPLACE);
+		}
+
+		If (!bQUIET)
+		{
+			PrintPickupMessage(LocalView, PickupMessage());
+
+			// Special check so voodoo dolls picking up items cause the
+			// real player to make noise.
+			S_StartSound("Boots/Music", 0, CHANF_OVERLAP, 1, ATTN_NONE);
+			If (Player != Null)
+			{
+				If (!bNOSCREENFLASH)
+				{
+					Player.BonusCount = BONUSADD;
+				}
+			}
+		}							
+
+		// [RH] Execute an attached special (if any)
+		DoPickupSpecial(Toucher);
+
+		If (bCOUNTITEM)
+		{
+			If (Player != Null)
+			{
+				Player.ItemCount++;
+			}
+			Level.Found_Items++;
+		}
+
+		If (bCOUNTSECRET)
+		{
+			Actor ac = Player != Null? Actor(Player.Mo) : Toucher;
+			ac.GiveSecret(True, True);
+		}
+
+		//Added by MC: Check if item taken was the roam destination of any bot
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			If (Players[i].Bot != Null && Self == Players[i].Bot.dest)
+			{
+				Players[i].Bot.Dest = Null;
+			}
+		}
+	}
+	States
+	{
+	Spawn:
+		DVTB A -1;
+		Stop;
+	}
+}

@@ -1,0 +1,282 @@
+Class EOA_ReticleRenderer : EventHandler
+{
+	/*Static Void EOA_HUDMessage(Font Font, String Text, Int Flags = 0, Int TextColor = 0, Double X = 0, Double Y = 0, Int HUDScaleX = 1, Int HUDBoundY = 1, Double HoldTime, Double Alpha)
+	{
+		Alpha = (Flags & HUDMSG_ALPHA) ? Alpha : 1;
+		Style = (Flags & HUDMSG_ADDBLEND) ? STYLE_Add : STYLE_Normal;
+		Screen.DrawText(Font, TextColor, X, Y, Text,
+			DTA_VirtualWidth, SCREENWIDTH / HUDBoundX,
+			DTA_VirtualHeight, SCREENHEIGHT / HUDBoundY,
+			DTA_Alpha, Alpha,
+			DTA_RenderStyle, Style,
+			DTA_KeepRatio, True)
+	}*/
+	Const InitZ0Scale = 0;
+	Const InitZ1Alpha = 1.0;
+	Const InitZ1Dist = 0;
+	Const InitZ1Scale = 0;
+	Const InitZ1Tick = 0;
+	Const InitZ2Alpha = 1.0;
+	Const InitZ2Dist = 0.75;
+	Const InitZ2Scale = 0;
+	Const InitZ3Alpha = 1.0;
+	Const InitZ3Scale = 0;
+
+	Const EndZ1Alpha = 0;
+	Const EndZ1Dist = 0.1;
+	Const EndZ1Scale = 2.0;
+	Const EndZ1Tick = 5;
+	Const EndZ2Alpha = 0;
+	Const EndZ2Dist = 0.125;
+	Const EndZ2Scale = 0.75;
+	Const EndZ3Alpha = 0;
+	Const EndZ3Scale = 0.775;
+	
+	Const Z1ASpeed = 0.15;
+	Const Z1SSpeed = 0.15;
+	Const XHairW = 4980;
+	Const XHairH = 3860;
+
+	Const GXHairW = 1364; 
+	Const GXHairH = 1023; 
+	
+	Override Void RenderOverlay(RenderEvent e)
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player && Player.Mo && Player.Mo == e.Camera && PlayerInGame[ConsolePlayer])
+		{
+			Let Mo = PlayerPawn(e.Camera);
+			Let HAR = Mo ? EOA_HeavyAssaultRifle(Mo.Player.ReadyWeapon) : Null;
+			If (HAR)
+			{
+				Int HUDW;
+				Int HUDH;
+				If (e.Camera.CountInv("TacticalScopeSelected"))
+				{
+					If (e.Camera.CountInv("TacticalScopeReady") && e.Camera.CountInv("TacticalScopeFireCounter"))
+					{
+						EventHandler.SendNetworkEvent("TakeItem:TacticalScopeFireCounter");
+						HAR.Z0Scale = 0.1;
+						HAR.Z2Dist += 0.1;
+					}
+					HAR.Z0Scale -= 0.02;
+					If (HAR.Z0Scale < 0)
+					{
+						HAR.Z0Scale = 0;
+					}
+					HUDW = Screen.GetWidth() + Screen.GetWidth() * HAR.Z0Scale; 
+					HUDH = Screen.GetHeight() + Screen.GetHeight() * HAR.Z0Scale;
+					//HUDW = GXHairW + GXHairW * HAR.Z0Scale;
+					//HUDH = GXHairH + GXHairH * HAR.Z0Scale; 
+
+					//Int Z1SSpeed = 0.15;
+					//Int Z1ASpeed = 0.15;
+					If (e.Camera.CountInv("TacticalScopeReady"))
+					{
+						If (HAR.Z1Alpha)
+						{
+							HAR.Z1Scale += Z1SSpeed;
+							HAR.Z1Alpha -= Z1ASpeed;
+							HAR.Z1Dist += Z1SSpeed * 0.1;
+							HAR.Z1Tick++;
+						}
+						If (HAR.Z1Tick >= 5)
+						{
+							HAR.Z2Scale += Z1SSpeed;
+							HAR.Z2Alpha -= Z1ASpeed;
+							HAR.Z3Scale += Z1SSpeed;
+							HAR.Z3Alpha -= Z1ASpeed / 3;
+							HAR.Z2Dist -= Z1SSpeed;
+						}
+					}
+					Else
+					{
+						HAR.Z1Scale -= Z1SSpeed;
+						HAR.Z1Alpha += Z1ASpeed;
+						HAR.Z2Scale -= Z1SSpeed;
+						HAR.Z2Alpha += Z1ASpeed;
+						HAR.Z3Scale -= Z1SSpeed;
+						HAR.Z3Alpha += Z1ASpeed;
+						HAR.Z1Dist -= Z1SSpeed * 0.1;
+						HAR.Z2Dist += Z1SSpeed;
+						HAR.Z1Tick--;
+					}
+					HAR.Z1Alpha = clamp(HAR.Z1Alpha, EndZ1Alpha, InitZ1Alpha);
+					HAR.Z1Dist = clamp(HAR.Z1Dist, InitZ1Dist, EndZ1Dist); 
+					HAR.Z1Scale = clamp(HAR.Z1Scale, InitZ1Scale, EndZ1Scale);
+					HAR.Z1Tick = clamp(HAR.Z1Tick, InitZ1Tick, EndZ1Tick);
+					HAR.Z2Alpha = clamp(HAR.Z2Alpha, EndZ2Alpha, InitZ2Alpha);
+					HAR.Z2Dist = clamp(HAR.Z2Dist, EndZ2Dist, InitZ2Dist);
+					HAR.Z2Scale = clamp(HAR.Z2Scale, InitZ2Scale, EndZ2Scale);
+					HAR.Z3Alpha = clamp(HAR.Z3Alpha, EndZ3Alpha, InitZ3Alpha); 
+					HAR.Z3Scale = clamp(HAR.Z3Scale, InitZ3Scale, EndZ3Scale);
+				}
+				Else
+				{
+					HAR.Z0Scale = 0;
+					HAR.Z1Alpha = 1.0;
+					HAR.Z1Dist = 0;
+					HAR.Z1Scale = 0;
+					HAR.Z1Tick = 0;
+					HAR.Z2Alpha = 1.0;
+					HAR.Z2Dist = 0.75;
+					HAR.Z2Scale = 0;
+					HAR.Z3Alpha = 1.0;
+					HAR.Z3Scale = 0;
+				}
+				//[DoomKrakken]: Thanks for the delta time code, Boondorl!
+				UInt CurrentTime = MSTime();
+				If (!HAR.PrevTime) // Assume it's not initialized
+				{
+					HAR.PrevTime = CurrentTime;
+				}
+				HAR.DeltaTime = CurrentTime - HAR.PrevTime;
+				If (HAR.DeltaTime > 200) // Cap to a minimum of 5 FPS
+				{
+					HAR.DeltaTime = 200;
+				}
+				HAR.PrevTime = CurrentTime;
+				If (!AutomapActive && HAR.DeltaTime >= 200)
+				{
+					//Int XHRW = HUDW - FixedMul(HUDW, Z1Scale); 
+					//Int XHRH = HUDH - FixedMul(HUDH, Z1Scale);
+					//SetHUDSize(XHRW, XHRH, 1);
+					//SetFont("HARXHR"); // Main Crosshair
+					//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, XHRW / 2 * 1.0, XHRH / 2 * 1.0, 0.033, Z1Alpha);
+					//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, XHRW / 2 * 1.0, XHRH / 2 * 1.0, 0.033, FixedMul(Z1Alpha, 0.5));
+					
+					Double XHRW = HUDW - HUDW * HAR.Z1Scale; 
+					Double XHRH = HUDH - HUDH * HAR.Z1Scale;
+					TextureID HARXHTEX = TexMan.CheckForTexture("HARXHR", TexMan.TYPE_ANY);
+					Vector2 HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+					/*
+					Screen.DrawTexture(HARXHTEX, False, (XHRW - HARXHPOS.X) / 2.0, (XHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(XHRW), DTA_VirtualHeight, Int(XHRH), DTA_KeepRatio, True, DTA_Alpha, HAR.Z1Alpha);
+					Screen.DrawTexture(HARXHTEX, False, (XHRW - HARXHPOS.X) / 2.0, (XHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(XHRW), DTA_VirtualHeight, Int(XHRH), DTA_KeepRatio, True, DTA_Alpha, HAR.Z1Alpha / 2.0);
+					*/
+					If (e.Camera.CountInv("TacticalScopeSelected") && (HAR.Z1Alpha < 1 || HAR.Z2Alpha < 1 || HAR.Z3Alpha < 1 || HAR.Z1Scale || HAR.Z2Scale || HAR.Z3Scale))
+					{
+						Double ZXHRW = (HUDW + HUDW * HAR.Z1Scale) * 0.4;
+						Double ZXHRH = (HUDH + HUDH * HAR.Z1Scale) * 0.4;
+						//SetHUDSize(ZXHRW, ZXHRH, 1);
+						//SetFont("HARTSX"); 
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, 1.0 - Z1Alpha);
+						HARXHTEX = TexMan.CheckForTexture("HARTSX", TexMan.TYPE_ANY); //Center Cross (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, 1.0 - HAR.Z1Alpha, DTA_LegacyRenderStyle, STYLE_Add);
+						ZXHRW = HUDW * 2 / 3;
+						ZXHRH = HUDW * 2 / 3;
+						//SetHUDSize(ZXHRW, ZXHRH, 1);
+						//SetFont("HARTSX2");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, 0.08)) * 1.0 + 0.2, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.5));
+						HARXHTEX = TexMan.CheckForTexture("HARTSX2", TexMan.TYPE_ANY); //Left static thing (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0 - (ZXHRW - HARXHPOS.X) / 2.0 * 0.24, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.5, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTSX2B");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, 0.08)) * 1.0 + 0.1, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.5));
+						HARXHTEX = TexMan.CheckForTexture("HARTSX2B", TexMan.TYPE_ANY); //Right static thing (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0 + (ZXHRW - HARXHPOS.X) / 2.0 * 0.24, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.5, DTA_LegacyRenderStyle, STYLE_Add);
+						If (HAR.Z1Scale)
+						{
+							ZXHRW = (HUDW + HUDW / HAR.Z1Scale) * 0.4;
+							ZXHRH = (HUDH + HUDH / HAR.Z1Scale) * 0.4;
+							//SetHUDSize(ZXHRW, ZXHRH, 1);
+							//SetFont("HARTST4");
+							//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, (ZXHRW - FixedMul(ZXHRW, Z1Dist)) / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+							HARXHTEX = TexMan.CheckForTexture("HARTST4", TexMan.TYPE_ANY); //Left curved thing (Zoom)
+							HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+							Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) - (ZXHRW - HARXHPOS.X) * HAR.Z1Dist) / 2.0, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.25, DTA_LegacyRenderStyle, STYLE_Add);
+							//SetFont("HARTST4B");
+							//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, (ZXHRW + FixedMul(ZXHRW, Z1Dist)) / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+							HARXHTEX = TexMan.CheckForTexture("HARTST4B", TexMan.TYPE_ANY); //Right curved thing (Zoom)
+							HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+							Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) + (ZXHRW - HARXHPOS.X) * HAR.Z1Dist) / 2.0, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.25, DTA_LegacyRenderStyle, STYLE_Add);
+						}
+						ZXHRW = (HUDW + HUDW * HAR.Z2Scale) * 7 / 30;
+						ZXHRH = (HUDH + HUDH * HAR.Z2Scale) * 7 / 30;
+						//SetHUDSize(ZXHRW, ZXHRH, 1);
+						//SetFont("HARTSBA2");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+						HARXHTEX = TexMan.CheckForTexture("HARTSBA2", TexMan.TYPE_ANY); //Big Circle (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z2Alpha) * 0.25);
+						ZXHRW = (HUDW + HUDW * HAR.Z3Scale) * 0.2;
+						ZXHRH = (HUDH + HUDH * HAR.Z3Scale) * 0.2;
+						//SetHUDSize(ZXHRW, ZXHRH, 1);
+						//SetFont("HARTSBA3");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+						HARXHTEX = TexMan.CheckForTexture("HARTSBA3", TexMan.TYPE_ANY); //Inner Circle (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z2Alpha) * 0.25);
+						//SetFont("HARTSB3B");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(FixedMul(1.0 - Z2Alpha, 0.25), Z3Alpha));
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(FixedMul(1.0 - Z2Alpha, 0.25), Z3Alpha));
+						HARXHTEX = TexMan.CheckForTexture("HARTSB3B", TexMan.TYPE_ANY); //Inner Circle (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z2Alpha) * 0.25 * HAR.Z3Alpha, DTA_LegacyRenderStyle, STYLE_Add);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0, (ZXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z2Alpha) * 0.25 * HAR.Z3Alpha, DTA_LegacyRenderStyle, STYLE_Add);
+						Int BXHRW = (HUDW + HUDW * HAR.Z1Scale) / 12;
+						Int BXHRH = (HUDH + HUDH * HAR.Z1Scale) / 12;
+						//SetHUDSize(BXHRW, BXHRH, 1);
+						//SetFont("HARTSBK2"); 
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, BXHRW / 2 * 1.0, BXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+						HARXHTEX = TexMan.CheckForTexture("HARTSBK2", TexMan.TYPE_ANY); //BackGround
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (BXHRW - HARXHPOS.X) / 2.0, (BXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(BXHRW), DTA_VirtualHeight, Int(BXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z2Alpha) * 0.25);
+						BXHRW = (HUDW + HUDW * HAR.Z2Scale) / 11;
+						BXHRH = (HUDH + HUDH * HAR.Z2Scale) / 11;
+						//SetHUDSize(BXHRW, BXHRH, 1);
+						//SetFont("HARTSBAK");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, BXHRW / 2 * 1.0, BXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+						HARXHTEX = TexMan.CheckForTexture("HARTSBAK", TexMan.TYPE_ANY); //BackGround 2
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (BXHRW - HARXHPOS.X) / 2.0, (BXHRH - HARXHPOS.Y) / 2.0, DTA_VirtualWidth, Int(BXHRW), DTA_VirtualHeight, Int(BXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z2Alpha) * 0.25);
+						ZXHRW = HUDW * 2 / 3;
+						ZXHRH = HUDW * 2 / 3;
+						//SetHUDSize(ZXHRW, ZXHRH, 1);
+						//SetFont("HARTST2");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, FixedMul(ZXHRW / 2, 0.2) * 1.0 + 0.2, FixedDiv(ZXHRH / 2, 0.75) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+						HARXHTEX = TexMan.CheckForTexture("HARTST2", TexMan.TYPE_ANY); //Left thing (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0 * 0.2, (ZXHRH - HARXHPOS.Y) / 2.0 / 0.75, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.25, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTST2B");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, FixedDiv(ZXHRW / 2, 0.55) * 1.0 + 0.1, FixedDiv(ZXHRH / 2, 0.75) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+						HARXHTEX = TexMan.CheckForTexture("HARTST2B", TexMan.TYPE_ANY); //Right thing (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, (ZXHRW - HARXHPOS.X) / 2.0 / 0.55, (ZXHRH - HARXHPOS.Y) / 2.0 / 0.75, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.25, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTST3B");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, 0.25)) * 1.0 + 0.2, FixedMul(ZXHRH / 2, 0.85) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.1));
+						HARXHTEX = TexMan.CheckForTexture("HARTST3B", TexMan.TYPE_ANY); //Left thingy (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) / 2.0 - (ZXHRW - HARXHPOS.X) / 2.0 * 0.375), (ZXHRH - HARXHPOS.Y) / 2.0 * 0.85, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.1, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTST3");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, 0.25)) * 1.0 + 0.1, FixedMul(ZXHRH / 2, 0.85) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.1));
+						HARXHTEX = TexMan.CheckForTexture("HARTST3", TexMan.TYPE_ANY); //Right thingy (Zoom)
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) / 2.0 + (ZXHRW - HARXHPOS.X) / 2.0 * 0.375), (ZXHRH - HARXHPOS.Y) / 2.0 * 0.85, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.1, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTST");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.2, ((ZXHRH / 2) + FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.1, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+						HARXHTEX = TexMan.CheckForTexture("HARTST", TexMan.TYPE_ANY); //Bottom Left thing
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) / 2.0 - (ZXHRW - HARXHPOS.X) / 2.0 * HAR.Z2Dist * 3), (ZXHRH - HARXHPOS.Y) / 2.0 + (ZXHRH - HARXHPOS.Y) / 2.0 * HAR.Z2Dist * 3, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.15, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTSTB"); // Top Left thing
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.2,((ZXHRH / 2) - FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.2, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+						HARXHTEX = TexMan.CheckForTexture("HARTSTB", TexMan.TYPE_ANY); //Top Left thing
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) / 2.0 - (ZXHRW - HARXHPOS.X) / 2.0 * HAR.Z2Dist * 3), (ZXHRH - HARXHPOS.Y) / 2.0 - (ZXHRH - HARXHPOS.Y) / 2.0 * HAR.Z2Dist * 3, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.15, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTSTD"); // Bottom Right thing
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.1,((ZXHRH / 2) + FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.1, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+						HARXHTEX = TexMan.CheckForTexture("HARTSTD", TexMan.TYPE_ANY); //Bottom Right thing
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) / 2.0 + (ZXHRW - HARXHPOS.X) / 2.0 * HAR.Z2Dist * 3), (ZXHRH - HARXHPOS.Y) / 2.0 + (ZXHRH - HARXHPOS.Y) / 2.0 * HAR.Z2Dist * 3, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.15, DTA_LegacyRenderStyle, STYLE_Add);
+						//SetFont("HARTSTC");
+						//HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.1, ((ZXHRH / 2) - FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.2, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+						HARXHTEX = TexMan.CheckForTexture("HARTSTC", TexMan.TYPE_ANY); //Top Right thing
+						HARXHPOS = TexMan.GetScaledSize(HARXHTEX);
+						Screen.DrawTexture(HARXHTEX, False, ((ZXHRW - HARXHPOS.X) / 2.0 + (ZXHRW - HARXHPOS.X) / 2.0 * HAR.Z2Dist * 3), (ZXHRH - HARXHPOS.Y) / 2.0 - (ZXHRH - HARXHPOS.Y) / 2.0 * HAR.Z2Dist * 3, DTA_VirtualWidth, Int(ZXHRW), DTA_VirtualHeight, Int(ZXHRH), DTA_KeepRatio, True, DTA_Alpha, (1.0 - HAR.Z1Alpha) * 0.15, DTA_LegacyRenderStyle, STYLE_Add);
+					}
+				}
+			}
+		}
+	}
+}

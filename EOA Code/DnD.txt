@@ -1,0 +1,127 @@
+Damage 'n Distance!
+
+What, you were expecting Dungeons 'n Dragons?!
+
+Well, too bad!  It was me, DIO!  And the Spanish Inquisition!
+
+Enough dungposting.
+
+The following information is based off of damage/distance values found in DOOM (2016) as were found on "http://gameswiki.net/doom-all-weapons-details/".  It appears to be the only source where these numbers were posted.  Keep in mind, the values are done in 100s and 1000s, instead of 10s and 100s we typically see in Doom.  They will be listed here as a reference: not as straight numbers, but as comparison with each other for percentages/ratios between each other, so that they can eventually be scaled down to work within Doom, when compared to Doom's original damage/distance values.
+
+The Chaingun's values here seem very inaccurate.  Over 2.5 years of observation, I can definitively say that the Chaingun's slugs deal more damage than the Heavy Assault Rifle's bullets.
+
+After much pondering, it seems that most (if not all) values here, pertaining to damage and distance, can be reduced to 40% of their original value, especially when compared to "vanilla" values.
+
+=== Pistol ===
+
+= Gameswiki:
+- Standard (20)
+- Charged Energy Shot (43 base, 200 max, 1.5s charge, 0.75s cooldown) [DoomKrakken]: Something tells me it accumulated just a bit of charge before launch.
+- Increased Power (53 base, 320 max, 1s charge, 0.35s cooldown) [DoomKrakken]: Same deal here.
+
+= EOA Values:
+- Standard (8)
+- Charged Energy Shot (16 base, 80 max)
+- Increased Power (20 base, 128 max)
+
+
+=== Combat Shotgun ===
+
+= Gameswiki:
+- Standard (22 - 26 per pellet)
+– Power Shot (27.5 - 32.5 per pellet) [DoomKrakken]: Ooh, looky there, a 25% increase! :D
+- Explosive Shot Grenade (100 impact, 275 max splash)
+- Explosive Shot Cluster Bombs (98 max splash, 180 splash radius)
+
+= EOA Values:
+- Standard (8 per pellet)
+- Power Shot (10 per pellet)
+- Explosive Shot Grenade (40 impact, 110 max splash, 96 max splash radius + 48 max splash radius w/ Bigger Boom)
+- Explosive Shot Cluster Bombs (40 max splash, 64 splash radius)
+
+
+=== Super Shotgun ===
+
+= Gameswiki:
+- Standard (40-60)
+
+= EOA Values:
+- Standard (16)
+ 
+
+=== Heavy Assault Rifle ===
+
+= Gameswiki:
+- Standard (40)
+- Micro Missiles (10 impact, 100 max splash)
+- Devastator Rounds (70)
+
+= EOA Values:
+- Standard (16)
+- Micro Missiles (4 impact, 40 max splash, 64 splash range)
+- Devastator Rounds (28)
+
+
+=== Rocket Launcher ===
+
+= Gameswiki:
+- Standard (130 impact, 350 max splash, 320 splash radius)
+- Remote Detonation Splash (350 max splash, 340 splash radius)
+- Remote Detonation: Improved Warhead (350 max splash, 408 splash radius)
+- Remote Detonation: Jagged Shrapnel (450 max splash, 340/408 splash radius) [DoomKrakken]: I'm assuming that this is also taking into account the full splash damage of the rocket.
+- Lock-on Burst (300/375 impact [based on enemy], 25 max splash, 128 splash radius)
+
+= EOA Values:
+- Standard (52 impact, 140 max splash, 128 splash radius)
+- Remote Detonation Splash (140 max splash, 128 splash radius, 256 splash radius w/ Improved Warhead)
+- Jagged Shrapnel (40 damage across 100 tics)
+- Lock-On Burst (150 impact, 10 max splash, 96 splash radius)
+
+
+=== Plasma Rifle ===
+
+= Gameswiki:
+- Standard (25 impact, 10 max splash, 96 splash radius)
+- Heat Blast (5 min, 350 max)
+- Heat Blast Upgraded (10 min, 600 max)
+- Stun Bomb (1 impact, 1 max splash, 96 splash radius)
+- Stun Bomb Splash Upgraded (1 impact, 1 max splash, 320 splash radius)
+
+= EOA Values:
+- Standard (10 impact, 4 max splash, 48 splash radius)
+- Heat Blast (5 min, 150 max)
+- Heat Blast Upgraded (10 min, 300 max)
+- Stun Bomb (48 splash radius, 160 w/ Big Shock)
+
+
+=== Gauss Cannon ===
+
+= Gameswiki:
+- Standard (650 impact, 80 max splash, 128 splash radius)
+- Precision Bolt (300 base, 1200 charged)
+- Volatile Discharge (800 max splash, 384 splash radius)
+- Siege Mode (1680)
+- Outer Beam (96 beam radius)
+
+= EOA Values:
+- Standard (260 impact, 32 max splash, 64 splash radius)
+- Precision Bolt (120 base, 480 charged)
+- Volatile Discharge (320 max splash, 192 splash radius)
+- Siege Mode (1344)
+- Outer Beam (96 beam radius)
+
+
+=== Chaingun ===
+
+= Gameswiki:
+- Standard (19)
+- Incendiary Rounds (24)
+- Mobile Turret (22) (WTF)
+
+= DoomKrakken's Estimation:
+- Standard (50)
+- Incendiary Rounds (75)
+
+= EOA Values:
+- Standard (20)
+- Incendiary Rounds (30)

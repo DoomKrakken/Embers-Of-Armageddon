@@ -1,0 +1,242 @@
+//Elite Guard Corpse
+Class EOA_EliteGuardCorpse : Actor //[DoomKrakken]: Sprites taken from D4DHF.
+{
+	Mixin EOA_MapMarkerUser;
+	Bool TokenClaimed;
+	Default
+	{
+		Radius 10;
+		Height 20;
+		Scale 0.6;
+		EOA_EliteGuardCorpse.MarkerType "EOA_EliteGuardCorpseMarker";
+		+BRIGHT
+		+DONTBLAST
+		+DONTGIB
+		+DONTTHRUST
+		+FORCEXYBILLBOARD
+		+NOBLOOD
+		+NODAMAGE
+		+RELATIVETOFLOOR
+	}
+	Override Bool Used(Actor User)
+	{
+		PlayerInfo Player = User.Player;
+		If (Player && Player.Mo && Player.Mo == User && !TokenClaimed && !User.FindInventory("EOA_InteractWeapon", True) && Distance3D(User) <= Player.Mo.UseRange && Distance3D(User) >= Radius)
+		{
+			A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);
+			Let Challenges = EOA_ChallengeArchive.Get();
+			If (Challenges)
+			{
+				If (Challenges.DeadManStalking.Active)
+				{
+					Challenges.DeadManStalking.Amount++;
+				}
+			}
+			//User.A_GiveInventory("PraetorTokenReward");
+			User.A_GiveInventory("EOA_EliteGuardCorpseWeapon");
+			Let TokenHand = EOA_InteractWeapon(User.FindInventory("EOA_EliteGuardCorpseWeapon"));
+			If (TokenHand)
+			{
+				TokenHand.YieldItem = "PraetorTokenReward";
+				TokenHand.ReselectWeapon = Player.ReadyWeapon.GetClass();
+				TokenHand.Giver = Self;
+				//Player.Mo.A_Face(Self, Max_Pitch: 90, Flags: FAF_BOTTOM);
+				Player.PendingWeapon = TokenHand;
+				Player.ReadyWeapon = Null;
+			}
+			TokenClaimed = True;
+			A_RemoveChildren(1, RMVF_EVERYTHING);
+			If (Marker)
+			{
+				Marker.ItemClaimed = True;
+			}
+			Let StaticArchive = EOA_StaticArchive.Get();
+			StaticArchive.PraetorTokensClaimed++;
+			Return True;
+		}
+		Return False;
+	}
+	States
+	{
+	Spawn:
+		EGUR A -1 NoDelay A_SpawnItemEx("PraetorTokenIndicator", ZOfs: 5, Flags: SXF_NOCHECKPOSITION|SXF_SETMASTER|SXF_ORIGINATOR);
+		Stop;
+	}
+}
+
+Class EOA_EliteGuardCorpseWeapon : EOA_InteractWeapon
+{
+	Vector3 V;
+	Double Len2;
+	Bool LookAtTarget;
+	Double CurPitch;
+	Double OfsPitch;
+	Double MaxPitch;
+	Int LegOffset;
+	Default
+	{
+		EOA_InteractWeapon.ZoomFactor 1.5;
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("Suit/GrabToken");
+		Super.MarkPrecacheSounds();
+	}
+	States
+	{
+	Ready:
+		TNT1 A 0
+		{
+			A_GunFlash("GrabHand", GFF_NOEXTCHANGE);
+			A_Overlay(-10, "Knee", 1);
+			EOA_SpawnNoiseMaker("Suit/GrabToken");
+			Invoker.V = Invoker.Giver.Pos - (Pos.X, Pos.Y, Pos.Z + Player.ViewZ);
+			Invoker.Len2 = (Invoker.V.XY).Length();
+			Invoker.CurPitch = Pitch;
+		}
+		PTLH AABBCCDDEEFFGGHHIIJJKKLLMNOPQR 1
+		{
+			If (Invoker.Giver)
+			{
+				A_Face(Invoker.Giver);
+				Vector2 Dist = Vec2To(Invoker.Giver);
+				Double GiverZ = Invoker.Giver.Pos.Z + Invoker.Giver.GetBobOffset();
+				Double SourceZ = Pos.Z + 32 + GetBobOffset();
+				Double DistZ = GiverZ - SourceZ;
+				Double DDist = sqrt(Dist.X * Dist.X + Dist.Y * Dist.Y + DistZ * DistZ);
+				Double NewPitch = -Normalize180(asin(DistZ / DDist));
+				If (Invoker.CurPitch > NewPitch)
+				{
+					Invoker.MaxPitch = Min(90, Invoker.CurPitch - NewPitch);
+					A_SetPitch(Pitch - Invoker.MaxPitch / 30, SPF_INTERPOLATE);
+				}
+				Else
+				{
+					Invoker.MaxPitch = Min(90, NewPitch - Invoker.CurPitch);
+					A_SetPitch(Pitch + Invoker.MaxPitch / 30, SPF_INTERPOLATE);
+				}
+			}
+		}
+		//[DoomKrakken]: This retardation came from the fact that centering your pitch can still happen despite being frozen in place.
+		//Gotta call it each tic to make sure it's behaving properly.
+		PTLH RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR 1
+		{
+			If (Invoker.Giver)
+			{
+				A_Face(Invoker.Giver, Max_Pitch: 90, Flags: FAF_BOTTOM);
+			}
+		}
+		PTLH RQPONMLKJIHGFEDCBA 1
+		{
+			If (Invoker.Giver)
+			{
+				A_Face(Invoker.Giver, Max_Pitch: 90, Flags: FAF_BOTTOM);
+			}
+		}
+		Goto Deselect;
+	GrabHand:
+		PTRR AABBCCDDEEFFGGHHIIJJKKLLMN 1; //{Invoker.LegOffset -= 8;}
+		PTRG A 30;
+		PTRG AAAAAAAAAAAAAAAAAAAA 1 A_OverlayOffset(OverlayID(), random(-1, 1), random(-1, 1), WOF_INTERPOLATE);
+		TNT1 A 0 A_OverlayOffset(OverlayID(), 0, 0);
+		PTRG BCDEF 1;
+		PTRG G 12;
+		PTRC ABCD 1;
+		PTRC E 28;
+		PTRC FGHIJKLMNOP 1 {Invoker.LegOffset += 12;}
+		Stop;
+	Knee:
+		KICK D 1 A_OverlayOffset(OverlayID(), 0, Invoker.LegOffset + 80 * cos(Pitch), WOF_KEEPX|WOF_INTERPOLATE);
+		Wait;
+	}
+}
+
+Class PraetorTokenReward : CustomInventory
+{
+	Default
+	{
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+		-INVENTORY.INVBAR
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0;
+		Stop;
+	Pickup:
+		TNT1 A 0 
+		{
+			ACS_NamedExecuteAlways("PraetorTokenReward");
+		}
+		Stop;
+	}
+}
+
+Class PraetorTokenIndicator : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Radius 32;
+		Alpha 0.5;
+		Scale 0.2;
+		+BRIGHT
+		+FLATSPRITE
+		+NOGRAVITY
+		+NOINTERACTION
+		+ROLLSPRITE
+		+ROLLCENTER
+	}
+	Override Void Tick()
+	{
+		If (Master)
+		{
+			A_SetRoll(Roll + 8, SPF_INTERPOLATE);
+			A_Warp(AAPTR_MASTER, ZOfs: 5, Flags: WARPF_INTERPOLATE|WARPF_NOCHECKPOSITION);
+		}
+		Else
+		{
+			Destroy();
+		}
+		Super.Tick();
+	}
+	States
+	{
+	Spawn:
+		PSTI A -1;
+		Stop;
+	}
+}
+
+//Praetor Suit Upgrades...
+
+//Environmental Resistance - Find the Praetor Suit.
+Class EnvironmentalResistance : EOA_Token {}
+Class HazardProtection : EOA_Token {} //Decrease Explosive Barrel and Environmental damage taken. - 1
+Class SelfPreservation : EOA_Token {} //Your own weapons deal less damage to you. - 2
+Class BarrelsOFun : EOA_Token {} 	 //Immunity to Explosive Barrel Damage. - 3
+
+//Area-Scanning Technology - Pick up an Automap.
+Class AreaScanningTechnology : EOA_Token {}
+Class ItemAwareness : EOA_Token {}	 //Items show up in a larger radius around you in the Automap - 1
+Class SecretFinder : EOA_Token {}	 //Your HUD will indicate whether you're near a secret. - 2
+Class FullView : EOA_Token {}		 //Full scanner. - 3
+
+//Equipment System - Pick up an Equipment Item.
+Class EquipmentSystem : EOA_Token {}
+Class QuickCharge : EOA_Token {}		 //Decrease Equipment Recharge. - 2
+Class StockUp : EOA_Token {}			 //Increase total number of charges. - 3
+Class RapidCharge : EOA_Token {}		 //Further Decrease Equipment Recharge. - 4
+
+//Powerup Effectiveness - Pick up a powerup.
+Class PowerupEffectiveness : EOA_Token {}
+Class PowerSurge : EOA_Token {}		 //When a powerup ends, release a powerful blast wave of energy. - 1
+Class HealingPower : EOA_Token {}	 //Full health upon picking up a powerup. - 2
+Class PowerExtender : EOA_Token {}	 //Increase the duration of a powerup. - 3
+
+//Dexterity - Have possession of 4 or more weapons.
+Class Dexterity : EOA_Token {}
+Class Adept : EOA_Token {}			 //Faster Weapon Switch - 2
+Class QuickHands : EOA_Token {}		 //Faster Ledge Mantling - 3
+Class HotSwap : EOA_Token {}			 //Faster Mod Swapping - 4

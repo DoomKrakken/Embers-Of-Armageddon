@@ -1,0 +1,1591 @@
+#library "MAIN"
+#include "zcommon.acs"
+Script "EOA_Resets" UNLOADING
+{
+	TakeInventory("ChainsawFuelCounter", 10000);
+	TakeInventory("EMGCharging", 10000);
+	TakeInventory("EMGChargeCounter", 10000);
+	TakeInventory("EMGCooldownCounter", 10000);
+	TakeInventory("ChargedBurstReady", 10000);
+	TakeInventory("ChargedBurstChargeCounter", 10000);
+	TakeInventory("ChargedBurstCooldownCounter", 10000);
+	TakeInventory("PowerShotCounter1", 10000);
+	TakeInventory("PowerShotCounter2", 10000);
+	TakeInventory("PowerShotCounter3", 10000);
+	TakeInventory("PowerShotFiring", 10000);
+	TakeInventory("ExplosiveShotChargeCounter", 10000);
+	TakeInventory("ExplosiveShotCooldownCounter", 10000);
+	GiveInventory("MicroMissileCounter", 6);
+	TakeInventory("RemoteDetonationTrigger", 10000);
+	TakeInventory("LockOnBurstChargeCounter", 10000);
+	TakeInventory("LockOnBurstCooldownCounter", 10000);
+	TakeInventory("LockTarget1", 10000);
+	TakeInventory("LockTarget2", 10000);
+	TakeInventory("LockTarget3", 10000);
+	TakeInventory("LockOnBurstFiring", 10000);
+	TakeInventory("HeatBlastCharged", 10000);
+	TakeInventory("HeatBlastSubChargeCounter", 10000);
+	TakeInventory("HeatBlastCooldownCounter", 10000);
+	TakeInventory("StunBombCharged", 10000);
+	TakeInventory("StunBombCooldownCounter", 10000);
+	TakeInventory("ChaingunSpinCounter", 10000);
+	TakeInventory("ChaingunFireCounter", 10000);
+	TakeInventory("MobileTurretHeatCounter", 10000);
+	TakeInventory("MobileTurretOverheatCounter", 10000);
+	TakeInventory("MobileTurretBarrelCounter", 10000);
+	TakeInventory("MobileTurretReady", 10000);
+	TakeInventory("UltimateCoolingKillCounter", 10000);
+	TakeInventory("GaussCooldownCounter", 10000);
+	TakeInventory("PrecisionBoltReady", 10000);
+	TakeInventory("PrecisionBoltChargeCounter", 10000);
+	TakeInventory("SiegeModeReady", 10000);
+	TakeInventory("SiegeModeChargeCounter", 10000);
+	/*
+	TakeInventory("HasteActive", 10000);
+	TakeInventory("BerserkActive", 10000);
+	TakeInventory("QuadDamageActive", 10000);
+	TakeInventory("InvulnerabilityActive", 10000);
+	*/
+	TakeInventory("RipAndTear", 10000);
+	TakeInventory("ChainsawRipAndTear", 10000);
+	TakeInventory("DeathFromAbove", 10000);
+	TakeInventory("BloodCounter", 10000);
+	SetPlayerProperty(0, 0, PROP_TOTALLYFROZEN);
+	SetPlayerProperty(0, 0, PROP_FROZEN);
+	SetActorProperty(0, APROP_GRAVITY, 0.6);
+	SetActorFlag(0, "NOTARGET", 0);
+	SetActorFlag(0, "NOPAIN", 0);
+	SetActorFlag(0, "NODAMAGE", 0);
+	SetActorFlag(0, "NOGRAVITY", 0);
+}
+
+Script "MasteryChallengeCounter" (void)
+{
+	LocalAmbientSound("MasteryChallenge/Ticker", 127);
+}
+
+Script "SecretFinderBlip" (void)
+{
+	LocalAmbientSound("SecretFinder/Blip", 64);
+}
+
+/*Script "GloryKillSystem" OPEN
+{
+    SpawnForced("GloryKillPackage", 0, 0, 0);
+}*/
+
+Script "EOA_WeaponUpgradePointReinitializer" RETURN
+{
+	ACS_NamedExecuteAlways("EOA_WeaponUpgradePointHandler", 0);
+}
+
+Script "EOA_WeaponUpgradePointHandler" ENTER //[DoomKrakken]: Slightly based off of D4D's reward script, because it makes sense how it was set up.
+{
+	Delay(2); //I believe this was here just in case some monsters take an extra tic or two to spawn...
+	Int MonsterTotal = GetLevelInfo(LEVELINFO_TOTAL_MONSTERS);
+	Int SecretTotal = GetLevelInfo(LEVELINFO_TOTAL_SECRETS);
+	Int Sparsity = GetCVar("EOA_PointSparsity");	
+	Int KillMilestoneCounter;
+	Int SecretMilestoneCounter;
+	Int SparsityFactor;
+	If (Sparsity > 0) 
+	{
+		KillMilestoneCounter = MonsterTotal / 5;
+		SecretMilestoneCounter = SecretTotal / 2 + SecretTotal % 2;
+		SparsityFactor = Sparsity;
+	}
+	Else
+	{
+		KillMilestoneCounter = MonsterTotal / 5 * -Sparsity;
+		SecretMilestoneCounter = SecretTotal / 2 * -Sparsity + SecretTotal % 2;
+		SparsityFactor = 1;
+	}
+	Int KillMilestoneMax = 0;
+	Int SecretMilestoneMax = 0;
+	Int KillMilestone = KillMilestoneCounter;
+	Int SecretMilestone = SecretMilestoneCounter;
+	//Str RewardMessage = "Weapon Upgrade Point gained.";
+	While (MonsterTotal >= 5 && GetLevelInfo(LEVELINFO_KILLED_MONSTERS) >= KillMilestone) //[DoomKrakken]: This stuff happens in case we've returned to the same map... you know, like in a hub.  This way, we don't go for a fresh restart to this system if we re-open a map we previously visited. ;)
+	{
+		KillMilestoneMax++;
+		If (Sparsity < 0)
+		{
+			KillMilestoneMax++;
+		}
+		If (KillMilestoneMax > 3)
+		{
+			KillMilestone = MonsterTotal;
+		}
+		Else
+		{
+			KillMilestone += KillMilestoneCounter;
+		}
+		Delay(1);
+	}
+	While (SecretTotal && GetLevelInfo(LEVELINFO_FOUND_SECRETS) >= SecretMilestone)
+	{
+		SecretMilestoneMax++;
+		If (Sparsity < 0)
+		{
+			SecretMilestoneMax++;
+		}
+		SecretMilestone = SecretTotal;
+		Delay(1);
+	}	
+	While (1)
+	{
+		If (MonsterTotal >= 5 && KillMilestoneMax < 5 && GetLevelInfo(LEVELINFO_KILLED_MONSTERS) >= KillMilestone)
+		{
+			If (!GetCVar("EOA_KillAmount"))
+			{
+				//SetFont("SmallFont");
+				SetFont("POINTEXT"); //[Strongbelly]: weapon upgrade point graphic HUD message
+				GiveInventory("WeaponUpgradePoint", 1 * SparsityFactor);
+				//HudMessage(s:RewardMessage; HUDMSG_TYPEON|HUDMSG_LOG, 999, CR_GOLD, 1.5, 0.16, 3.0, 0.005, 1.0);
+			}			
+			KillMilestoneMax++;
+			If (Sparsity < 0)
+			{
+				KillMilestoneMax++;
+			}
+			If (KillMilestoneMax > 3)
+			{
+				KillMilestone = MonsterTotal;
+			}
+			Else
+			{
+				KillMilestone += KillMilestoneCounter;
+			}
+		}
+		If (SecretTotal && SecretMilestoneMax < 2 && GetLevelInfo(LEVELINFO_FOUND_SECRETS) >= SecretMilestone)
+		{
+			//SetFont("SmallFont");
+			SetFont("POINTEXT"); //[Strongbelly]: weapon upgrade point graphic HUD message
+			GiveInventory("WeaponUpgradePoint", 1 * SparsityFactor);
+			HudMessage(s:"A";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 993, 0, 1.5,0.18, 3.0, 0.005, 1.0);
+			//HudMessage(s:RewardMessage; HUDMSG_TYPEON|HUDMSG_LOG, 999, CR_GOLD, 1.5, 0.16, 3.0, 0.005, 1.0);
+			SecretMilestoneMax++;
+			If (Sparsity < 0)
+			{
+				SecretMilestoneMax++;
+			}
+			SecretMilestone = SecretTotal;
+		}
+		Delay(1);
+	}
+}
+
+/*Script "EOA_KillRewardHandler" KILL
+{
+	Int Prob = 3;
+	If (ACS_NamedExecuteWithResult("GetTargetHealth") <= 40)
+	{
+		Bool NeedsHealth = True;
+	}
+	If (100 * ACS_NamedExecuteWithResult("GetTargetHealth") / ACS_NamedExecuteWithResult("GetMaxTargetHealth") <= 80)
+	{
+		Prob -= 1;
+	}
+	If (100 * ACS_NamedExecuteWithResult("GetTargetHealth") / ACS_NamedExecuteWithResult("GetMaxTargetHealth") <= 60)
+	{
+		Prob -= 1;
+	}
+	If (100 * ACS_NamedExecuteWithResult("GetTargetHealth") / ACS_NamedExecuteWithResult("GetMaxTargetHealth") <= 40)
+	{
+		Prob -= 1;
+	}
+	If (CheckFlag(0, "ISMONSTER"))// && (CheckInventory("GloryKillCounter") || !random(0, Prob))) //Continue if the killed thing is a monster and was either glory killed or killed and the randomizer chooses 0 (since monsters drop health sometimes even when they haven't been glory killed).
+	{
+		Bool GK = CheckInventory("GloryKillCounter"); //Check if glory killed.
+		Bool CSGK = CheckInventory("ChainsawGloryKillCounter");
+		TakeInventory("GloryKillCounter", 1); //Take the counter, in case it's raised.
+		TakeInventory("ChainsawGloryKillCounter", 1); //Same here.
+		If (GK || ((ACS_NamedExecuteWithResult("GetTargetHealthDiff") || !random(0, Prob)) && ACS_NamedExecuteWithResult("GetTargetClass") == "DoomSlayer")) //If not glory killed, or if the health difference of the killer is not less than the max health of the killer AND the killer isn't the Doom Slayer...
+		{
+			//Terminate; //... forget about it.
+			Int StimDrops = ACS_NamedExecuteWithResult("GetTargetHealthDiff") / (20 + 5 * ACS_NamedExecuteWithResult("GetTargetArgentHealth")); //Make sure that the amount of health dropped is proportional to the amount of health you need.
+			If (StimDrops > 4 || NeedsHealth)
+			{
+				StimDrops = 4;
+			}
+			If (CSGK)
+			{
+				Delay(9); //[DoomKrakken]: For aesthetic purposes, to simulate when monsters actually drop items after being Glory Killed.  This was about the average.
+			}	
+			If (GK && !CheckFlag(0, "BOSS"))
+			{
+				DropItem(0, "TempStim", -1);
+				StimDrops *= 2;
+				StimDrops--;
+			}
+			
+			For (Int i = 1; i <= StimDrops; i++)
+			{
+				If (!CheckFlag(0, "BOSS"))
+				{
+					DropItem(0, "TempStim", -1, 96 + 160 * (GK || NeedsHealth));
+					Delay(1);
+				}
+			}
+		}
+		
+		//If (CheckFlag(0, "BOSS"))
+		//{
+		//	ACS_NamedExecuteAlways("BossKillReward", 0);
+		//}
+		
+		If (ACS_NamedExecuteWithResult("CheckAmmoBoost") && ACS_NamedExecuteWithResult("HasBFG"))
+		{
+			DropItem(0, "TempBFGAmmo", -1, 12);
+		}
+		If (GK && ACS_NamedExecuteWithResult("CheckArmoredOffensive"))
+		{
+			For (i = 1; i <= ACS_NamedExecuteWithResult("CheckArmoredOffensive"); i++)
+			{
+				DropItem(0, "TempArmor", -1);
+				Delay(1);
+			}
+			//PlaySound(0, "Armor/Pickup", 0, 0.5);
+		}
+		If (CSGK)
+		{
+			For (i = 1; i <= 7 + ACS_NamedExecuteWithResult("GetTargetArgentAmmo"); i++)
+			{
+				DropItem(0, "TempChainsawBulletAmmo", -1);
+				DropItem(0, "TempChainsawShellAmmo", -1);
+				DropItem(0, "TempChainsawRocketAmmo", -1);
+				DropItem(0, "TempChainsawCellAmmo", -1);
+				Delay(1);
+			}
+		}
+		Else If (!CheckFlag(0, "BOSS"))
+		{
+			If (ACS_NamedExecuteWithResult("WantsBullets"))
+			{
+				DropItem(0, "TempBulletAmmo", -1, 16 * (1 + ACS_NamedExecuteWithResult("NeedsBullets")) * (1 + ACS_NamedExecuteWithResult("ReallyNeedsBullets")));
+			}
+			If (ACS_NamedExecuteWithResult("WantsShells"))
+			{
+				DropItem(0, "TempShellAmmo", -1, 16 * (1 + ACS_NamedExecuteWithResult("NeedsShells")) * (1 + ACS_NamedExecuteWithResult("ReallyNeedsShells")));
+			}
+			If (ACS_NamedExecuteWithResult("WantsRockets"))
+			{
+				DropItem(0, "TempRocketAmmo", -1, 16 * (1 + ACS_NamedExecuteWithResult("NeedsRockets")) * (1 + ACS_NamedExecuteWithResult("ReallyNeedsRockets")));
+			}
+			If (ACS_NamedExecuteWithResult("WantsCells"))
+			{
+				DropItem(0, "TempCellAmmo", -1, 16 * (1 + ACS_NamedExecuteWithResult("NeedsCells")) * (1 + ACS_NamedExecuteWithResult("ReallyNeedsCells")));
+			}
+		}
+	}
+}*/
+
+Script "BossKillReward" (void)
+{
+	DropItem(0, "MegaTempStim", -1);
+	DropItem(0, "MegaTempBulletAmmo", -1);
+	DropItem(0, "MegaTempShellAmmo", -1);
+	DropItem(0, "MegaTempRocketAmmo", -1);
+	DropItem(0, "MegaTempCellAmmo", -1);
+}
+
+Script "WeaponUpgradePointReward" (void)
+{
+	//Str RewardMessage = "Weapon Upgrade Point gained.";
+	//SetFont("SmallFont");
+	SetFont("POINTEXT"); //[Strongbelly]: new graphic HUD message for weapon upgrade point.
+	HudMessage(s:"A";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 993, 0, 1.5,0.18, 3.0, 0.005, 1.0);
+	GiveInventory("WeaponUpgradePoint", 1);
+	//HudMessage(s:RewardMessage; HUDMSG_TYPEON|HUDMSG_LOG, 999, CR_GOLD, 1.5, 0.16, 3.0, 0.005, 1.0);
+}
+
+Script "PraetorTokenReward" (void)
+{
+	//Str RewardMessage = "Praetor Token gained.";
+	//SetFont("SmallFont");
+	SetFont("PRTRTEXT"); //strongbelly: new graphic HUD message for praetor token gained
+	HudMessage(s:"A"; HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 993, 0, 1.5,0.18, 3.0, 0.005, 1.0);
+	GiveInventory("PraetorToken", 1);
+	//HudMessage(s:RewardMessage; HUDMSG_TYPEON|HUDMSG_LOG, 999, CR_GOLD, 1.5, 0.16, 3.0, 0.005, 1.0);
+}
+
+Script "CheckArmoredOffensive" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("ArmoredOffensiveSelected") * 2 * (1 + CheckInventory("ArmoredOffensiveII")));
+}
+
+Script "CheckAmmoBoost" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("AmmoBoostSelected") && CheckInventory("AmmoBoostII"));
+}
+
+Script "WantsBullets" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue((CheckInventory("EOA_HeavyAssaultRifle") || CheckInventory("EOA_Chaingun")) && (CheckInventory("EOA_BulletAmmo") < GetMaxInventory(0, "EOA_BulletAmmo")));
+}
+
+Script "NeedsBullets" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue((CheckInventory("EOA_HeavyAssaultRifle") || CheckInventory("EOA_Chaingun")) && (CheckInventory("EOA_BulletAmmo") <= GetMaxInventory(0, "EOA_BulletAmmo") / 3));
+}
+
+Script "ReallyNeedsBullets" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("BulletsLowAmmo"));
+}
+
+Script "WantsShells" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue((CheckInventory("EOA_CombatShotgun") || CheckInventory("EOA_SuperShotgun")) && (CheckInventory("EOA_ShellAmmo") < GetMaxInventory(0, "EOA_ShellAmmo")));
+}
+
+Script "NeedsShells" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue((CheckInventory("EOA_CombatShotgun") || CheckInventory("EOA_SuperShotgun")) && (CheckInventory("EOA_ShellAmmo") <= GetMaxInventory(0, "EOA_ShellAmmo") / 3));
+}
+
+Script "ReallyNeedsShells" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("ShellsLowAmmo"));
+}
+
+Script "WantsRockets" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("EOA_RocketLauncher") && (CheckInventory("EOA_RocketAmmo") < GetMaxInventory(0, "EOA_RocketAmmo")));
+}
+
+Script "NeedsRockets" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("EOA_RocketLauncher") && (CheckInventory("EOA_RocketAmmo") <= GetMaxInventory(0, "EOA_RocketAmmo") / 3));
+}
+
+Script "ReallyNeedsRockets" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("RocketsLowAmmo"));
+}
+
+Script "WantsCells" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue((CheckInventory("EOA_PlasmaRifle") || CheckInventory("EOA_GaussCannon")) && (CheckInventory("EOA_CellAmmo") < GetMaxInventory(0, "EOA_CellAmmo")));
+}
+
+Script "NeedsCells" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue((CheckInventory("EOA_PlasmaRifle") || CheckInventory("EOA_GaussCannon")) && (CheckInventory("EOA_CellAmmo") <= GetMaxInventory(0, "EOA_CellAmmo") / 3));
+}
+
+Script "ReallyNeedsCells" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("CellsLowAmmo"));
+}
+
+Script "HasBFG" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("EOA_BFG"));
+}
+
+Script "BerserkWeaponStorage" (void)
+{
+	//Save the name of the weapon we had previously...
+	If (!CheckWeapon("EOA_BerserkFist"))
+	{
+		Str Weapon = GetWeapon();
+	}
+	
+	//Force selection of the Berserk Fist...
+	While (!CheckWeapon("EOA_BerserkFist"))
+	{
+		SetWeapon("EOA_BerserkFist");
+		Delay(1);
+	}
+	
+	//Wait until Berserk has expired...
+	While (GetActorPowerupTics(0, "PowerBerserk"))
+	{
+		Delay(1); 
+	}
+	
+	//Switch back to the original weapon we had before...
+	Do
+	{
+		SetWeapon(Weapon);
+		Delay(1);
+	}
+	Until (!CheckWeapon("EOA_BerserkFist")); 
+}
+
+Script "GetBerserkTics" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(GetActorPowerupTics(0, "PowerBerserk"));
+}
+
+Script "GetHasteTics" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(GetActorPowerupTics(0, "PowerHaste"));
+}
+
+Script "GetQuadDamageTics" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(GetActorPowerupTics(0, "PowerQDMG"));
+}
+
+Script "GetInvulnerabilityTics" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(GetActorPowerupTics(0, "PowerInvulnerability"));
+}
+
+Script "GetMaxTargetHealth" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(GetActorProperty(0, APROP_SPAWNHEALTH));
+}
+
+Script "GetMaxTracerHealth" (void)
+{
+	SetActivator(0, AAPTR_TRACER);
+	SetResultValue(GetActorProperty(0, APROP_SPAWNHEALTH));
+}
+
+Script "GetTargetHealth" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(GetActorProperty(0, APROP_HEALTH));
+}
+
+Script "GetTargetHealthDiff" (void)
+{
+	SetActivatorToTarget(0);
+	Int HealthDiff = (GetActorProperty(0, APROP_SPAWNHEALTH) - GetActorProperty(0, APROP_HEALTH));
+	If (HealthDiff < 0)
+	{
+		HealthDiff = 0;
+	}
+	SetResultValue(HealthDiff);
+}
+
+Script "GetTargetArgentHealth" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("EOA_ArgentHealthBonusCounter"));
+}
+
+Script "GetTargetArgentArmor" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("EOA_ArgentArmorBonusCounter"));
+}
+
+Script "GetTargetArgentAmmo" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(CheckInventory("EOA_ArgentAmmoBonusCounter"));
+}
+
+Script "GetTargetClass" (void)
+{
+	SetActivatorToTarget(0);
+	SetResultValue(GetActorClass(0));
+}
+
+/*Script "GetX" (void)
+{
+	SetResultValue(GetActorX(0) / 65536);
+}
+
+Script "GetY" (void)
+{
+	SetResultValue(GetActorY(0) / 65536);
+}
+
+Script "GetTracerX" (void)
+{
+	SetActivator(0, AAPTR_TRACER);
+	SetResultValue(GetActorX(0) / 65536);
+}
+
+Script "GetTracerY" (void)
+{
+	SetActivator(0, AAPTR_TRACER);
+	SetResultValue(GetActorY(0) / 65536);
+}*/
+
+
+//[DoomKrakken]: The following code has been taken from ZIONv8.  I take no credit in the authoring of this code, except for those instances of editing the code to look cleaner and more organized and insertions of my own code and actor references.  TEAM ZION ROCKS! :D
+#DEFINE XHairW 4980
+#DEFINE XHairH 3860
+
+#DEFINE GXHairW 1364
+#DEFINE GXHairH 1023
+
+Script "EMGReticle" (void)
+{
+	Int CrossScale;
+	Int CrossAlpha;
+	Int CRetAlpha = 0;
+	Int ZoomScale = 0;
+	Int ZoomMaxScale = 700;
+	Int ZoomScale2 = 1.0;
+	Int ZoomMaxScale2 = 0.8;
+	While (CheckWeapon("EOA_Pistol") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+		Bool Zoomed = (CheckInventory("EMGCharging"));//(GetPlayerInput(-1, INPUT_BUTTONS) & BT_ALTATTACK);
+		If (Zoomed)
+		{
+			ZoomScale += 85;
+		}
+		Else
+		{
+			ZoomScale -= 85;
+		}
+		If (ZoomScale > ZoomMaxScale)
+		{
+			ZoomScale = ZoomMaxScale;
+		}
+		If (ZoomScale < /*0*/ 15 * CheckInventory("EMGAccuracyCounter")) //[DoomKrakken]: Do a lesser check here, so that it doesn't keep shrinking while we're firing, if we're firing a lot.
+		{
+			ZoomScale = /*0*/ 15 * CheckInventory("EMGAccuracyCounter");
+		}
+		If (CheckInventory("EMGCharging")) //(Zoomed)
+		{
+			CRetAlpha += 0.1;
+		}
+		Else
+		{
+			CRetAlpha -= 0.1;
+		}
+		If (CRetAlpha > 1.0)
+		{
+			CRetAlpha = 1.0;
+		}
+		Else If (CRetAlpha < 0)
+		{
+			CRetAlpha = 0;
+		}
+		If (GetPlayerInput(-1, INPUT_BUTTONS) & BT_ALTATTACK)
+		{
+			ZoomScale2 -= 0.075;
+		}
+		Else
+		{
+			ZoomScale2 += 0.075;
+		}
+		If (ZoomScale2 < ZoomMaxScale2)
+		{
+			ZoomScale2 = ZoomMaxScale2;
+		}
+		Else If (ZoomScale2 > 1.0)
+		{
+			ZoomScale2 = 1.0;
+		}
+		//Center Reticle
+		Int WXHairW = FixedMul(GXHairW + ZoomScale, ZoomScale2);
+		Int WXHairH = FixedMul(GXHairH + FixedMul(ZoomScale, 0.75), ZoomScale2);
+		SetHudSize(WXHairW, WXHairH, 1);
+		SetFont("PISRTC2");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, WXHairW / 2 * 1.0, WXHairH / 2 * 1.0, 0.033, CRetAlpha);
+		//Outer Reticle
+		WXHairW = FixedMul(FixedMul(GXHairW, 1.25) - ZoomScale, ZoomScale2);
+		WXHairH = FixedMul(FixedMul(GXHairH, 1.25) - FixedMul(ZoomScale, 0.75), ZoomScale2);
+		SetHudSize(WXHairW, WXHairH, 1);
+		SetFont("PISRTC1");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, WXHairW / 2 * 1.0, WXHairH / 2 * 1.0, 0.033, (1.0 - CRetAlpha) + 0.05);
+		If (CheckInventory("EMGChargeCounter") < GetMaxInventory(0, "EMGChargeCounter"))
+		{
+			CrossScale = 1000;
+			CrossAlpha = 1.0;
+		}
+		Int HUDW = FixedMul(FixedMul(XHairW, 0.66), ZoomScale2);
+		Int HUDH = FixedMul(FixedMul(XHairH, 0.66), ZoomScale2);
+		Int Power = 100 * CheckInventory("EMGChargeCounter") / GetMaxInventory(0, "EMGChargeCounter");
+		Str PowerPic = StrParam(s:"BMTR", d:Power);
+		SetHudSize(HUDW, HUDH, 1);
+		If (Power && !CheckInventory("EMGCooldownCounter"))
+		{
+			SetFont(PowerPic);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.8);
+			If (CheckInventory("EMGChargeCounter") == GetMaxInventory(0, "EMGChargeCounter"))
+			{
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+			}
+		}
+		If ((CheckInventory("EMGChargeCounter") == GetMaxInventory(0, "EMGChargeCounter")) && !CheckInventory("EMGCooldownCounter") && CrossAlpha > 0)
+		{
+			CrossScale -= 20;
+			Int ScalingHUDW = HUDW * CrossScale / 1000;
+			Int ScalingHUDH = HUDH * CrossScale / 1000;
+			SetHudSize(ScalingHUDW, ScalingHUDH, 1);
+			SetFont("BMTR100");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, ScalingHUDW / 2 * 1.0, ScalingHUDH / 2 * 1.0, 0.033, CrossAlpha);
+			CrossAlpha -= 0.066;
+		}
+		If (CheckInventory("EMGCooldownCounter"))
+		{
+			Int Cooldn = 100 * CheckInventory("EMGCooldownCounter") / GetMaxInventory(0, "EMGCooldownCounter");
+			Str CooldnPic = StrParam(s:"RMTR", d:Cooldn);
+			SetFont(CooldnPic);
+			If (CheckFont(CooldnPic))
+			{
+				SetHudSize(HUDW, HUDH, 1);
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.75);
+			}
+		}
+		SetHudSize(HUDW, HUDH, 1);
+		SetFont("MTRBAK");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.1);
+		Delay(1);
+	}
+}
+
+Script "CSGReticle" (void)
+{
+	Int Dist = 35;
+	Int Namber = 0;
+	Int ZoomScale = 0;
+	Int ZoomMaxScale = 300;
+	While (CheckWeapon("EOA_CombatShotgun") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+		If ((CheckInventory("ChargedBurstSelected") && CheckInventory("ChargedBurstChargeCounter")) || (CheckInventory("ExplosiveShotSelected") && CheckInventory("ExplosiveShotChargeCounter")))
+		{
+			ZoomScale += 50;
+		}
+		Else
+		{
+			ZoomScale -= 50;
+		}
+		If (ZoomScale > ZoomMaxScale)
+		{
+			ZoomScale = ZoomMaxScale;
+		}
+		If (ZoomScale < 0)
+		{
+			ZoomScale = 0;
+		}
+		Int WXHairW = GXHairW - ZoomScale;
+		Int WXHairH = GXHairH - FixedMul(ZoomScale, 0.75);
+		SetHudSize(WXHairW, WXHairH, 1);
+		If (CheckInventory("ChargedBurstSelected") && (GetPlayerInput(-1, INPUT_BUTTONS) & BT_ALTATTACK) && CheckInventory("ChargedBurstChargeCounter"))
+		{
+			SetFont("SGXHR9");
+		}
+		Else If (CheckInventory("ChargedBurstSelected"))
+		{
+			SetFont("SGXHR8");
+		}
+		Else If (CheckInventory("ExplosiveShotSelected") && (GetPlayerInput(-1, INPUT_BUTTONS) & BT_ALTATTACK) && CheckInventory("ExplosiveShotChargeCounter"))
+		{
+			SetFont("SGXHR3");
+		}
+		Else If (CheckInventory("ExplosiveShotSelected"))
+		{
+			SetFont("SGXHR2");
+		}
+		Else
+		{
+			SetFont("SGXHR");
+		}
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, WXHairW / 2 * 1.0, WXHairH / 2 * 1.0, 0.033, 0.9);
+		If (CheckInventory("ChargedBurstSelected"))
+		{
+			Dist = 35 - ZoomScale * 3 / 50 * !CheckInventory("ChargedBurstCooldownCounter");
+			If (CheckInventory("PowerShotToken") || CheckInventory("PowerShotFiring"))
+			{
+				SetFont("SGXHRC2");
+			}
+			Else
+			{
+				SetFont("SGXHRC");
+			}
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, (WXHairW / 2 - Dist) * 1.0, WXHairH / 2 * 1.0, 0.033, 0.9);
+
+			If (CheckInventory("PowerShotToken") || CheckInventory("PowerShotFiring"))
+			{
+				SetFont("SGXHRC2F");
+			}
+			Else
+			{
+				SetFont("SGXHRCF");
+			}
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0,(WXHairW / 2 + Dist) * 1.0, WXHairH / 2 * 1.0, 0.033, 0.9);
+		}
+		Else If (CheckInventory("ExplosiveShotSelected"))
+		{
+			Namber = 14 * CheckInventory("ExplosiveShotChargeCounter") / GetMaxInventory(0, "ExplosiveShotChargeCounter");
+			Str Fonty = StrParam(s:"SGXGR",d:Namber);
+			SetFont(Fonty);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, WXHairW / 2 * 1.0, WXHairH / 2 * 1.0, 0.033, 1.0);
+		}
+		If (CheckInventory("ChargedBurstSelected") && !CheckInventory("ChargedBurstCooldownCounter") && CheckInventory("ChargedBurstChargeCounter") && (GetPlayerInput(-1, INPUT_BUTTONS) & BT_ALTATTACK))
+		{
+			SetFont(StrParam(s:"SGXHR", d: 4 + CheckInventory("ChargedBurstChargeCounter")));
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, WXHairW / 2 * 1.0, WXHairH / 2 * 1.0, 0.033, 1.0);
+		}
+		Int HUDW = FixedMul(XHairW, 0.66) - FixedMul(ZoomScale, 1.5);
+		Int HUDH = FixedMul(XHairH, 0.66) - FixedMul(ZoomScale, 1.5);
+		Int CooldownInv = "ChargedBurstCooldownCounter";
+		If (CheckInventory("ExplosiveShotSelected"))
+		{
+			CooldownInv = "ExplosiveShotCooldownCounter";
+		}
+		Int Cooldown = 100 * CheckInventory(CooldownInv) / GetMaxInventory(0, CooldownInv);
+		If (Cooldown)
+		{
+			Str CooldownPic = StrParam(s:"RMTR", d:Cooldown);
+			SetHudSize(HUDW, HUDH, 1);
+			SetFont(CooldownPic);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.66);
+		}
+		SetHudSize(HUDW, HUDH, 1);
+		SetFont("MTRBAK");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.1);
+		Delay(1);
+	}
+}
+
+Script "SSGReticle" (void)
+{
+	Int ZoomScale = 0;
+	Int ZoomMaxScale = 400;
+	While (CheckWeapon("EOA_SuperShotgun") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+		If (CheckInventory("SSGZoomCounter"))
+		{
+			ZoomScale += 50;
+		}
+		Else
+		{
+			ZoomScale -= 50;
+		}
+		If (ZoomScale > ZoomMaxScale)
+		{
+			ZoomScale = ZoomMaxScale;
+		}
+		If (ZoomScale < 0)
+		{
+			ZoomScale = 0;
+		}
+		Int WXHairW = GXHairW - ZoomScale;
+		Int WXHairH = GXHairH - FixedMul(ZoomScale, 0.75);
+		SetHudSize(WXHairW, WXHairH, 1);
+		If (CheckInventory("DoubleTrouble"))
+		{
+			SetFont(StrParam(s:"SSGXR", d: 3 - CheckInventory("SSGShots")));
+		}
+		Else
+		{
+			SetFont("SSGXR");
+		}
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP, 0, 0, WXHairW / 2 * 1.0, WXHairH / 2 * 1.0, 0.033, 1.0);
+		Delay(1);
+	}
+}
+
+Script "HARReticle" (void)
+{
+	Int Z0Scale = 0;
+	Int Z1Scale = 0;
+	Int Z1Alpha = 1.0;
+	Int Z1Dist = 0;
+	Int Z1Tick = 0;
+	Int Z2Scale = 0;
+	Int Z2Alpha = 1.0;
+	Int Z3Scale = 0;
+	Int Z3Alpha = 1.0;
+	Int Z2Dist = 0.75;
+	While (CheckWeapon("EOA_HeavyAssaultRifle") && GetActorProperty(0, APROP_HEALTH) > 0) // Micro
+	{
+		Int HUDW = GXHairW;
+		Int HUDH = GXHairH;
+		SetHUDSize(HUDW, HUDH, 1);
+		If (CheckInventory("MicroMissilesSelected"))
+		{
+			SetHUDSize(HUDW, HUDH, 1);
+			Int HARTickie;
+			Int HARChargeAlpha;
+			Int HARCharge = CheckInventory("MicroMissileCounter");
+			If (!CheckInventory("MicroMissilesReady"))
+			{
+				Int HARPSeudoCharge = 0;
+			}
+			If (CheckInventory("MicroMissilesReady"))
+			{
+				HARTickie = (HARTickie + 1) % 4;
+				If (!HARTickie)
+				HARPSeudoCharge++;
+				If (HARPSeudoCharge > HARCharge || CheckInventory("QuickLauncher"))
+				HARPSeudoCharge = HARCharge;
+
+				HARChargeAlpha = 0;
+				If (CheckInventory("BottomlessMissiles"))
+				{
+					HARPSeudoCharge = 6;
+				}
+				SetFont("HARMXH0");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.75);
+				If (HARCharge && HARPSeudoCharge)
+				{
+					Str FuenteDeAgua = StrParam(s:"HARMXH", d:HARPSeudoCharge);
+					SetFont(FuenteDeAgua);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.75);
+				}
+			}
+			Else If (!CheckInventory("MicroMissilesReady") && !CheckInventory("BottomlessMissiles"))
+			{
+				If (HARChargeAlpha)
+				{
+					SetFont("HARMXH0");
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, HARChargeAlpha);
+					FuenteDeAgua = StrParam(s:"HARMXL", d:HARCharge);
+					SetFont(FuenteDeAgua);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, HARChargeAlpha);
+				}
+				If (HarCharge < 6)
+				{
+					HARChargeAlpha = 0.75;
+				}
+				Else
+				{
+					HARChargeAlpha -= 0.2;
+				}
+				If (HARChargeAlpha < 0)
+				{
+					HARChargeAlpha = 0;
+				}
+			}
+		}
+		If (CheckInventory("TacticalScopeSelected"))
+		{
+			If (CheckInventory("TacticalScopeReady") && CheckInventory("TacticalScopeFireCounter"))
+			{
+				//TakeInventory("TacticalScopeFireCounter", 10000);
+				Z0Scale = 0.1;
+				Z2Dist += 0.1;
+			}
+			Z0Scale -= 0.02;
+			If (Z0Scale < 0)
+			{
+				Z0Scale = 0;
+			}
+			HUDW = GXHairW + FixedMul(GXHairW, Z0Scale);
+			HUDH = GXHairH + FixedMul(GXHairH, Z0Scale);
+
+			Int Z1SSpeed = 0.15;
+			Int Z1ASpeed = 0.15;
+			If (CheckInventory("TacticalScopeReady"))
+			{
+				If (Z1Alpha)
+				{
+					Z1Scale += Z1SSpeed;
+					Z1Alpha -= Z1ASpeed;
+					Z1Dist += 0.015;
+					Z1Tick++;
+				}
+				If (Z1Tick >= 5)
+				{
+					Z2Scale += Z1SSpeed;
+					Z2Alpha -= Z1ASpeed;
+					Z3Scale += Z1SSpeed;
+					Z3Alpha -= Z1ASpeed / 3;
+					Z2Dist -= Z1SSpeed;
+				}
+			}
+			Else
+			{
+				Z1Scale -= Z1SSpeed;
+				Z1Alpha += Z1ASpeed;
+				Z2Scale -= Z1SSpeed;
+				Z2Alpha += Z1ASpeed;
+				Z3Scale -= Z1SSpeed;
+				Z3Alpha += Z1ASpeed;
+				Z1Dist -= 0.015;
+				Z2Dist += Z1SSpeed;
+				Z1Tick--;
+			}
+			If (Z1Alpha < 0) Z1Alpha = 0; 
+			If (Z1Alpha > 1.0) Z1Alpha = 1.0;
+			If (Z1Scale > 2.0) Z1Scale = 2.0; 
+			If (Z1Scale < 0) Z1Scale = 0;
+			If (Z1Dist > 0.1) Z1Dist = 0.1; 
+			If (Z1Dist < 0) Z1Dist = 0;
+			If (Z2Dist < 0.125) Z2Dist = 0.125; 
+			If (Z2Dist > 0.75) Z2Dist = 0.75;
+			If (Z1Tick > 5) Z1Tick = 5; 
+			If (Z1Tick < 0) Z1Tick = 0;
+			If (Z2Alpha < 0) Z2Alpha = 0; 
+			If (Z2Alpha > 1.0) Z2Alpha = 1.0;
+			If (Z2Scale > 0.75) Z2Scale = 0.75; 
+			If (Z2Scale < 0) Z2Scale = 0;
+			If (Z3Scale > 0.775) Z3Scale = 0.775; 
+			If (Z3Scale < 0) Z3Scale = 0;
+			If (Z3Alpha < 0) Z3Alpha = 0; 
+			If (Z3Alpha > 1.0) Z3Alpha = 1.0;
+		}
+		Else
+		{
+			Z0Scale = 0;
+			Z1Scale = 0;
+			Z1Alpha = 1.0;
+			Z1Dist = 0;
+			Z1Tick = 0;
+			Z2Scale = 0;
+			Z2Alpha = 1.0;
+			Z3Scale = 0;
+			Z3Alpha = 1.0;
+			Z2Dist = 0.75;
+		}
+		Int XHRW = HUDW - FixedMul(HUDW, Z1Scale); 
+		Int XHRH = HUDH - FixedMul(HUDH, Z1Scale);
+		SetHUDSize(XHRW, XHRH, 1);
+		SetFont("HARXHR"); // Main Crosshair
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, XHRW / 2 * 1.0, XHRH / 2 * 1.0, 0.033, Z1Alpha);
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, XHRW / 2 * 1.0, XHRH / 2 * 1.0, 0.033, FixedMul(Z1Alpha, 0.5));
+		// [DoomKrakken]: The following is laggy AF.
+		/*If (CheckInventory("TacticalScopeSelected") && (Z1Alpha < 1 || Z2Alpha < 1 || Z3Alpha < 1 || Z1Scale || Z2Scale || Z3Scale))
+		{
+			Int ZXHRW = (HUDW + FixedMul(HUDW, Z1Scale)) * 2 / 5;
+			Int ZXHRH = (HUDH + FixedMul(HUDH, Z1Scale)) * 2 / 5;
+			SetHUDSize(ZXHRW, ZXHRH, 1);
+			SetFont("HARTSX"); // (zoom) Center Cross
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, 1.0 - Z1Alpha);
+			ZXHRW = HUDW * 2 / 3;
+			ZXHRH = HUDW * 2 / 3;
+			SetHUDSize(ZXHRW, ZXHRH, 1);
+			SetFont("HARTSX2"); // (zoom) Left static thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, 0.08)) * 1.0 + 0.2, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.5));
+			SetFont("HARTSX2B"); // (zoom) Right static thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, 0.08)) * 1.0 + 0.1, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.5));
+
+			ZXHRW = (HUDW + FixedDiv(HUDW, Z1Scale)) * 2 / 5;
+			ZXHRH = (HUDH + FixedDiv(HUDH, Z1Scale)) * 2 / 5;
+			SetHUDSize(ZXHRW, ZXHRH, 1);
+			SetFont("HARTST4"); // (zoom) Left curved thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, (ZXHRW - FixedMul(ZXHRW, Z1Dist)) / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+			SetFont("HARTST4B"); // (zoom) Right curved thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, (ZXHRW + FixedMul(ZXHRW, Z1Dist)) / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+
+			ZXHRW = (HUDW + FixedMul(HUDW, Z2Scale)) * 7 / 30; // (zoom) Big Circle
+			ZXHRH = (HUDH + FixedMul(HUDH, Z2Scale)) * 7 / 30;
+			SetHUDSize(ZXHRW, ZXHRH, 1);
+			SetFont("HARTSBA2");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+			ZXHRW = (HUDW + FixedMul(HUDW, Z3Scale)) * 6 / 30; // (zoom) Inner Circle
+			ZXHRH = (HUDH + FixedMul(HUDH, Z3Scale)) * 6 / 30;
+			SetHUDSize(ZXHRW, ZXHRH, 1);
+			SetFont("HARTSBA3");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+			SetFont("HARTSB3B");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(FixedMul(1.0 - Z2Alpha, 0.25), Z3Alpha));
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(FixedMul(1.0 - Z2Alpha, 0.25), Z3Alpha));
+
+			Int BXHRW = (HUDW + FixedMul(HUDW, Z1Scale)) / 12;
+			Int BXHRH = (HUDH + FixedMul(HUDH, Z1Scale)) / 12;
+			SetHUDSize(BXHRW, BXHRH, 1);
+			SetFont("HARTSBK2"); // BackGround
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, BXHRW / 2 * 1.0, BXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+			BXHRW = (HUDW + FixedMul(HUDW, Z2Scale)) / 11;
+			BXHRH = (HUDH + FixedMul(HUDH, Z2Scale)) / 11;
+			SetHUDSize(BXHRW, BXHRH, 1);
+			SetFont("HARTSBAK"); // BackGround 2
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, BXHRW / 2 * 1.0, BXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+
+			ZXHRW = HUDW * 2 / 3;
+			ZXHRH = HUDW * 2 / 3;
+			SetHUDSize(ZXHRW, ZXHRH, 1);
+			SetFont("HARTST2"); // (zoom) Left thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, FixedMul(ZXHRW / 2, 0.2) * 1.0 + 0.2, FixedDiv(ZXHRH / 2, 0.75) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+			SetFont("HARTST2B"); // (zoom) Right thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, FixedDiv(ZXHRW / 2, 0.55) * 1.0 + 0.1, FixedDiv(ZXHRH / 2, 0.75) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+
+
+			SetFont("HARTST3B"); // (zoom) Left thingy
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, 0.25)) * 1.0 + 0.2, FixedMul(ZXHRH / 2, 0.85) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.1));
+			SetFont("HARTST3"); // (zoom) Right thingy
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, 0.25)) * 1.0 + 0.1, FixedMul(ZXHRH / 2, 0.85) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.1));
+
+			SetFont("HARTST"); // Bottom Left thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.2, ((ZXHRH / 2) + FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.1, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+			SetFont("HARTSTB"); // Top Left thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.2,((ZXHRH / 2) - FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.2, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+			SetFont("HARTSTD"); // Bottom Right thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.1,((ZXHRH / 2) + FixedMul(ZXHRH / 2,Z2Dist)) * 1.0 + 0.1, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+			SetFont("HARTSTC"); // Top Right thing
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.1,((ZXHRH / 2) - FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.2, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+		}*/
+		Delay(1);
+	}
+}
+
+Script "RLRReticle" (void)
+{
+	Str LockReticle = "TNT1A0";
+	While (CheckWeapon("EOA_RocketLauncher") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+		SetHudSize(GXHairW,GXHairH,1);
+		If (CheckInventory("LockOnBurstSelected") && (CheckInventory("LockTarget1") || CheckInventory("LockOnBurstFiring")))
+		{
+			SetFont("RLXLOCC");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0, 0.033, 0.5);
+		}
+		Else
+		SetFont("RLXR");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0, 0.033, 1.0);
+		If (!CheckInventory("LockOnBurstSelected"))
+		{
+			SetFont("RLDETX");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0, 0.033, 0.1);
+		}
+		If (CheckInventory("LockOnBurstSelected"))
+		{
+			Int ReticleAlpha;
+			If (CheckInventory("LockOnBurstChargeCounter"))
+			{
+				ReticleAlpha = 1.0;
+			}
+			Else 
+			{
+				ReticleAlpha = 0;
+			}
+			Int LockAmount = 27 * CheckInventory("LockOnBurstChargeCounter") / GetMaxInventory(0, "LockOnBurstChargeCounter");
+			If (!CheckInventory("LockOnBurstCooldownCounter"))
+			{
+				LockReticle = StrParam(s:"RLXR", d:LockAmount);
+			}
+			Else
+			{
+				LockAmount = 27 * CheckInventory("LockOnBurstCooldownCounter") / GetMaxInventory(0, "LockOnBurstCooldownCounter");
+				LockReticle = StrParam(s:"RLXX", d:LockAmount);
+				Int RedAlpha = CheckInventory("LockOnBurstCooldownCounter") * 1.0 / GetMaxInventory(0, "LockOnBurstCooldownCounter"); //[DoomKrakken]: Smart.  Multiplying by a float to make it into a float. :D
+			}
+			If (!CheckInventory("LockOnBurstChargeCounter") && (CheckInventory("LockTarget1") || CheckInventory("LockOnBurstFiring")) || CheckInventory("LockOnBurstChargeCounter") >= GetMaxInventory(0, "LockOnBurstChargeCounter") && (CheckInventory("LockTarget1") || CheckInventory("LockOnBurstFiring")))
+			LockReticle = "TNT1A0";
+			If (CheckInventory("LockTarget1") || CheckInventory("LockOnBurstFiring"))
+			{
+				SetFont("RLXLOC");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0 - 2.0, 0.033, 1.0);
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND|HUDMSG_ALPHA, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0 - 2.0, 0.033, 0.25);
+				SetHudSize(GXHairW / 2, GXHairH / 2, 1);
+				SetFont("Confont");
+				HudMessage(s:"LOCKED";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA,0,CR_WHITE, GXHairW / 4 * 1.0,(GXHairH / 4 * 1.0) + 40.0, 0.033, 1.0);
+				SetHudSize(GXHairW, GXHairH, 1);
+				Int LockAlpha = 0.3;
+
+				Bool LockScaleAndFade;
+				Int LockScaleAndFadeOut;
+				If (!LockScaleAndFade)
+				{
+					LockScaleAndFade = True;
+					LockScaleAndFadeOut = 1.0;
+					Int LockScaleScale = 0;
+				}
+				If (LockScaleAndFade)
+				{
+					LockScaleScale -= 40;
+					LockScaleAndFadeOut -= 0.1;
+				}
+				If (LockScaleAndFadeOut < 0)
+				{
+					LockScaleAndFadeOut = 0;
+				}
+				
+				SetHudSize(GXHairW + LockScaleScale, GXHairH + (LockScaleScale / 2), 1);
+				SetFont("RLXLOC");
+				If (LockScaleAndFadeOut)
+				{
+					SetFont("RLXLOC");
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND|HUDMSG_ALPHA, 0, 0, (GXHairW + LockScaleScale) / 2 * 1.0, (GXHairH + (LockScaleScale / 2)) / 2 * 1.0 - 2.0, 0.033, LockScaleAndFadeOut);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND|HUDMSG_ALPHA, 0, 0, (GXHairW + LockScaleScale) / 2 * 1.0, (GXHairH + (LockScaleScale / 2)) / 2 * 1.0 - 2.0, 0.033, LockScaleAndFadeOut / 2);
+				}
+				SetHudSize(GXHairW, GXHairH, 1);
+			}
+			Else
+			{
+				LockScaleAndFade = False;
+				LockAlpha -= 0.15;
+				If(LockAlpha < 0)
+				{
+					LockAlpha = 0;
+				}
+			}
+			SetFont(LockReticle);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0, 0.033, 0.5 + (ReticleAlpha / 2));
+			If (RedAlpha)
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0, 0.033, RedAlpha);
+			If (LockAlpha)
+			{
+				SetFont("RLLOCK");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0, 0.033, LockAlpha);
+			}
+		}
+		Else If (CheckInventory("RemoteDetonationSelected"))
+		{
+			Bool Det = CheckInventory("RemoteDetonationTrigger");
+			If (Det)
+			{
+				Int DetAlpha;
+				Bool Fading;
+
+				If (Fading)
+				{
+					DetAlpha -= 0.25;
+				}
+				Else
+				{
+					DetAlpha += 0.25;
+				}
+				If (DetAlpha <= 0)
+				{
+					DetAlpha = 0; 
+					Fading = False;
+				}
+				Else If (DetAlpha >= 1.0)
+				{
+					DetAlpha = 1.0;
+					Fading = True;
+				}
+				SetFont("RLDET");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, GXHairW / 2 * 1.0, GXHairH / 2 * 1.0, 0.033, 0.5 + (DetAlpha / 2));
+				SetHudSize(GXHairW / 2, GXHairH / 2, 1);
+				SetFont("ConFont");
+				HudMessage(s:"DETONATE";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, CR_WHITE, GXHairW / 4 * 1.0, (GXHairH / 4 * 1.0) + 40.0, 0.033, 0.5 + (DetAlpha / 2));
+			}
+		}
+		Delay(1);
+	}
+}
+
+Script "PLRReticle" (void)
+{
+	//Bool StunCooled, HeatCharged;
+	While (CheckWeapon("EOA_PlasmaRifle") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+		Int HUDW = XHairW;
+		Int HUDH = XHairH;
+		SetHudSize(HUDW, HUDH, 1);
+		Str Font = "PLSMXHR";
+		SetFont(Font);
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+		If (CheckInventory("HeatBlastSelected") || CheckInventory("StunBombSelected"))
+		{
+			If (CheckInventory("HeatBlastSelected")) // Heat
+			{
+				Int HeatCooldown = 10 * CheckInventory("HeatBlastCooldownCounter") / GetMaxInventory(0, "HeatBlastCooldownCounter");
+				Str HeatCldnPic = StrParam(s:"PLSMTR", d:HeatCooldown);
+				If(HeatCooldown > 0 && CheckInventory("HeatBlastChargeCounter") < GetMaxInventory(0, "HeatBlastChargeCounter"))
+				{
+					SetFont(HeatCldnPic);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.8);
+				}
+
+				Int HeatPower = 10 * CheckInventory("HeatBlastChargeCounter") / GetMaxInventory(0, "HeatBlastChargeCounter");
+				Str HeatPic = StrParam(s:"PLS2TR", d:HeatPower);
+				SetFont(HeatPic);
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP,0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+			}
+			
+			Else If (CheckInventory("StunBombSelected")) // Stun
+			{
+				SetFont("TNT1A0");
+				Int StunCooldown = 10 * CheckInventory("StunBombCooldownCounter") / GetMaxInventory(0, "StunBombCooldownCounter");
+				Str StunCldnPic = StrParam(s:"PLSMTR", d:StunCooldown);
+				If (StunCooldown > 0 && CheckInventory("StunBombCooldownCounter") > 0)
+				{
+					SetFont(StunCldnPic);
+				}
+				Else If (!CheckInventory("StunBombCooldownCounter") && CheckInventory("StunBombReady"))
+				{
+					SetFont("PLS2TR10");
+				}
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+			}
+		}
+		SetFont("PLSMTR0");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.1);
+
+		Int AnyCharged, CrossScale, CrossAlpha;
+		If ((CheckInventory("StunBombSelected") && CheckInventory("StunBombReady")) || (CheckInventory("HeatBlastSelected") && CheckInventory("HeatBlastReady")))
+		{
+			AnyCharged = True;
+		}
+		Else
+		{
+			AnyCharged = False;
+			CrossScale = 1000;
+			CrossAlpha = 1.0;
+		}
+		If (AnyCharged && CrossAlpha > 0)
+		{
+			CrossScale -= 20;
+			HUDW = FixedMul(XHairW, 0.75) * CrossScale / 1000;
+			HUDH = FixedMul(XHairH, 0.75) * CrossScale / 1000;
+			SetHudSize(HUDW, HUDH, 1);
+			SetFont("MTRBAK");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, CrossAlpha);
+			CrossAlpha -= 0.066;
+		}
+		Delay(1);
+	}
+}
+
+Script "CGNReticle" (void)
+{
+	Int CrossScale;
+	Int CrossAlpha;
+	Int SpeedTrack = 0;
+	While (CheckWeapon("EOA_Chaingun") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+
+		/*Int TrackSpeed = 10;
+		If(SpeedTrack + TrackSpeed<CheckInventory("ChaingunRotationSpeed")*3)
+		SpeedTrack+=TrackSpeed;
+		Else If(SpeedTrack-TrackSpeed>CheckInventory("ChaingunRotationSpeed")*3)
+		SpeedTrack-=TrackSpeed;
+		Else
+		SpeedTrack=CheckInventory("ChaingunRotationSpeed")*3;*/
+
+		Int WXHairW = FixedMul(GXHairW, 0.9);
+		Int WXHairH = FixedMul(GXHairH, 0.9);
+		Int CGNXHairW = FixedMul(GXHairW + 1, 0.9);
+		Int CGNXHairH = FixedMul(GXHairH + 1, 0.9);
+		SetHudSize(CGNXHairW, CGNXHairH, 1);
+		SetFont("CHGXHR");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, CGNXHairW / 2 * 1.0, CGNXHairH / 2 * 1.0, 0.033, 0.75);
+
+
+		//Int HUDW=FixedMul(5210,1.1);
+		//Int HUDH=FixedMul(4416,1.05);
+
+		Int HUDW = FixedMul(WXHairW, 2.75);
+		Int HUDH = FixedMul(WXHairH, 2.75);
+		If (CheckInventory("ChaingunSpinCounter") < GetMaxInventory(0, "ChaingunSpinCounter"))
+		{
+			CrossScale = 1000;
+			CrossAlpha = 1.0;
+		}
+		Int Speed = 100 * CheckInventory("ChaingunSpinCounter") / GetMaxInventory(0, "ChaingunSpinCounter");
+		If (Speed != 0 && !CheckInventory("MobileTurretSelected"))
+		{
+			Str SpeedPic = StrParam(s:"GMTR", d:Speed);
+			SetHudSize(HUDW, HUDH, 1);
+			SetFont(SpeedPic);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.8);
+			If (CheckInventory("ChaingunSpinCounter") == GetMaxInventory(0, "ChaingunSpinCounter") && !CheckInventory("MobileTurretSelected"))
+			{
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+			}
+		}
+		If ((CheckInventory("ChaingunSpinCounter") == GetMaxInventory(0, "ChaingunSpinCounter")) && !CheckInventory("MobileTurretSelected") && CrossAlpha > 0)
+		{
+			CrossScale -= 10;
+			Int ScalingHUDW = HUDW * CrossScale / 1000;
+			Int ScalingHUDH = HUDH * CrossScale / 1000;
+			SetHudSize(ScalingHUDW, ScalingHUDH, 1);
+			SetFont("GMTR100");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, ScalingHUDW / 2 * 1.0, ScalingHUDH / 2 * 1.0, 0.033, CrossAlpha);
+			CrossAlpha -= 0.066;
+		}
+		Int Heat = 100 * CheckInventory("MobileTurretHeatCounter") / GetMaxInventory(0, "MobileTurretHeatCounter");
+		If (Heat && CheckInventory("MobileTurretSelected"))
+		{
+			SetHudSize(HUDW, HUDH, 1);
+			Str HeatPic;
+			If (CheckInventory("MobileTurretOverheatCounter"))
+			{
+				HeatPic = StrParam(s:"RMTR", d:Heat);
+			}
+			Else
+			{
+				HeatPic = StrParam(s:"HMTR", d:Heat);
+			}
+			SetFont(HeatPic);
+			Int CircleAlpha = 1.0;
+			If (!CheckInventory("MobileTurretOverheatCounter"))
+			{
+				CircleAlpha = 0.5;
+			}
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 *1.0, 0.033, CircleAlpha);
+			Int TextScaleW = FixedMul(HUDW, 0.2);
+			Int TextScaleH = FixedMul(HUDH, 0.2);
+			Str Text = "\ciWARNING";
+			If (CheckInventory("MobileTurretOverheatCounter"))
+			{
+				Text = "\cgOverheat";
+			}
+			If (!CheckInventory("MobileTurretOverheatCounter"))
+			{
+				Int PulsingAlpha;
+				PulsingAlpha += 0.05;
+				PulsingAlpha = PulsingAlpha % 1.0;
+				Int CirclePulsingAlpha = Cos(PulsingAlpha) * 3 / 4;
+				If (CirclePulsingAlpha < 0)
+				{
+					CirclePulsingAlpha *= -1;
+				}
+				Int BlinkPoint = FixedMul(100, 0.5);
+				Int IRanOutOfNames = Heat - BlinkPoint;
+				If (IRanOutOfNames < 0)
+				{
+					IRanOutOfNames = 0;
+				}
+				Int FinalCirclePulsingAlpha = FixedMul(CirclePulsingAlpha, 1.0 * IRanOutOfNames / (100 - BlinkPoint));
+				If (FinalCirclePulsingAlpha)
+				{
+					SetFont("HMTR100");
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, FinalCirclePulsingAlpha);
+				}
+				If (!CheckInventory("UltimateCooling"))
+				{
+					SetHudSize(TextScaleW, TextScaleH, 1);
+					SetFont("ConFont");
+					HudMessage(s:Text;HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, TextScaleW / 2 * 1.0,FixedMul(TextScaleH / 2, 1.15) * 1.0, 0.033, FinalCirclePulsingAlpha * 2);
+				}
+			}
+			Else
+			{
+				SetHudSize(TextScaleW, TextScaleH, 1);
+				SetFont("ConFont");
+				HudMessage(s:Text;HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP, 0, 0, TextScaleW / 2 * 1.0, FixedMul(TextScaleH / 2, 1.15) * 1.0, 0.033, 0.75);
+			}
+		}
+		SetHudSize(HUDW, HUDH, 1);
+		SetFont("MTRBAK");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.2);
+		Int X = GetActorX(0);
+		Int Y = GetActorY(0);
+		Int Z = GetActorZ(0);
+		/*For (Int i = 50; i <= 500; i += 50)
+		{
+			If(CheckInventory("TurretHeat")>=i)
+			SpawnForced("TurretHeatLight",X,Y,Z);
+		}*/
+		Delay(1);
+	}
+}
+
+Script "GCNReticle" (Void)
+{
+	//Int PNum = PlayerNumber();
+	//Bool FullyCharged;
+	Int W = 1290 * 3 / 2;
+	Int H = 1080 * 3 / 2;
+	Int HUDW = GXHairW;
+	Int HUDH = GXHairH;
+	Int RTCLCenterDist = W * 3 / 6;
+	Int RTCLCenterDistFake = 800;
+	Int PowerCenterDist = W * 2 / 20;
+	Int PowerCenterDistFake = 125;
+	Str Font = "TNT1A0";
+	While (CheckWeapon("EOA_GaussCannon") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+		If (!CheckInventory("PrecisionBoltReady"))
+		{
+			Font = "GAUSXR0";
+		}
+		If (CheckInventory("SiegeModeSelected"))
+		{
+			Int GaussSiegeCharge = 53 * CheckInventory("SiegeModeChargeCounter") / GetMaxInventory(0, "SiegeModeChargeCounter");
+			Font = StrParam(s:"GAUSXR", d:GaussSiegeCharge);
+			If (GaussSiegeCharge >= 53)
+			{
+				Int GaussAlpha;
+				If (GaussAlpha <= 0)
+				{
+					GaussAlpha = 1.0;
+				}
+				Else
+				{
+					GaussAlpha -= 0.025;
+				}
+				SetHUDSize(HUDW, HUDH, 1);
+				SetFont(Font);
+				If (GaussAlpha > 0)
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, GaussAlpha);
+			}
+			Else
+			{
+				GaussAlpha = 0;
+			}
+		}
+		SetHUDSize(HUDW, HUDH, 1);
+		SetFont(Font);
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+		If (CheckInventory("PrecisionBoltSelected") && CheckInventory("PrecisionBoltReady"))
+		{
+			Font = "GAUSZXHR";
+			SetHUDSize(HUDW, HUDH, 1);
+			SetFont(Font);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+			If (RTCLCenterDistFake > 0)
+			{
+				RTCLCenterDistFake = FixedMul(RTCLCenterDistFake, 0.66);
+			}
+			Else
+			{
+				RTCLCenterDistFake = 0;
+			}
+			If (PowerCenterDistFake > 0)
+			{
+				PowerCenterDistFake = FixedMul(PowerCenterDistFake, 0.75);
+			}
+			Else
+			{
+				PowerCenterDistFake = 0;
+			}
+			SetHudSize(W, H, 1);
+			SetFont("GSSRTCL");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ADDBLEND|HUDMSG_NOTWITHFULLMAP, 0, 0, W / 2 - (RTCLCenterDist + RTCLCenterDistFake) << 16, H / 2 << 16, 0.033);
+			SetFont("GSSRTCLF");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ADDBLEND|HUDMSG_NOTWITHFULLMAP, 0, 0, W / 2 + (RTCLCenterDist + RTCLCenterDistFake) << 16, H / 2 << 16, 0.033);
+			Bool GaussCooldown = False;
+			If (CheckInventory("GaussCooldownCounter"))
+			{
+				GaussCooldown = True;
+			}
+			/*If (Timer() % (2 - CheckInventory("PowerHaste")) == 0 && !CheckInventory("EnergyEfficient") && !GaussCooldown)
+			{
+				GiveInventory("PrecisionBoltChargeCounter", 1);
+			}*/
+			Int GaussPower = 22 * CheckInventory("PrecisionBoltChargeCounter") / GetMaxInventory(0, "PrecisionBoltChargeCounter") * (1 - GaussCooldown);
+			Str ZoomPic = StrParam(s:"GSSMTR", d:GaussPower);
+			Str ZoomPic2 = StrParam(s:"GSFMTR", d:GaussPower);
+			SetHudSize(W + (PowerCenterDistFake * 10), H + (PowerCenterDistFake * 20), 1);
+			SetFont(ZoomPic);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ADDBLEND|HUDMSG_NOTWITHFULLMAP, 0, 0, (W + (PowerCenterDistFake * 10)) / 2 - (PowerCenterDist - PowerCenterDistFake) << 16, (H + (PowerCenterDistFake * 20)) / 2 << 16, 0.033);
+			SetFont(ZoomPic2);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ADDBLEND|HUDMSG_NOTWITHFULLMAP, 0, 0, (W + (PowerCenterDistFake * 10)) / 2 + (PowerCenterDist - PowerCenterDistFake) << 16, (H + (PowerCenterDistFake * 20)) / 2 << 16, 0.033);
+			If (GaussPower == 22)
+			{
+				Int i;
+				If (!i)
+				{
+					SetFont(ZoomPic);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ADDBLEND|HUDMSG_FADEOUT|HUDMSG_NOTWITHFULLMAP, 0, 0, W / 2 - PowerCenterDist << 16, H / 2 << 16, 0, 0.5);
+					SetFont(ZoomPic2);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_ADDBLEND|HUDMSG_FADEOUT|HUDMSG_NOTWITHFULLMAP, 0, 0, W / 2 + PowerCenterDist << 16, H / 2 << 16, 0, 0.5);
+				}
+				i++;
+				If (i >= 50)
+				{
+					i = 0;
+				}
+			}
+		}
+		Else
+		{
+			RTCLCenterDistFake = 800;
+			PowerCenterDistFake = 125;
+		}
+		Delay(1);
+	}
+}
+
+Script "BFGReticle" (Void)
+{
+	While (CheckWeapon("EOA_BFG") && GetActorProperty(0, APROP_HEALTH) > 0)
+	{
+		Int HUDW = GXHairW;
+		Int HUDH = GXHairH;
+		SetHUDSize(HUDW, HUDH, 1);
+		SetFont("BFGXHR");
+		HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 1.0);
+		Delay(1);
+	}
+}
+
+//BFG FX Stuff
+Script "FaceToward"(Int TID, Int TID2, Int UsePointer, Int Height)
+{
+	If (UsePointer)
+	{
+		Int OldTID = TID;
+		Int NewTID = UniqueTID();
+		Thing_ChangeTID(0, NewTID);
+		SetActivator(TID, TID2);
+
+		Int OldTID2 = ActivatorTID();
+		Int NewTID2 = UniqueTID();
+		Thing_ChangeTID(0, NewTID2);
+
+		SetActivator(NewTID);
+		Thing_ChangeTID(0, OldTID);
+	}
+	Else
+	{
+		NewTID2 = TID2;
+	}
+	Int Angle = GetAngleToActor(TID, NewTID2, 0, Height);
+	Int Pitch = GetAngleToActor(TID, NewTID2, 1, Height);
+	SetActorAngle(TID, Angle);
+	SetActorPitch(TID, Pitch);
+	If (UsePointer)
+	Thing_ChangeTID(NewTID2, OldTID2);
+}
+Script "GetDist" (Int TID, Int TID2, Int UsePointer)
+{
+	SetResultValue(GetDistPointer(TID, TID2, UsePointer));
+}
+
+Function Int GetDistance(Int tid1, Int tid2)
+{
+
+	int x, y, z, d;
+	x = GetActorX(tid1) - GetActorX(tid2);
+	y = GetActorY(tid1) - GetActorY(tid2);
+	z = GetActorZ(tid1) - GetActorZ(tid2);
+
+    Return VectorLength(VectorLength(X, Y), Z);
+}
+
+Function Int GetDistPointer(Int TID, Int TID2, Bool UsePointer)
+{
+	If (!ThingCount(0, TID) && !ThingCount(0, TID2))
+	{
+		Return -1;
+	}
+	Int Dist;
+	If (UsePointer)
+	{
+		Int OldTID = TID;
+		Int NewTID = UniqueTID();
+		Thing_ChangeTID(0, NewTID);
+		SetActivator(TID, TID2);
+		Dist = GetDistance(0, NewTID);
+		SetActivator(NewTID);
+		Thing_ChangeTID(0, OldTID);
+	}
+	Else
+	Dist = GetDistance(TID, TID2);
+	Return Dist >> 16;
+}
+
+Function Int GetAngleToActor(Int Source, Int Target, Bool ReturnPitch, Int Height)
+{
+	int X = GetActorX(Target) - GetActorX(Source);
+	int Y = GetActorY(Target) - GetActorY(Source);
+	int Z = GetActorZ(Target) - GetActorZ(Source) + (
+	GetUserArray(Source, "User_Stats", 0) * Height / 100 << 16); //Height percentage.
+	Int Angle = VectorAngle(X, Y);
+	Int Pitch = VectorAngle(VectorLength(X, Y), Z);
+	If (ReturnPitch)
+	{
+		Return Pitch;
+	}
+	Return Angle;
+}

@@ -1,0 +1,131 @@
+Class EOA_UI : BaseStatusBar
+{
+	//KillMilestoneData KMD;
+	Override Void Draw(Int State, Double TicFrac)
+	{
+		Super.Draw(State, TicFrac);
+		EOA_Powerup Power = EOA_Powerup(CPlayer.Mo.FindInventory("EOA_Powerup", True));
+		If (Power && !AutomapActive)
+		{
+			TextureID PwrOverlay = TexMan.CheckForTexture(Power.Overlay, TexMan.TYPE_ANY);
+			Vector2 OverlayPos = TexMan.GetScaledSize(PwrOverlay);
+			Screen.DrawTexture(PwrOverlay, True, 0, 0, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+		}
+	}
+}
+
+//[DoomKrakken]: We may attempt this sort of thing when we're prettying up some more. ;)
+/*// Class-wide variable
+		/*EOA_StaticArchive StaticArchive = EOA_StaticArchive.Retrieve();
+		If (StaticArchive)
+		{
+			If (!KMD || KMD.MapName != Level.MapName)
+			{
+				For (Int i = 0; i < StaticArchive.KillMilestone.Size(); i++)
+				{
+					If (StaticArchive.KillMilestone[i].MapName == Level.MapName)
+					{
+						KMD = StaticArchive.KillMilestone[i];
+						Break;
+					}
+					KMD = Null;
+				}
+				If (!KMD)
+				{
+					Let KMD = New("KillMilestoneData");
+					If (KMD)
+					{
+						KMD.MapName = Level.MapName;
+						KMD.PointsAwarded = 0;
+						KMD.CurrentKillThreshold = KMD.KillThreshold = Level.Total_Monsters / 5;
+						StaticArchive.KillMilestone.Push(KMD);
+					}
+				}
+			}
+			If (KMD && Level.Killed_Monsters > KMD.KillThreshold && KMD.PointsAwarded < 5)
+			{
+				KMD.PointsAwarded++;
+				KMD.CurrentKillThreshold += KMD.KillThreshold;
+			}
+			SetSize(0, 1024, 768);
+			If (KMD.PointsAwarded >= 5)
+			{
+				DrawImage("WUPGLOW", (730, 0), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				DrawImage("WUPGLOW", (780, 0), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				DrawImage("WUPGLOW", (830, 0), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				DrawImage("WUPGLOW", (880, 0), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				DrawImage("WUPGLOW", (930, 0), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+			}
+			Else
+			{
+				If (KMD.PointsAwarded >= 1)
+				{
+					DrawImage("WUP1", (750, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				Else
+				{
+					DrawImage("WUP0", (750, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				If (KMD.PointsAwarded >= 2)
+				{
+					DrawImage("WUP1", (800, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				Else 
+				{
+					DrawImage("WUP0", (800, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				If (KMD.PointsAwarded >= 3)
+				{
+					DrawImage("WUP1", (850, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				Else
+				{
+					DrawImage("WUP0", (850, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				If (KMD.PointsAwarded >= 4)
+				{
+					DrawImage("WUP1", (900, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				Else
+				{
+					DrawImage("WUP0", (900, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				}
+				DrawImage("WUP0", (950, 20), DI_SCREEN_MANUAL_ALIGN|DI_ITEM_RIGHT_TOP, Scale: (1.5, 1.5));
+				BeginHUD();
+			}
+		}
+
+double overlayAlpha;
+double prevOverlayAlpha
+
+// Tick()
+
+prevOverlayAlpha = overlayAlpha;
+
+let pwr = CPlayer.Mo.FindInventory("EOA_Powerup", True);
+if (pwr)
+{
+    if (overlayAlpha < 1)
+    {
+        overlayAlpha += [fade amount];
+        if (overlayAlpha > 1)
+            overlayAlpha = 1;
+    }
+}
+else
+{
+    if (overlayAlpha > 0)
+    {
+        overlayAlpha -= [fade amount];
+        if (overlayAlpha < 0)
+            overlayAlpha = 0;
+    }
+}
+
+// Draw()
+
+if (overlayAlpha > 0 || prevOverlayAlpha > 0)
+{
+    double fade = prevOverlayAlpha + (overlayAlpha - prevOverlayAlpha)*ticFrac;
+    DrawImage("BRQDMG01", (0, 0),  alpha: fade, (320, 200));
+}*/

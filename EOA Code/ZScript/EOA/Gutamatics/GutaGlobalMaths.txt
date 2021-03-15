@@ -1,0 +1,219 @@
+Class EOA_GlobalMaths
+{
+	// Returns the sign of s.
+	Static Int Sign(Double s)
+	{
+		If (s > 0)
+		{
+			Return 1;
+		}
+		If (s < 0)
+		{
+			Return -1;
+		}
+		Return 0;
+	}
+
+	// Copies the sign from signSource to source.
+	Static Int copySignInt(Int source, Int signSource)
+	{
+		Return abs(source) * sign(SignSource);
+	}
+
+	// Copies the sign from signSource to source.
+	Static Double copySignDouble(Double source, Double signSource)
+	{
+		Return abs(source) * sign(signSource);
+	}
+	
+	// Remaps a value in a range to another range.
+	Static Double remapRange(Double value, Double range1L, Double range1H, Double range2L, Double range2H)
+	{
+		Return range2L + (value - range1L) * (range2H - range1H) / (range1H - range1L);
+	}
+	
+	// Remaps a value in a range to another range.
+	Static Int remapRangeInt(Int value, Int range1L, Int range1H, Int range2L, Int range2H)
+	{
+		Return Int(range2L + (value - range1L) * (range2H - range1H) / Double(range1H - range1L));
+	}
+
+	// Returns If two values are close enough to be considered equal.
+	Static Bool closeEnough(Double a, Double b, Double epsilon = double.epsilon)
+	{
+		If (a == b)
+		{
+			Return True;
+		}
+		Return abs(a - b) <= epsilon;
+	}
+
+	// Creates a smoothed transition between edge0 and edge1.
+	Static Double smoothStep(Double x, Double edge0 = 0, Double edge1 = 1)
+	{
+		x = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+		Return x * x * (3 - 2 * x);
+	}
+
+	// Creates a smoother transition between edge0 and edge1.
+	Static Double smootherStep(Double x, Double edge0 = 0, Double edge1 = 1)
+	{
+		x = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+		Return x * x * x * (x * (x * 6 - 15) + 10);
+	}
+
+	// Converts from horizontal FOV to vertical FOV, according to how GZDoom handles it.
+	Static Double fovHToY(Double fovH)
+	{
+		// this is how gzdoom does it internally, so i'm using it here
+		Double aspect = Screen.getAspectRatio();
+		Double fovratio = (aspect >= 1.3) ? 1.333333 : aspect;
+		Return 2 * atan(tan(clamp(fovH, 5, 170) / 2.0) / fovratio);
+	}
+	
+	// Linearly interpolates between two doubles, clamping the parameters.
+	Static Double lerpDouble(Double from, Double to, Double time)
+	{
+		time = clamp(time, 0, 1);
+		Return lerpUnclampedDouble(from, to, time);
+	}
+	
+	// Linearly interpolates between two doubles.
+	Static Double lerpUnclampedDouble(Double from, Double to, Double time)
+	{
+		Double ret;
+		Double reverseTime = 1 - time;
+		ret = reverseTime * from + time * to;
+		Return ret;
+	}
+
+	// Converts from Normalised Device Coordinates to Viewport coordinates.
+	Static Vector2 ndcToViewport(Vector3 ndcCoords, Bool useScreenblocks = True, PlayerInfo player = NULL)
+	{
+		// player is needed for screenblocks
+		If (useScreenblocks)
+		{
+			If (player == NULL)
+			{
+				player = players[consoleplayer];
+			}
+			Int viewwindowx, viewwindowy, viewwidth, viewheight;
+			[viewwindowx, viewwindowy, viewwidth, viewheight] = Screen.getViewWindow();
+			Int screenHeight = Screen.getHeight();
+			Int height = screenHeight;
+			Int screenblocks = CVar.getCVar("screenblocks", player).getInt();
+			If (screenblocks < 10)
+			{
+				height = (screenblocks * screenHeight / 10) & ~7;
+			}
+			Int bottom = screenHeight - (height + viewwindowy - ((height - viewheight) / 2));
+			Return (viewwindowx, screenHeight - bottom - height) + (((ndcCoords.X + 1) * viewwidth) / 2, ((-ndcCoords.Y + 1) * height) / 2);
+		}
+		Else
+		{
+			Return (((ndcCoords.X + 1) * Screen.getWidth()) / 2, ((-ndcCoords.Y + 1) * Screen.getHeight()) / 2);
+		}
+	}
+	
+	Enum OutCode
+	{
+		OUT_Inside = 0,
+		OUT_Left   = 1 << 0,
+		OUT_Right  = 1 << 1,
+		OUT_Bottom = 1 << 2,
+		OUT_Top    = 1 << 3
+	}
+	
+	// Computes an outcode for a point in a rectangle.
+	Static OutCode computeOutcode(Vector2 point, Vector2 min, Vector2 max)
+	{
+		OutCode code = OUT_Inside;
+		
+		If (point.X < min.X)
+		{
+			code |= OUT_Left;
+		}
+		Else If (point.X > max.X)
+		{
+			code |= OUT_Right;
+		}
+		If (point.Y < min.Y)
+		{
+			code |= OUT_Top;
+		}
+		Else If (point.Y > max.Y)
+		{
+			code |= OUT_Bottom;
+		}
+		Return code;
+	}
+	
+	// Clips a line to a rectangle.
+	Static Bool, Vector2, Vector2 cohenSutherlandClip(Vector2 point0, Vector2 point1, Vector2 min, Vector2 max) {
+		OutCode outcode0 = computeOutCode(point0, min, max);
+		OutCode outcode1 = computeOutCode(point1, min, max);
+		
+		While (True)
+		{
+			// trivial accept - points are both on screen
+			If ((outcode0 | outcode1) == 0)
+			{
+				Return True, point0, point1;
+			}
+			// trivial reject - points are in the same region offscreen
+			Else If ((outcode0 & outcode1) != 0)
+			{
+				Return False, point0, point1;
+			}
+			Else
+			{
+				Vector2 new;
+				OutCode outcodeOut = (outcode0 != 0) ? outcode0 : outcode1;
+				
+				If ((outcodeOut & OUT_Bottom) != 0)
+				{
+					new.X = point0.X + (point1.X - point0.X) * (max.Y - point0.Y) / (point1.Y - point0.Y);
+					new.Y = max.Y;
+				}
+				Else If ((outcodeOut & OUT_Top) != 0)
+				{
+					new.X = point0.X + (point1.X - point0.X) * (min.Y - point0.Y) / (point1.Y - point0.Y);
+					new.Y = min.Y;
+				}
+				If ((outcodeOut & OUT_Right) != 0)
+				{
+					new.Y = point0.Y + (point1.Y - point0.Y) * (max.X - point0.X) / (point1.X - point0.X);
+					new.X = max.X;
+				}
+				Else If ((outcodeOut & OUT_Left) != 0)
+				{
+					new.Y = point0.Y + (point1.Y - point0.Y) * (min.X - point0.X) / (point1.X - point0.X);
+					new.X = min.X;
+				}
+				
+				If (outcodeOut == outCode0)
+				{
+					point0.X = new.X;
+					point0.Y = new.Y;
+					outCode0 = computeOutCode(point0, min, max);
+				}
+				Else
+				{
+					point1.X = new.X;
+					point1.Y = new.Y;
+					outCode1 = computeOutCode(point1, min, max);
+				}
+			}
+		}
+		Return False, (0, 0), (0, 0);
+	}
+	
+	// Normalizes an angle to (-180, 180]. Like Actor.normalize180, but callable in data scope.
+	Static Double normalize180(Double ang)
+	{
+		ang = ang % 360;
+		ang = (ang + 360) % 360;
+		If (ang > 180) ang -= 360;
+		Return ang;
+	}
+}

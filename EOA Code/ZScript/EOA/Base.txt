@@ -1,0 +1,1621 @@
+Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
+{
+	Transient CVar RS1, RS2, RS3;
+	Static Bool IsClassOrSpecies(Actor ToCheck, Class<Actor> ToCheckFor)
+	{
+		If (ToCheck && ToCheckFor)
+		{
+			Return ToCheck Is ToCheckFor || ToCheck.GetSpecies() == ToCheckFor;
+		}
+		Return False;
+	}
+	Override Void WorldLoaded(WorldEvent e)
+	{
+		Let StaticArchive = EOA_StaticArchive.Get();
+		If (!e.IsSaveGame)
+		{
+			PlayerInfo Player = Players[ConsolePlayer];
+			If (Player && Player.Mo)
+			{
+				Let ThisPlayer = DoomSlayer(Player.Mo);
+				If (ThisPlayer)
+				{
+					If (ThisPlayer.LastDroneSelected)
+					{
+						ThisPlayer.LastDroneSelected.DroneBeingUsed = False;
+						ThisPlayer.LastDroneSelected = Null;
+					}
+					If (ThisPlayer.LastStoneSelected)
+					{
+						ThisPlayer.LastStoneSelected.StoneBeingUsed = False;
+						ThisPlayer.LastStoneSelected = Null;
+					}
+				}
+			}
+			If (!e.IsReopen)
+			{
+				//[DoomKrakken]: Taken from Dr. Pyspy's "Doom Delta" project.
+				For (Int i = 0; i < Level.Sectors.Size(); i++)
+				{
+					If (Level.Sectors[i].IsSecret())
+					{
+						Let SC = Level.Sectors[i].CenterSpot;
+						Actor.Spawn("EOA_SecretMarker", (SC.X, SC.Y, Level.Sectors[i].FloorPlane.ZAtPoint(SC)));
+					}
+					If (Level.Sectors[i].DamageAmount && EOA_DamFloors)
+					{
+						Level.Sectors[i].DamageInterval = 12;
+						Level.Sectors[i].DamageAmount = max(4, Level.Sectors[i].DamageAmount / 3);
+					}
+				}
+			}
+			If (!(e.IsSaveGame || e.IsReopen) && StaticArchive) //DoomKrakken]: Reset these counters.
+			{
+				StaticArchive.ShotgunNeeded = False;
+				StaticArchive.ShotgunSpawned = False;
+				StaticArchive.ChaingunNeeded = False;
+				StaticArchive.ChaingunSpawned = False;
+				StaticArchive.ChainsawSpawnedInLevel = False;
+				StaticArchive.ThrustBootsSpawned = False;
+				StaticArchive.AutomapSpawned = False;
+				StaticArchive.FuelAmmoSpawnedInLevel = 0;
+				/*For (Int i = 0; i < StaticArchive.KillMilestone.Size(); i++)
+				{
+					If (StaticArchive.KillMilestone[i].MapName == Level.MapName)
+					{
+						StaticArchive.KillMilestone.Delete(i);
+					}
+				}*/
+				PlayerInfo Player = Players[ConsolePlayer];
+				If (Player && Player.Mo)
+				{
+					Let ThisPlayer = DoomSlayer(Player.Mo);
+					If (ThisPlayer)
+					{
+						StaticArchive.PraetorTokensClaimed = ThisPlayer.CountInv("PraetorToken") + ThisPlayer.CountInv("HazardProtection") + 2 * ThisPlayer.CountInv("SelfPreservation") + 3 * ThisPlayer.CountInv("BarrelsOFun") + ThisPlayer.CountInv("ItemAwareness") + 2 * ThisPlayer.CountInv("SecretFinder") + 3 * ThisPlayer.CountInv("FullView") + 2 * ThisPlayer.CountInv("QuickCharge") + 3 * ThisPlayer.CountInv("StockUp") + 4 * ThisPlayer.CountInv("RapidCharge") + ThisPlayer.CountInv("PowerSurge") + 2 * ThisPlayer.CountInv("HealingPower") + 3 * ThisPlayer.CountInv("PowerExtender") + 2 * ThisPlayer.CountInv("Adept") + 3 * ThisPlayer.CountInv("QuickHands") + 4 * ThisPlayer.CountInv("HotSwap");
+						StaticArchive.FieldDronesClaimed = ThisPlayer.CountInv("ChargedBurst") + ThisPlayer.CountInv("ExplosiveShot") + ThisPlayer.CountInv("MicroMissiles") + ThisPlayer.CountInv("TacticalScope") + ThisPlayer.CountInv("LockOnBurst") + ThisPlayer.CountInv("RemoteDetonation") + ThisPlayer.CountInv("HeatBlast") + ThisPlayer.CountInv("StunBomb") + ThisPlayer.CountInv("PrecisionBolt") + ThisPlayer.CountInv("SiegeMode") + ThisPlayer.CountInv("GatlingRotator") + ThisPlayer.CountInv("MobileTurret");
+						StaticArchive.ArgentCellsClaimed = ThisPlayer.CountInv("EOA_ArgentHealthBonusCounter") + ThisPlayer.CountInv("EOA_ArgentArmorBonusCounter") + ThisPlayer.CountInv("EOA_ArgentAmmoBonusCounter");
+						StaticArchive.RuneTrialStonesClaimed = ThisPlayer.CountInv("Vacuum") + ThisPlayer.CountInv("DazedAndConfused") + ThisPlayer.CountInv("AmmoBoost") + ThisPlayer.CountInv("EquipmentPower") + ThisPlayer.CountInv("Savagery") + ThisPlayer.CountInv("SeekAndDestroy") + ThisPlayer.CountInv("InFlightMobility") + ThisPlayer.CountInv("ArmoredOffensive") + ThisPlayer.CountInv("BloodFueled") + ThisPlayer.CountInv("IntimacyIsBest") + ThisPlayer.CountInv("RichGetRicher") + ThisPlayer.CountInv("SavingThrow");
+					}
+				}
+				StaticArchive.PraetorTokensSpawned = StaticArchive.PraetorTokensClaimed;
+				StaticArchive.FieldDronesSpawned = StaticArchive.FieldDronesClaimed;
+				StaticArchive.ArgentCellsSpawned = StaticArchive.ArgentCellsClaimed;
+				StaticArchive.RuneTrialStonesSpawned = StaticArchive.RuneTrialStonesClaimed;
+			}
+		}
+	}
+	Override Void CheckReplacement(ReplaceEvent e)
+	{
+		Static Const Class<Actor> EOA_DoomReplacees[] = {"HealthBonus", "StimPack", "MediKit", "ArmorBonus", "GreenArmor", "BlueArmor", "Pistol", "Shotgun", "SuperShotgun", "Chaingun", "RocketLauncher", "PlasmaRifle", "BFG9000", "Chainsaw", "Clip", "ClipBox", "Shell", "ShellBox", "RocketAmmo", "RocketBox", "Cell", "CellPack", "Megasphere", "Soulsphere", "Blursphere", "InvulnerabilitySphere", "Berserk", "Radsuit", "Backpack", "Infrared", "Allmap", "ExplosiveBarrel"};
+		Static Const Class<Actor> EOA_Replacements[] = {"EOA_SmallHealthSpawner", "EOA_MediumHealthSpawner", "EOA_LargeHealthSpawner", "EOA_SmallArmorSpawner", "EOA_LargeArmorSpawner", "EOA_LargeArmorSpawner2", "EOA_Pistol", "EOA_ShotgunReplacer", "EOA_SuperShotgunReplacer", "EOA_ChaingunReplacer", "EOA_RocketLauncherReplacer", "EOA_PlasmaRifleReplacer", "EOA_BFGReplacer", "EOA_Chainsaw", "EOA_BulletAmmo1", "EOA_BulletAmmo2", "EOA_ShellAmmo1", "EOA_ShellAmmo2", "EOA_RocketAmmo1", "EOA_RocketAmmo2", "EOA_CellAmmo1", "EOA_CellAmmo2", "EOA_MegaHealth", "EOA_MegaHealth", "EOA_QuadHasteSpawner", "EOA_Invulnerability", "EOA_Berserk", "EOA_QuadHasteSpawner", "EOA_BackpackReplacer", "EOA_InfraredReplacer", "EOA_AllmapReplacer", "EOA_ExplosiveBarrel"};
+		For (Int i = 0; i < EOA_Replacements.Size(); i++)
+		{
+			If (e.Replacee Is EOA_DoomReplacees[i])
+			{
+				e.Replacement = EOA_Replacements[i];
+			}
+		}
+		If (e.Replacee Is "EOA_BulletPuff" && EOA_NoHitscan)
+		{
+			e.Replacement = "EOA_PlasmaLauncherPuff";
+		}
+	}
+	Override Void WorldThingSpawned(WorldEvent e)
+	{
+		//[DoomKrakken]:
+		//For the Glory Kill system.  Ported here so that no one tampers with the system in-game.
+		If (e.Thing Is "EOA_PlasmaLauncherPuff" && e.Thing.Target && e.Thing.Target.bISMONSTER)
+		{
+			//Vector3 AimDir = e.Thing.Target.Vec3To(e.Thing);
+			e.Thing.Target.A_StartSound("PLR/Enemy/Fire", CHAN_WEAPON);
+			Let Proj = e.Thing.Target.A_SpawnProjectile("EOA_EnemyPlasmaBall");
+			If (Proj)
+			{
+				e.Thing.AimBulletMissile(Proj, e.Thing, 0, True, True); //[DoomKrakken]: Because "Temp" (the 4th parameter) is true, the puff will be destroyed upon calling this function.  Make sure, then, not to reference this actor any more after this function.
+			}
+			Return;
+		}
+		If (e.Thing Is "EOA_WeakPointBlood" && e.Thing.Target)
+		{
+			EOA_WeakPoint BloodOwner = EOA_WeakPoint(e.Thing.Target);
+			If (BloodOwner)
+			{
+				Let Blood = e.Thing.Spawn(BloodOwner.OwnerBloodType, e.Thing.Pos);
+				If (Blood)
+				{
+					Blood.CopyBloodColor(BloodOwner);
+				}
+			}
+		}
+		Let Essentials = New("EOA_Essentials");
+		Essentials.Owner = e.Thing;
+		
+		//Now, onto everything else.
+		Let StaticArchive = EOA_StaticArchive.Get();
+		If (e.Thing.GetClassName() == "EOA_RadsuitReplacer" && !e.Thing.CheckProximity("EOA_RadsuitReplacer", 256, 1, CPXF_CHECKSIGHT))
+		{
+			e.Thing.A_SpawnItemEx("EOA_QuadHasteSpawner", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+		}
+		If (e.Thing.GetClassName() == "EOA_QuadHasteSpawner" && StaticArchive) //Have Haste and Quad Damage alternate spawning.
+		{
+			If (StaticArchive.PowerCycle)
+			{
+				e.Thing.A_SpawnItemEx("EOA_QuadDamage", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+				StaticArchive.PowerCycle = False;
+			}
+			Else
+			{
+				e.Thing.A_SpawnItemEx("EOA_Haste", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+				StaticArchive.PowerCycle = True;
+			}
+			e.Thing.Destroy();
+			Return;
+		}
+		DropItem DropList = e.Thing.GetDropItems(); //First, we'll cycle through each actor's DropItem list, and see if any Shotguns or Chainguns are present there... since this mod doesn't allow for the picking up of any monsters' dropped weapons, and some maps/mapsets yield Shotguns/Chainguns only via monsters that drop such weapons, we'll need to spawn them elsewhere.  Let's check if we're "supposed" to find the weapon from a monster. :D
+		If (DropList != Null && StaticArchive)
+		{
+			While (DropList != Null)
+			{
+				If (DropList.Name == 'Shotgun')
+				{
+					StaticArchive.ShotgunNeeded = True;
+				}
+				If (DropList.Name == 'Chaingun')
+				{
+					StaticArchive.ChaingunNeeded = True;
+				}
+				DropList = DropList.Next;
+			}
+		}
+		Let IsHealthItem = EOA_Health(e.Thing);
+		Let IsArmorItem = EOA_Armor(e.Thing);
+		Let IsAmmoItem = EOA_Ammo(e.Thing);
+		//Let InvItem = Inventory(e.Thing); //[DoomKrakken]: To get access to the inventory-specific stuff.  Plus, the above three items are all derived from Inventory, so it shouldn't be a problem... ;)
+		If ((IsHealthItem && !IsHealthItem.Dropped) || (IsArmorItem && !IsArmorItem.Dropped) || (IsAmmoItem && !IsAmmoItem.Dropped))
+		{
+			e.Thing.bDROPPED = False;
+		}
+		If (e.Thing.GetClassName() == "EOA_ThrustBootsGiver")
+		{
+			StaticArchive.ThrustBootsSpawned = True;
+		}
+		If (e.Thing.GetClassName() == "EOA_AutomapStation")
+		{
+			StaticArchive.AutomapSpawned = True;
+		}
+		If (!e.Thing.bDROPPED && StaticArchive)
+		{
+			//Backpacks
+			If (e.Thing.GetClassName() == "EOA_BackpackReplacer" || e.Thing.GetClassName() == "EOA_InfraredReplacer")
+			{
+				If (!e.Thing.CheckProximity("EOA_BackpackReplacer", 256, 1, CPXF_CHECKSIGHT) && !e.Thing.CheckProximity("EOA_InfraredReplacer", 256, 1, CPXF_CHECKSIGHT))
+				{
+					If (e.Thing.CurSector.IsSecret() && !StaticArchive.AutomapSpawned)
+					{
+						e.Thing.A_SpawnItemEx("EOA_AutomapStation", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.AutomapSpawned = True;
+						e.Thing.Destroy();
+						Return;
+					}
+					StaticArchive.UpgradeCycle++;
+					If (StaticArchive.UpgradeCycle % clamp(2 * EOA_ItemSparsity, 1, 4) == 0)
+					{
+						StaticArchive.BackpackCycle++;
+						If (StaticArchive.BackpackCycle % 7 == 0 && StaticArchive.BackpackCycle >= 7 && !StaticArchive.ThrustBootsEquipped && !StaticArchive.ThrustBootsSpawned) //[DoomKrakken]: Make thrust boots spawn once per map, if conditions are right.  Don't spawn them if thrust boots were equipped.
+						{
+							e.Thing.A_SpawnItemEx("EOA_ThrustBootsGiver", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+							StaticArchive.ThrustBootsSpawned = True;
+							e.Thing.Destroy();
+							Return;
+						}
+						If (StaticArchive.BackpackCycle % 6 == 5 && StaticArchive.RuneTrialStonesSpawned < 12)
+						{
+							e.Thing.A_SpawnItemEx("EOA_RuneTrialStone", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+							StaticArchive.RuneTrialStonesSpawned++;
+							e.Thing.Destroy();
+							Return;
+						}
+						Else If (StaticArchive.BackpackCycle % 6 == 3 && StaticArchive.ArgentCellsSpawned < 12)
+						{
+							e.Thing.A_SpawnItemEx("EOA_ArgentCell", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+							StaticArchive.ArgentCellsSpawned++;
+							e.Thing.Destroy();
+							Return;
+						}
+						Else If (StaticArchive.BackpackCycle % 6 == 2 && StaticArchive.FieldDronesSpawned < 12)
+						{
+							e.Thing.A_SpawnItemEx("EOA_FieldDrone", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+							StaticArchive.FieldDronesSpawned++;
+							e.Thing.Destroy();
+							Return;
+						}
+						Else If (StaticArchive.PraetorTokensSpawned < 36)
+						{
+							e.Thing.A_SpawnItemEx("EOA_EliteGuardCorpse", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+							StaticArchive.PraetorTokensSpawned++;
+							e.Thing.Destroy();
+							Return;
+						}
+					}
+					e.Thing.A_SpawnItemEx("EOA_AmmoCrate", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+				}
+				e.Thing.Destroy();
+				Return;
+			}
+			Else If (e.Thing.GetClassName() == "EOA_Chainsaw")
+			{
+				StaticArchive.ChainsawSpawned = True;
+				StaticArchive.ChainsawSpawnedInLevel = True;
+			}
+			Else If (e.Thing Is "EOA_WeaponReplacer")
+			{
+				EOA_WeaponReplacer WR = EOA_WeaponReplacer(e.Thing);
+				If (WR)
+				{
+					Name WRName = WR.GetClassName();
+					Switch (WRName)
+					{
+					Case 'EOA_ShotgunReplacer':
+						StaticArchive.ShotgunSpawned = True;
+						StaticArchive.ShotgunsSpawned++;
+						WR.SecondarySpawn = EOA_SSGSpawn && StaticArchive.ShotgunsSpawned % Int((6 * EOA_ItemSparsity < 2) ? 2 : (6 * EOA_ItemSparsity)) == 0;
+						Break;
+					Case 'EOA_ChaingunReplacer':
+						//By "chaingun", I mean the "vanilla" chaingun. ;)
+						StaticArchive.ChaingunSpawned = True;
+						StaticArchive.ChaingunsSpawned++;
+						If (EOA_ItemSparsity == 0.5 && EOA_PLRSpawn && !(StaticArchive.ChaingunsSpawned % 3)) //[DoomKrakken]: Check for when item sparsity causes the check for the Chaingun to equal the same check for the Plasma Rifle (which is every 3rd EOA_ChaingunReplacer actor spawned).  This way, Plasma Rifles still have a chance to spawn within this pool at this setting, if the game is set to spawn them.
+						{
+							If (StaticArchive.ChaingunsSpawned % 6 == 0) //[DoomKrakken]: Alternate spawning the Plasma Rifle and Chaingun.
+							{
+								WR.SecondarySpawn = True;
+								Break;
+							}
+							//[DoomKrakken]: This clause won't be reached if the above is true, since it'll return the function at that point.
+							e.Thing.A_SpawnItemEx("EOA_PlasmaRifleReplacer", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+							e.Thing.Destroy();
+							Break;					
+						}
+						Else If (StaticArchive.ChaingunsSpawned % Int((6 * EOA_ItemSparsity < 2) ? 2 : (6 * EOA_ItemSparsity)) == 0)
+						{
+							WR.SecondarySpawn = True;
+							Break;
+						}
+						Else If (EOA_PLRSpawn && StaticArchive.ChaingunsSpawned % 3 == 0)
+						{
+							e.Thing.A_SpawnItemEx("EOA_PlasmaRifleReplacer", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL); //Lenny face intensifies...
+							e.Thing.Destroy();
+							Break;
+						}
+						Break;
+					Case 'EOA_PlasmaRifleReplacer':
+						StaticArchive.PlasmaRiflesSpawned++;
+						WR.SecondarySpawn = StaticArchive.PlasmaRiflesSpawned % Int((4 * EOA_ItemSparsity < 2) ? 2 : (4 * EOA_ItemSparsity)) == 0;
+						Break;
+					Case 'EOA_BFGReplacer':
+						StaticArchive.BFGSpawned = True;
+						Break;
+					}	
+				}
+				Return;
+			}
+			Else If (e.Thing Is "EOA_EquipmentSpawner")
+			{
+				StaticArchive.EquipmentSpawned++;
+				If (StaticArchive.EquipmentSpawned > 40 * EOA_ItemSparsity && StaticArchive.EquipmentSpawned % 3 == 0)
+				{
+					e.Thing.A_SpawnItemEx("EOA_SiphonGrenadePickup", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+				}
+				Else If (StaticArchive.EquipmentSpawned > 20 * EOA_ItemSparsity && StaticArchive.EquipmentSpawned % 2 == 0)
+				{
+					e.Thing.A_SpawnItemEx("EOA_HologramPickup", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+				}
+				Else
+				{
+					e.Thing.A_SpawnItemEx("EOA_FragGrenadePickup", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+				}
+				e.Thing.Destroy();
+				Return;
+			}
+			Else If (StaticArchive.BFGSpawned && (e.Thing.GetClassName() == "EOA_CellAmmo1" || e.Thing.GetClassName() == "EOA_CellAmmo2"))
+			{
+				StaticArchive.CellAmmoSpawned++; //[DoomKrakken]: We'll only do it after a BFG has spawned, since that's when it'll matter.
+				If (((e.Thing.GetClassName() == "EOA_CellAmmo2") || ((((e.Thing.GetClassName() == "EOA_CellAmmo1") && StaticArchive.CellAmmoSpawned % 4 == 0) && ((e.Thing.CountProximity("EOA_CellAmmo1", 256, CPXF_CHECKSIGHT) + e.Thing.CountProximity("EOA_CellAmmo2", 256, CPXF_CHECKSIGHT)) < 2)))) && (!(e.Thing.CheckProximity("EOA_PlasmaRifleReplacer", 256, 1, CPXF_ANCESTOR|CPXF_CHECKSIGHT) || e.Thing.CheckProximity("EOA_PlasmaRifle", 256, 1, CPXF_ANCESTOR|CPXF_CHECKSIGHT) || e.Thing.CheckProximity("EOA_GaussCannon", 256, 1, CPXF_ANCESTOR|CPXF_CHECKSIGHT)) || (e.Thing.CheckProximity("EOA_BFG", 256, 1, CPXF_ANCESTOR|CPXF_CHECKSIGHT) || e.Thing.CheckProximity("EOA_BFGReplacer", 256, 1, CPXF_ANCESTOR|CPXF_CHECKSIGHT))))
+				{
+					Let BFGAmmo = Actor.Spawn("EOA_BFGCell", e.Thing.Pos, NO_REPLACE);
+					If (BFGAmmo)
+					{
+						BFGAmmo.bDROPPED = False;
+					}
+					e.Thing.Destroy();
+					Return;
+				}
+			}
+			Else If (e.Thing.GetClassName() == "EOA_SmallHealthSpawner")
+			{
+				e.Thing.A_SpawnItemEx("EOA_SmallHealth", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+				e.Thing.Destroy();
+				Return;
+			}
+			Else If (e.Thing.GetClassName() == "EOA_SmallArmorSpawner")
+			{
+				StaticArchive.ArmorCycle++;
+				If (StaticArchive.ArmorCycle % 21 == 0)
+				{
+					e.Thing.A_SpawnItemEx("EOA_MediumArmorSpawner", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+				Else
+				{
+					e.Thing.A_SpawnItemEx("EOA_SmallArmor", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+			}
+			Else If (e.Thing.GetClassName() == "EOA_LargeHealthSpawner" || e.Thing.GetClassName() == "EOA_MediumHealthSpawner" || e.Thing.GetClassName() == "EOA_LargeArmorSpawner" || e.Thing.GetClassName() == "EOA_MediumArmorSpawner")
+			{
+				If (e.Thing.CurSector.IsSecret() && !StaticArchive.AutomapSpawned)
+				{
+					e.Thing.A_SpawnItemEx("EOA_AutomapStation", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					StaticArchive.AutomapSpawned = True;
+					e.Thing.Destroy();
+					Return;
+				}
+				StaticArchive.UpgradeCycle++;
+				If (StaticArchive.UpgradeCycle % (8 * EOA_ItemSparsity) == 0)
+				{
+					StaticArchive.BackpackCycle++;
+					If (StaticArchive.BackpackCycle % 7 == 0 && StaticArchive.BackpackCycle >= 7 && !StaticArchive.ThrustBootsEquipped && !StaticArchive.ThrustBootsSpawned)
+					{
+						e.Thing.A_SpawnItemEx("EOA_ThrustBootsGiver", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.ThrustBootsSpawned = True;
+						e.Thing.Destroy();
+						Return;
+					}
+					If (StaticArchive.BackpackCycle % 6 == 5 && StaticArchive.RuneTrialStonesSpawned < 12)
+					{
+						e.Thing.A_SpawnItemEx("EOA_RuneTrialStone", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.RuneTrialStonesSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+					Else If (StaticArchive.BackpackCycle % 6 == 3 && StaticArchive.ArgentCellsSpawned < 12)
+					{
+						e.Thing.A_SpawnItemEx("EOA_ArgentCell", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.ArgentCellsSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+					Else If (StaticArchive.BackpackCycle % 6 == 2 && StaticArchive.FieldDronesSpawned < 12)
+					{
+						e.Thing.A_SpawnItemEx("EOA_FieldDrone", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.FieldDronesSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+					Else If (StaticArchive.PraetorTokensSpawned < 36)
+					{
+						e.Thing.A_SpawnItemEx("EOA_EliteGuardCorpse", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.PraetorTokensSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+				}
+				If (e.Thing.GetClassName() == "EOA_LargeHealthSpawner")
+				{
+					e.Thing.A_SpawnItemEx("EOA_LargeHealth", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+				Else If (e.Thing.GetClassName() == "EOA_MediumHealthSpawner")
+				{
+					e.Thing.A_SpawnItemEx("EOA_MediumHealth", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+				Else If (e.Thing.GetClassName() == "EOA_LargeArmorSpawner")
+				{
+					e.Thing.A_SpawnItemEx("EOA_LargeArmor", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+				Else If (e.Thing.GetClassName() == "EOA_MediumArmorSpawner")
+				{
+					e.Thing.A_SpawnItemEx("EOA_MediumArmor", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+			}
+			Else If (e.Thing.GetClassName() == "EOA_BulletAmmo1" || e.Thing.GetClassName() == "EOA_ShellAmmo1" || e.Thing.GetClassName() == "EOA_RocketAmmo1" || e.Thing.GetClassName() == "EOA_CellAmmo1" || e.Thing.GetClassName() == "EOA_BulletAmmo2" || e.Thing.GetClassName() == "EOA_ShellAmmo2" || e.Thing.GetClassName() == "EOA_RocketAmmo2" || e.Thing.GetClassName() == "EOA_CellAmmo2" || e.Thing.GetClassName() == "EOA_BFGCell") //[DoomKrakken]: Only check for these specific cases (which spawn in the map normally)... else unexpected things may happen if one calls A_GiveInventory or the like without these items already being present in the player's inventory.
+			{
+				StaticArchive.AmmoCycle++;
+				If (e.Thing.CurSector.IsSecret() && !StaticArchive.AutomapSpawned)
+				{
+					e.Thing.A_SpawnItemEx("EOA_AutomapStation", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					StaticArchive.AutomapSpawned = True;
+					e.Thing.Destroy();
+					Return;
+				}
+				If (StaticArchive.AmmoCycle % 24 == 0 && StaticArchive.UpgradeCycle % (6 * EOA_ItemSparsity) == 0) //Have 'em spawn in place of big ammo, though even more rarely.  Also keep a limit.
+				{
+					StaticArchive.UpgradeCycle++;
+					StaticArchive.BackpackCycle++;
+					If (StaticArchive.BackpackCycle % 7 == 0 && StaticArchive.BackpackCycle >= 7 && !StaticArchive.ThrustBootsEquipped && !StaticArchive.ThrustBootsSpawned)
+					{
+						e.Thing.A_SpawnItemEx("EOA_ThrustBootsGiver", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.ThrustBootsSpawned = True;
+						e.Thing.Destroy();
+						Return;
+					}
+					If (StaticArchive.BackpackCycle % 6 == 5 && StaticArchive.RuneTrialStonesSpawned < 12)
+					{
+						e.Thing.A_SpawnItemEx("EOA_RuneTrialStone", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.RuneTrialStonesSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+					Else If (StaticArchive.BackpackCycle % 6 == 3 && StaticArchive.ArgentCellsSpawned < 12)
+					{
+						e.Thing.A_SpawnItemEx("EOA_ArgentCell", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.ArgentCellsSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+					Else If (StaticArchive.BackpackCycle % 6 == 2 && StaticArchive.FieldDronesSpawned < 12)
+					{
+						e.Thing.A_SpawnItemEx("EOA_FieldDrone", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.FieldDronesSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+					Else If (StaticArchive.PraetorTokensSpawned < 36)
+					{
+						e.Thing.A_SpawnItemEx("EOA_EliteGuardCorpse", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+						StaticArchive.PraetorTokensSpawned++;
+						e.Thing.Destroy();
+						Return;
+					}
+				}
+				Else If (StaticArchive.AmmoCycle % 16 == 0 && !(e.Thing.GetClassName() == "EOA_BFGCell")) //We need fuel.  But it's not in as common supply as we'd like it to be...
+				{
+					If (StaticArchive.ChainsawSpawned)
+					{
+						Let FuelAmmo = Actor.Spawn("EOA_FuelAmmo", e.Thing.Pos, NO_REPLACE); //We'll have to call it under "Actor", since event handlers don't know what the hell "Spawn" is. :P
+						If (FuelAmmo)
+						{
+							StaticArchive.FuelAmmoSpawned++;
+							StaticArchive.FuelAmmoSpawnedInLevel++;
+							FuelAmmo.bDROPPED = False;
+							If (StaticArchive.FuelAmmoSpawned % 5 == 0 && !StaticArchive.ChainsawSpawnedInLevel && EOA_CSWSpawn) //Some mapsets introduce the Chainsaw too late.  Others don't have it at all.  We'll spawn it in place of every 5th Fuel Canister, so that it can be given earlier if it's not given early enough.  If you already have the Chainsaw, then it shouldn't matter too much... because it'll still give you the same three units of fuel.
+							{
+								FuelAmmo.A_SpawnItemEx("EOA_Chainsaw", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+								FuelAmmo.Destroy();
+							}
+						}
+						e.Thing.Destroy();
+						Return;
+					}
+					Else //If the Chainsaw hadn't spawned at all, we won't spawn any fuel ammo in place of ammo boxes.
+					{
+						StaticArchive.FuelAmmoSpawned++;
+						If (StaticArchive.FuelAmmoSpawned % 5 == 0 && !StaticArchive.ChainsawSpawnedInLevel)
+						{
+							StaticArchive.ChainsawSpawned = True;
+							StaticArchive.ChainsawSpawnedInLevel = True;
+							e.Thing.A_SpawnItemEx("EOA_Chainsaw", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+							e.Thing.Destroy();
+							Return;
+						}
+					}
+				}
+				Else If (StaticArchive.AmmoCycle % 8 == 0 && !(e.Thing.GetClassName() == "EOA_BFGCell")) //Here's the equipment. :D
+				{
+					e.Thing.A_SpawnItemEx("EOA_EquipmentSpawner", /*random(-8, 8), random(-8, 8),*/ Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+				//Finally, here's where we spawn weapons that are supposed to be picked up, but aren't dropped. ;)
+				If ((e.Thing.GetClassName() == "EOA_ShellAmmo1" || e.Thing.GetClassName() == "EOA_ShellAmmo2") && StaticArchive.ShotgunNeeded && !StaticArchive.ShotgunSpawned && EOA_CSGSpawn)
+				{
+					StaticArchive.ShotgunSpawned = True;
+					e.Thing.A_SpawnItemEx("EOA_ShotgunReplacer", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+				If ((e.Thing.GetClassName() == "EOA_BulletAmmo1" || e.Thing.GetClassName() == "EOA_BulletAmmo2") && StaticArchive.ChaingunNeeded && !StaticArchive.ChaingunSpawned && EOA_HARSpawn)
+				{
+					StaticArchive.ChaingunSpawned = True;
+					e.Thing.A_SpawnItemEx("EOA_ChaingunReplacer", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+					e.Thing.Destroy();
+					Return;
+				}
+			}
+		}
+		If (e.Thing.GetClassName() == "GloryKillIndicator" && e.Thing.Master)
+		{
+			e.Thing.A_SetSize(e.Thing.Master.Radius, e.Thing.Master.Height);
+		}
+	}
+    Override Void WorldThingDamaged(WorldEvent e)
+    {
+		/*
+		[DoomKrakken]: The key...
+		Actor Thing - The actor that took damage.
+		Actor Inflictor - The actor that actually did the damage (e.g. a projectile).
+		Int Damage - The damage dealt.
+		Actor DamageSource - The actor responsible for dealing the damage (e.g. a player who fired the Inflictor from his gun).
+		Name DamageType - The damagetype of the projectile.
+		EDmgFlags DamageFlags - Flags for damage.  See DamageMobj for more info.
+		Double DamageAngle - The angle at which the damage was recieved.
+		*/
+		//[DoomKrakken]: Override the effects of the Hologram projection, so that stun/targeting effects can take effect properly for the correct person.
+		If (e.Thing.bISMONSTER && e.DamageSource && e.DamageSource.Player && e.Thing.Target && e.Thing.Target Is "EOA_HologramProjection")
+		{
+			e.Thing.Target = e.DamageSource;
+		}
+		If (!(e.Inflictor && e.Inflictor Is "EOA_BFGBall") && !(e.Thing.CountInv("PowerStaggered") || e.Thing.CountInv("GloryKillCounter") || e.Thing.CountInv("ChainsawGloryKillCounter") || e.Thing.CountInv("PowerStunned")))
+		{
+			ThinkerIterator It = ThinkerIterator.Create("EOA_Essentials");
+			EOA_Essentials Essentials;
+			While (Essentials = EOA_Essentials(It.Next()))
+			{
+				If (Essentials && Essentials.Owner == e.Thing)
+				{
+					Int IntimacyIsBest;
+					For (Int i = 0; i < MAXPLAYERS; i++)
+					{
+						PlayerInfo Player = Players[i];
+						If (!(PlayerInGame[i] && Player.Mo))
+						{
+							Continue;
+						}
+						IntimacyIsBest = max(IntimacyIsBest, Player.Mo.CountInv("IntimacyIsBestSelected") + Player.Mo.CountInv("IntimacyIsBestSelected") * Player.Mo.CountInv("IntimacyIsBestII")); //[DoomKrakken]: Check all players' inventory for at least one of them having this rune equipped.
+						If (IntimacyIsBest >= 2) //[DoomKrakken]: If one has the upgraded rune selected, then there's no need to check anyone else's inventory for it.
+						{
+							Break;
+						}
+					}
+					If (e.Thing.Health <= Essentials.StaggerThreshold * (1 + (IntimacyIsBest == 2) * 0.75))
+					{
+						e.Thing.A_GiveInventory("PowerStaggered");
+					}
+				}
+			}
+		}
+		If (e.Thing.bISMONSTER && e.Thing.Health <= 0 && e.Thing.CountInv("PowerStunned") && e.DamageSource)
+		{
+			If (e.DamageSource.CountInv("MC_ChainStun"))
+			{
+				e.DamageSource.A_GiveInventory("ChainStunMasteryCounter");
+			}
+			Else If (e.DamageSource.CountInv("ChainStun"))
+			{
+				e.Thing.Target = e.DamageSource;
+				e.Thing.A_SpawnItemEx("ChainStunLightningTracerSpawner", ZOfs: e.Thing.Height / 2, Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_SETMASTER|SXF_ORIGINATOR);
+			}
+		}
+		If (e.Thing.bISMONSTER && !e.Thing.bNOBLOOD && e.Thing.Health > 0 && e.Inflictor && e.Inflictor.GetClassName() == "EOA_Rocket" && (e.Inflictor.CountInv("RemoteDetonationTrigger") || (e.DamageSource.CountInv("ExternalPayload") && e.DamageSource.CountInv("RemoteDetonationSelected") && (e.DamageFlags & DMG_EXPLOSION))) && e.DamageSource && e.DamageSource.CountInv("JaggedShrapnel"))
+		{
+			Let BleedActor = Actor.Spawn("ShrapnelDamager", e.Thing.Pos, NO_REPLACE);
+			If (BleedActor)
+			{
+				BleedActor.Master = e.Inflictor;
+				BleedActor.Target = e.DamageSource;
+				BleedActor.Tracer = e.Thing;
+				BleedActor.Translation = e.Thing.BloodTranslation;
+			}
+		}
+		//[DoomKrakken]: Check to see if there is an inflictor, and check if the thing is a monster, and check to see if the thing is dead (can't use bKILLED because it hadn't been assigned yet).
+		If (e.Inflictor && e.Thing.bISMONSTER && e.Thing.Health <= 0 && e.DamageSource)
+		{
+			If (e.Inflictor.GetClassName() == "EMGChargeTracer" && EOA_Projectile(e.Inflictor).Headshot && e.DamageSource.CountInv("MC_IncreasedPower"))
+			{
+				e.DamageSource.A_GiveInventory("IncreasedPowerMasteryCounter");
+			}
+			If ((e.Inflictor.GetClassName() == "ChargedBurstTracer1" || e.Inflictor.GetClassName() == "ChargedBurstTracer2" || e.Inflictor.GetClassName() == "ChargedBurstTracer3") && IsClassOrSpecies(e.Thing, "Fatso") && e.DamageSource.CountInv("MC_PowerShot"))
+			{
+				e.DamageSource.A_GiveInventory("PowerShotMasteryCounter");
+			}
+			If (e.Inflictor.GetClassName() == "SuperShotgunTracer")
+			{
+				If (e.DamageSource.CountInv("MC_DoubleTrouble") && !(e.DamageSource.CountInv("PowerDoubleTroubleKillCounter1") && e.DamageSource.CountInv("PowerDoubleTroubleKillCounter2")))
+				{
+					If (e.DamageSource.CountInv("PowerDoubleTroubleKillCounter1") && !e.Thing.CountInv("PowerAlreadyHit"))
+					{
+						e.DamageSource.A_GiveInventory("DoubleTroubleKillCounter2");
+					}
+					Else
+					{
+						e.Thing.A_GiveInventory("AlreadyHit");
+						e.DamageSource.A_GiveInventory("DoubleTroubleKillCounter1");
+					}
+				}
+			}
+			If (e.Inflictor.GetClassName() == "HARTracer")
+			{
+				If (e.DamageSource.CountInv("MC_DevastatorRounds") && e.Inflictor.CountInv("TacticalScopeReady") && !e.Thing.CountInv("PowerAlreadyHit") && EOA_Projectile(e.Inflictor).Headshot)
+				{
+					e.Thing.A_GiveInventory("AlreadyHit");
+					e.DamageSource.A_GiveInventory("DevastatorRoundsMasteryCounter");
+				}
+			}
+			If (e.Inflictor.GetClassName() == "EOA_Rocket" && e.Inflictor.CountInv("RemoteDetonationTrigger") && e.DamageSource.CountInv("MC_ExternalPayload") && e.Inflictor.CountInv("ExternalPayloadKillCounter") < 3)
+			{
+				e.Inflictor.A_GiveInventory("ExternalPayloadKillCounter");
+			}
+			//[DoomKrakken]: No need to check for the RemoteDetonationTrigger item on the rocket here, since this shrapnel bleeding actor is only spawned whenever the remote detonation is actually triggered...
+			If (e.Inflictor.GetClassName() == "ShrapnelDamager" && e.Inflictor.Master && e.Inflictor.Target && e.Inflictor.Master.GetClassName() == "EOA_Rocket" && e.Inflictor.Target.CountInv("MC_ExternalPayload") && e.Inflictor.Master.CountInv("ExternalPayloadKillCounter") < 3)
+			{
+				e.Inflictor.Master.A_GiveInventory("ExternalPayloadKillCounter");
+			}
+			If (e.Inflictor.GetClassName() == "EOA_HomingRocket" && e.DamageSource.CountInv("MC_MultiTargeting") && IsClassOrSpecies(e.Thing, "ArchVile"))
+			{
+				e.DamageSource.A_GiveInventory("MultiTargetingMasteryCounter");
+			}
+			If (e.Inflictor.GetClassName() == "ChaingunSlug" && e.DamageSource.CountInv("MC_IncendiaryRounds") && e.DamageSource.CountInv("GatlingRotatorSelected") && !e.Inflictor.CountInv("MobileTurretSelected"))
+			{
+				If (!e.DamageSource.CountInv("PowerIncendiaryRoundsKillCounter1"))
+				{
+					e.DamageSource.A_GiveInventory("IncendiaryRoundsKillCounter1");
+				}
+				Else If (!e.DamageSource.CountInv("PowerIncendiaryRoundsKillCounter2"))
+				{
+					e.DamageSource.A_GiveInventory("IncendiaryRoundsKillCounter2");
+				}
+				Else If (!e.DamageSource.CountInv("PowerIncendiaryRoundsKillCounter3"))
+				{
+					e.DamageSource.A_GiveInventory("IncendiaryRoundsKillCounter3");
+				}
+				Else If (!e.DamageSource.CountInv("PowerIncendiaryRoundsKillCounter4"))
+				{
+					e.DamageSource.A_GiveInventory("IncendiaryRoundsKillCounter4");
+				}
+				Else If (!e.DamageSource.CountInv("PowerIncendiaryRoundsKillCounter5"))
+				{
+					e.DamageSource.A_GiveInventory("IncendiaryRoundsKillCounter5");
+				}
+			}
+			If (e.Inflictor.GetClassName() == "ChaingunSlug" && e.DamageSource.CountInv("MC_UltimateCooling") && e.Inflictor.CountInv("MobileTurretReady"))
+			{
+				e.DamageSource.A_GiveInventory("UltimateCoolingKillCounter");
+				If (e.DamageSource.CountInv("UltimateCoolingKillCounter") >= 4)
+				{
+					e.DamageSource.A_TakeInventory("UltimateCoolingKillCounter");
+					e.DamageSource.A_GiveInventory("UltimateCoolingMasteryCounter");
+				}
+			}
+			If (e.Inflictor.GetClassName() == "PrecisionBoltProjectile")
+			{
+				If (e.DamageSource.CountInv("VolatileDischarge"))
+				{
+					e.Inflictor.A_SpawnItemEx("VolatileDischargeExplosion", Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION);
+				}
+				Else If (e.DamageSource.CountInv("MC_VolatileDischarge") && IsClassOrSpecies(e.Thing, "HellKnight") && EOA_Projectile(e.Inflictor).Headshot && e.Thing == e.Inflictor.Tracer)
+				{
+					e.DamageSource.A_GiveInventory("VolatileDischargeMasteryCounter");
+				}
+			}
+			If (e.Inflictor.GetClassName() == "SiegeModeProjectile" && e.DamageSource.CountInv("MC_MobileSiege") && !(e.Inflictor.CountInv("MobileSiegeKillCounter") >= 3))
+			{
+				e.Inflictor.A_GiveInventory("MobileSiegeKillCounter");
+				If (e.Inflictor.CountInv("MobileSiegeKillCounter") >= 3)
+				{
+					e.DamageSource.A_GiveInventory("MobileSiegeMasteryCounter");
+				}
+			}
+			If (e.Inflictor Is "EOA_BFGBall")
+			{
+				e.Thing.A_SpawnItemEx("BFGSplashFX", 0, 0, e.Thing.Default.Height / 2, 0, 0, 1, 0, SXF_NOCHECKPOSITION|SXF_TRANSFERPOINTERS);
+			}
+			If (e.Inflictor Is "EOA_Projectile" && EOA_Projectile(e.Inflictor).HeadShot && e.Inflictor.Tracer == e.Thing && !e.Thing.bNOBLOOD)
+			{
+				e.Thing.A_StartSound("Death/Headshot");
+			}
+		}
+    }
+	Override Void WorldThingDestroyed(WorldEvent e)
+	{
+		If (e.Thing.GetClassName() == "EOA_Rocket" && e.Thing.Target && !e.Thing.Target.CountInv("ExternalPayload"))
+		{
+			If (e.Thing.CountInv("ExternalPayloadKillCounter") >= 3)
+			{
+				e.Thing.Target.A_GiveInventory("ExternalPayloadMasteryCounter");
+			}
+		}
+	}
+	Override Void WorldThingDied(WorldEvent e)
+	{
+		Let StaticArchive = EOA_StaticArchive.Get();
+		If (e.Thing.Default.bISMONSTER)
+		{
+			If (EOA_KillAmount)
+			{
+				StaticArchive.MonsterKills++;
+				Double SparsityDivisor; 
+				SparsityDivisor = EOA_PointSparsity;
+				If (SparsityDivisor && SparsityDivisor > 0)
+				{
+					SparsityDivisor = 1 / SparsityDivisor;
+				}
+				If (StaticArchive.MonsterKills % (20 * abs(SparsityDivisor)) == 0)
+				{
+					e.Thing.A_RadiusGive("BossKillReward", 32767, RGF_PLAYERS|RGF_NOSIGHT); //[DoomKrakken]: Remember, this only gives the weapon upgrade point.  No need to make the same function with a different name.
+				}
+			}
+			If (e.Thing.bBOSS)
+			{
+				e.Thing.A_RadiusGive("BossKillReward", 32767, RGF_PLAYERS|RGF_NOSIGHT);
+			}
+			If (!(e.Thing.CountInv("GloryKillCounter") || e.Thing.CountInv("ChainsawGloryKillCounter")))
+			{
+				If (!e.Thing.bNOKILLSCRIPTS)
+				{
+					e.Thing.A_GiveInventory("EOA_KillCounter");
+				}
+				If (e.Thing.CountInv("BloodFueledSelected", AAPTR_TARGET) && !e.Thing.CountInv("BloodFueledII", AAPTR_TARGET) && e.Thing.CountInv("PowerBloodFueledSpeed", AAPTR_TARGET))
+				{
+					e.Thing.A_GiveToTarget("BloodFueledChallengeCounter");
+				}
+				If (e.Thing.CountInv("SavingThrowSelected", AAPTR_TARGET) && !e.Thing.CountInv("SavingThrowII", AAPTR_TARGET) && e.Thing.CountInv("PowerSavingThrow", AAPTR_TARGET))
+				{
+					e.Thing.A_GiveToTarget("SavingThrowChallengeCounter");
+				}
+				If (e.Thing.CountInv("InFlightMobilitySelected", AAPTR_TARGET) && !e.Thing.CountInv("InFlightMobilityII", AAPTR_TARGET) && e.Thing.Target && !e.Thing.Target.Player.OnGround)
+				{
+					e.Thing.A_GiveToTarget("InFlightMobilityChallengeCounter");
+				}
+			}
+			e.Thing.A_TakeInventory("GloryKillCounter");
+			e.Thing.A_TakeInventory("ChainsawGloryKillCounter");
+		}
+	}
+	Override Void PlayerEntered(PlayerEvent e)
+	{
+		PlayerInfo ThisPlayer = Players[e.PlayerNumber];
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			PlayerInfo Player = Players[i];
+			If (Player && Player.Mo && Player.Mo.CountInv("EOA_ThrustBoots"))
+			{
+				ThisPlayer.Mo.A_GiveInventory("EOA_ThrustBoots");
+				Break;
+			}
+		}
+	}
+	Override Void WorldThingRevived(WorldEvent e)
+	{
+		//For the Glory Kill system.  Ported here so that no one tampers with the system in-game.
+		Let Essentials = New("EOA_Essentials");
+		Essentials.Owner = e.Thing;
+	}
+	Override Void WorldTick()
+	{
+		If (EOA_MinLightLevel)
+		{
+			For (Int i = 0; i < Level.Sectors.Size(); i++)
+			{
+				If (Level.Sectors[i].LightLevel < 96)
+				{
+					Level.Sectors[i].LightLevel = 96;
+				}
+			}
+		}
+		Let StaticArchive = EOA_StaticArchive.Get();
+		If (StaticArchive)
+		{
+			For (Int i = 0; i < MAXPLAYERS; i++)
+			{
+				PlayerInfo ThisPlayer = Players[i];
+				If (ThisPlayer && ThisPlayer.Mo && PlayerInGame[i])
+				{
+					If (ThisPlayer.Mo.CountInv("EOA_ThrustBoots"))
+					{
+						StaticArchive.ThrustBootsEquipped = True;
+						Break;
+					}
+					Else
+					{
+						StaticArchive.ThrustBootsEquipped = False;
+					}
+				}
+			}
+		}
+	}
+	Override Void RenderOverlay(RenderEvent e)
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player && Player.Mo && Player.Mo == e.Camera && PlayerInGame[ConsolePlayer])
+		{
+			Let MessageHandler = EOA_HandlerItem(e.Camera.FindInventory("EOA_HandlerItem"));
+			If (MessageHandler)
+			{
+				If (e.Camera.CountInv("PowerMsg1Active") && !e.Camera.CountInv("PowerChallenge1Active"))
+				{
+					Bool Completed = MessageHandler.Challenge1Complete;
+					Let MaxInvItem1 = e.Camera.FindInventory(MessageHandler.UpgradeItem1);
+					If (MaxInvItem1 && !Completed) //[DoomKrakken]: Why?  Because the counters will be removed from the player's inventory once the mastery challenge is complete.  This message won't show up until AFTER the counter is given.  And for those that are counterless (Bottomless Missiles and Incendiary Rounds), there's a direct shortcut to the completed version of the message. :D
+					{
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 700, MessageHandler.UpgradeType1, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 720, MessageHandler.UpgradeMsg1, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 740, String.Format("%d / %d", Player.Mo.CountInv(MessageHandler.UpgradeItem1), MaxInvItem1.MaxAmount), DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+					}
+					Else If (MessageHandler.UpgradeType1)
+					{
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 700, MessageHandler.UpgradeType1, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 720, MessageHandler.UpgradeMsg1, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 740, "Challenge Complete", DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+					}
+				}
+				Else If (!e.Camera.CountInv("PowerChallenge1Active"))
+				{
+					EventHandler.SendNetworkEvent("ClearMsg1");
+				}
+				If (e.Camera.CountInv("PowerMsg2Active") && !e.Camera.CountInv("PowerChallenge2Active"))
+				{
+					Bool Completed = MessageHandler.Challenge2Complete;
+					Let MaxInvItem2 = e.Camera.FindInventory(MessageHandler.UpgradeItem2);
+					If (MaxInvItem2 && !Completed)
+					{
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 600, MessageHandler.UpgradeType2, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 620, MessageHandler.UpgradeMsg2, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 640, String.Format("%d / %d", Player.Mo.CountInv(MessageHandler.UpgradeItem2), MaxInvItem2.MaxAmount), DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+					}
+					Else If (MessageHandler.UpgradeType2)
+					{
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 600, MessageHandler.UpgradeType2, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 620, MessageHandler.UpgradeMsg2, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 640, "Challenge Complete", DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+					}
+				}
+				Else If (!e.Camera.CountInv("PowerChallenge2Active"))
+				{
+					EventHandler.SendNetworkEvent("ClearMsg2");
+				}
+				If (e.Camera.CountInv("PowerMsg3Active") && !e.Camera.CountInv("PowerChallenge3Active"))
+				{
+					Bool Completed = MessageHandler.Challenge3Complete;
+					Let MaxInvItem3 = e.Camera.FindInventory(MessageHandler.UpgradeItem3);
+					If (MaxInvItem3 && !Completed)
+					{
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 500, MessageHandler.UpgradeType3, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 520, MessageHandler.UpgradeMsg3, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 540, String.Format("%d / %d", Player.Mo.CountInv(MessageHandler.UpgradeItem3), MaxInvItem3.MaxAmount), DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+					}
+					Else If (MessageHandler.UpgradeType3)
+					{
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 500, MessageHandler.UpgradeType3, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 520, MessageHandler.UpgradeMsg3, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 540, "Challenge Complete", DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+					}
+				}
+				Else If (!e.Camera.CountInv("PowerChallenge3Active"))
+				{
+					EventHandler.SendNetworkEvent("ClearMsg3");
+				}
+			}
+			//[DoomKrakken]: GOD BLESS YOU, GUTAWER! :D
+			Let Mo = PlayerPawn(e.Camera);
+			Let RL = Mo ? EOA_RocketLauncher(Mo.Player.ReadyWeapon) : Null;
+			EOA_Matrix WorldToClip = EOA_Matrix.WorldToClip(e.viewPos, e.viewAngle, e.viewPitch, e.viewRoll, Player.FOV);
+			If (RL && Mo.CountInv("LockOnBurstSelected") && !AutomapActive)
+			{
+				If (RL.Ptr1Tag && RL.Ptr1 && !RL.Ptr1.bKILLED)
+				{
+					Vector3 Ptr1Pos = e.ViewPos + LevelLocals.Vec3Diff(e.ViewPos, RL.Ptr1Tag.Pos);
+					Vector3 LockXHairPos1 = WorldToClip.MultiplyVector3(Ptr1Pos + (0, 0, RL.Ptr1Tag.Height * 2 / 3.0)).AsVector3();
+					If (LockXHairPos1.Z <= 1 && LockXHairPos1.Z >= -1)
+					{
+						Vector2 DrawPos1 = EOA_GlobalMaths.ndcToViewPort(LockXHairPos1);
+						Screen.DrawTexture(TexMan.CheckForTexture("RLXR", TexMan.TYPE_ANY), False, DrawPos1.X, DrawPos1.Y);
+					}
+				}
+				If (RL.Ptr2Tag && RL.Ptr2 && !RL.Ptr2.bKILLED)
+				{
+					Vector3 Ptr2Pos = e.ViewPos + LevelLocals.Vec3Diff(e.ViewPos, RL.Ptr2Tag.Pos);
+					Vector3 LockXHairPos2 = WorldToClip.MultiplyVector3(Ptr2Pos + (0, 0, RL.Ptr2Tag.Height * 2 / 3.0)).AsVector3();
+					If (LockXHairPos2.Z <= 1 && LockXHairPos2.Z >= -1)
+					{
+						Vector2 DrawPos2 = EOA_GlobalMaths.ndcToViewPort(LockXHairPos2);
+						Screen.DrawTexture(TexMan.CheckForTexture("RLXR", TexMan.TYPE_ANY), False, DrawPos2.X, DrawPos2.Y);
+					}
+				}
+				If (RL.Ptr3Tag && RL.Ptr3 && !RL.Ptr3.bKILLED)
+				{
+					Vector3 Ptr3Pos = e.ViewPos + LevelLocals.Vec3Diff(e.ViewPos, RL.Ptr3Tag.Pos);
+					Vector3 LockXHairPos3 = WorldToClip.MultiplyVector3(Ptr3Pos + (0, 0, RL.Ptr3Tag.Height * 2 / 3.0)).AsVector3();
+					If (LockXHairPos3.Z <= 1 && LockXHairPos3.Z >= -1)
+					{
+						Vector2 DrawPos3 = EOA_GlobalMaths.ndcToViewPort(LockXHairPos3);
+						Screen.DrawTexture(TexMan.CheckForTexture("RLXR", TexMan.TYPE_ANY), False, DrawPos3.X, DrawPos3.Y);
+					}
+				}
+			}
+		}
+	}
+	Override Void NetworkProcess(ConsoleEvent e) //Thank you, phantombeta and TheZombieKiller! :D
+	{
+		If (!e.IsManual)
+		{
+			//[DoomKrakken]: Thank you, phantombeta! :)
+			If (e.Player < 0 || !PlayerInGame[e.Player] || !Players[e.Player].Mo) //Don't execute this if the player isn't given/valid or if the player isn't in-game or the player's PlayerPawn is null.
+			{
+				Return;
+			}
+			Array<String> InvString;
+			e.Name.Split(InvString, ":");
+			If (InvString.Size() == 2) //Skip if the array doesn't have exactly two strings.
+			{
+				If (InvString[0] ~== "GiveItem") //Only execute if the name starts with "giveitem:"
+				{
+					PlayerInfo Player = Players[e.Player];
+					Let ThisPlayer = DoomSlayer(Player.Mo);
+					Let RuneHandler = EOA_HandlerItem(Player.Mo.FindInventory("EOA_HandlerItem"));
+					If (RuneHandler)
+					{
+						RS1 = RS1 ? RS1 : CVar.GetCVar("RuneSlot1", Player);
+						RS2 = RS2 ? RS2 : CVar.GetCVar("RuneSlot2", Player);
+						RS3 = RS3 ? RS3 : CVar.GetCVar("RuneSlot3", Player);
+						RuneHandler.RuneSlot1 = RS1.GetInt();
+						RuneHandler.RuneSlot2 = RS2.GetInt();
+						RuneHandler.RuneSlot3 = RS3.GetInt();
+					}
+					If (InvString[1] != "Clear" && !ThisPlayer.LastDroneSelected)
+					{
+						ThisPlayer.A_GiveInventory(InvString[1], 1);
+					}
+					If (ThisPlayer.LastDroneSelected)
+					{
+						ThisPlayer.GiveInventory("EOA_FieldDroneWeapon", 1);
+						Let DroneHand = EOA_FieldDroneWeapon(ThisPlayer.FindInventory("EOA_FieldDroneWeapon"));
+						If (DroneHand)
+						{
+							DroneHand.ReselectWeapon = (ThisPlayer.GetCVar("NeverSwitchOnPickup") || ThisPlayer.CountInv("PowerBerserk")) ? Player.ReadyWeapon.GetClass() : Null;
+							DroneHand.YieldItem = InvString[1];
+							DroneHand.Giver = ThisPlayer.LastDroneSelected;
+							DroneHand.FieldDrone = ThisPlayer.LastDroneSelected;
+							ThisPlayer.A_Face(ThisPlayer.LastDroneSelected, Max_Pitch: 90, Pitch_Offset: -10 * sin(ThisPlayer.Pitch), Flags: FAF_BOTTOM);
+							Player.PendingWeapon = DroneHand;
+							Player.ReadyWeapon = Null;
+						}
+						ThisPlayer.LastDroneSelected.DroneUsed = True;
+						ThisPlayer.LastDroneSelected = Null;
+						Let StaticArchive = EOA_StaticArchive.Get();
+						StaticArchive.FieldDronesClaimed++;
+					}
+					If (ThisPlayer.LastStoneSelected)
+					{
+						ThisPlayer.LastStoneSelected.StoneUsed = True;
+						ThisPlayer.LastStoneSelected = Null;
+						Let StaticArchive = EOA_StaticArchive.Get();
+						StaticArchive.RuneTrialStonesClaimed++;
+					}
+				}
+				If (InvString[0] ~== "TakeItem") //Only execute if the name starts with "takeitem:"
+				{
+					PlayerInfo Player = Players[e.Player];
+					Let ThisPlayer = DoomSlayer(Player.Mo);
+					ThisPlayer.A_TakeInventory(InvString[1], e.Args[0]);
+				}
+			}
+			If (e.Name == "ClearMsg1")
+			{
+				PlayerInfo Player = Players[e.Player];
+				If (Player && Player.Mo)
+				{
+					Let MessageHandler = EOA_HandlerItem(Player.Mo.FindInventory("EOA_HandlerItem"));
+					If (MessageHandler)
+					{
+						MessageHandler.UpgradeType1 = "";
+						MessageHandler.UpgradeMsg1 = "";
+						MessageHandler.UpgradeItem1 = "";
+						MessageHandler.Challenge1Complete = False;
+					}
+				}
+			}
+			If (e.Name == "ClearMsg2")
+			{
+				PlayerInfo Player = Players[e.Player];
+				If (Player && Player.Mo)
+				{
+					Let MessageHandler = EOA_HandlerItem(Player.Mo.FindInventory("EOA_HandlerItem"));
+					If (MessageHandler)
+					{
+						MessageHandler.UpgradeType2 = "";
+						MessageHandler.UpgradeMsg2 = "";
+						MessageHandler.UpgradeItem2 = "";
+						MessageHandler.Challenge2Complete = False;
+					}
+				}
+			}
+			If (e.Name == "ClearMsg3")
+			{
+				PlayerInfo Player = Players[e.Player];
+				If (Player && Player.Mo)
+				{
+					Let MessageHandler = EOA_HandlerItem(Player.Mo.FindInventory("EOA_HandlerItem"));
+					If (MessageHandler)
+					{
+						MessageHandler.UpgradeType3 = "";
+						MessageHandler.UpgradeMsg3 = "";
+						MessageHandler.UpgradeItem3 = "";
+						MessageHandler.Challenge3Complete = False;
+					}
+				}
+			}
+			If (e.Name == "ClearDronePointers")
+			{
+				PlayerInfo Player = Players[e.Player];
+				Let ThisPlayer = DoomSlayer(Player.Mo);
+				If (ThisPlayer.LastDroneSelected)
+				{
+					ThisPlayer.LastDroneSelected.DroneBeingUsed = False;
+					ThisPlayer.LastDroneSelected = Null;
+				}
+			}
+			If (e.Name == "ClearStonePointers")
+			{
+				PlayerInfo Player = Players[e.Player];
+				Let ThisPlayer = DoomSlayer(Player.Mo);
+				If (ThisPlayer.LastStoneSelected)
+				{
+					ThisPlayer.LastStoneSelected.StoneBeingUsed = True;
+					ThisPlayer.LastStoneSelected = Null;
+				}
+			}
+		}
+	}
+}
+
+Class EOA_KillCounter : EOA_Token
+{
+	//[DoomKrakken]: These same variables will be present in the reward fountain this item spawns, and will be passed one way or another to said actor.
+	PlayerPawn Killer; //Not to be passed.
+	Int DelayTics; //Number of tics to delay before yielding rewards.  Only used for Chainsaw kills.
+	Int HealthDrops; //Number of health stims to drop.  Dependant on how the monster was killed (Glory Killed or not) and by how much health the killer has.
+	Int ArmorDrops; //Number of armor shards to drop.  Only used for Armored Offensive.
+	Int AmmoDrops; //Number of ammo items to drop.  This will be greater than 1 if it's done via Chainsaw.
+	Bool DropBullets; //Check if bullet ammo should be dropped.
+	Bool DropShells; //Check if shell ammo should be dropped.
+	Bool DropRockets; //Check if rocket ammo should be dropped.
+	Bool DropCells; //Check if cell ammo should be dropped.
+	Int DropBulletsChanceMin; //Minimum chance of bullet ammo dropping.
+	Int DropShellsChanceMin; //Minimum chance of shell ammo dropping.
+	Int DropRocketsChanceMin; //Minimum chance of rocket ammo dropping.
+	Int DropCellsChanceMin; //Minimum chance of cell ammo dropping.
+	Int DropBulletsChanceMax; //Maximum chance of bullet ammo dropping.
+	Int DropShellsChanceMax; //Maximum chance of shell ammo dropping.
+	Int DropRocketsChanceMax; //Maximum chance of rocket ammo dropping.
+	Int DropCellsChanceMax; //Maximum chance of cell ammo dropping.
+	Bool DropBFGCell; //Check if BFG cell ammo should be dropped.  Only used for Ammo Boost II.
+	Bool GK; //Check if the monster was killed via standard Glory Kill.
+	Bool CSGK; //Check if the monster was killed via Chainsaw Glory Kill.
+	Bool NeedsHealth; //Check if the killer has critical (<=40) health.
+	Vector3 LastPos; //Last known position of the killed monster, so that it spawns the reward fountain in the correct place (should the killed monster somehow... disappear... before that happens).
+	Override Void AttachToOwner(Actor Other)
+	{
+		//[DoomKrakken]: Look for the player that has the monster in his tracer pointer.
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			PlayerInfo Player = Players[i];
+			If (!(PlayerInGame[i] && Player.Mo))
+			{
+				Continue;
+			}
+			If (Player.Mo.Tracer && Player.Mo.Tracer == Other)
+			{
+				Killer = PlayerPawn(Player.Mo);
+				Break;
+			}
+		}
+		If (!Killer)
+		{
+			Killer = PlayerPawn(Other.Target);
+		}
+		If (Killer)
+		{
+			If (Killer.CountInv("EOA_BFG") && Killer.CountInv("AmmoBoostSelected") && Killer.CountInv("AmmoBoostII") && random(1, 100) <= random(5, 8))
+			{
+				DropBFGCell = True;
+			}
+			If (!Other.bBOSS)
+			{
+				//Health
+				//Int HealthDiff = Killer.MaxHealth - Killer.Health;
+				//HealthDiff = max(0, HealthDiff);
+				//HealthDrops = HealthDiff / (20 + 5 * Killer.CountInv("EOA_ArgentHealthBonusCounter"));
+				If (Killer.Health <= Killer.MaxHealth * 0.25)
+				{
+					HealthDrops += 4;
+					NeedsHealth = True;
+				}
+				If (Killer.Health > Killer.MaxHealth * 0.25 && Killer.Health <= Killer.MaxHealth * 0.4)
+				{
+					HealthDrops += 2;
+					NeedsHealth = True;
+				}
+				If (Killer.Health > Killer.MaxHealth * 0.4 && Killer.Health <= Killer.MaxHealth * 0.6)
+				{
+					HealthDrops += 2;
+				}
+				If (GetClassName() == "GloryKillCounter" || GetClassName() == "ChainsawGloryKillCounter")
+				{
+					GK = True;
+					If (GetClassName() != "ChainsawGloryKillCounter")
+					{
+						HealthDrops++;
+						If (Killer.Health <= Killer.MaxHealth * 0.25)
+						{
+							HealthDrops += 4;
+						}
+						If (Killer.Health > Killer.MaxHealth * 0.25 && Killer.Health <= Killer.MaxHealth * 0.4)
+						{
+							HealthDrops += 2;
+						}
+						//HealthDrops *= 2;
+					}
+					//Armor
+					ArmorDrops = 2 * (Killer.CountInv("ArmoredOffensiveSelected") + (Killer.CountInv("ArmoredOffensiveSelected") * Killer.CountInv("ArmoredOffensiveII")));
+				}
+				//HealthDrops = min(max(HealthDrops, GK), 4 * (1 + GK));
+				//Ammo
+				If (GetClassName() == "ChainsawGloryKillCounter")
+				{
+					CSGK = True;
+					DelayTics = 9;
+					AmmoDrops = 7 + Killer.CountInv("EOA_ArgentAmmoBonusCounter");
+				}
+				Else
+				{
+					AmmoDrops = 1;
+					Let EOA_BulletAmmo = EOA_Ammo(Killer.FindInventory("EOA_BulletAmmo"));
+					Let EOA_ShellAmmo = EOA_Ammo(Killer.FindInventory("EOA_ShellAmmo"));
+					Let EOA_RocketAmmo = EOA_Ammo(Killer.FindInventory("EOA_RocketAmmo"));
+					Let EOA_CellAmmo = EOA_Ammo(Killer.FindInventory("EOA_CellAmmo"));
+					If (EOA_BulletAmmo && !Killer.CheckInventory("EOA_BulletAmmo", 0) && (Killer.CountInv("EOA_HeavyAssaultRifle") || Killer.CountInv("EOA_Chaingun")))
+					{
+						If (GK && Killer.CountInv("EOA_BulletAmmo") <= 0)
+						{
+							DropBulletsChanceMin = 75;
+							DropBulletsChanceMax = 75;
+						}
+						Else If (Killer.CountInv("EOA_BulletAmmo") <= EOA_BulletAmmo.MaxAmount * 0.2)
+						{
+							DropBulletsChanceMin = 0;
+							DropBulletsChanceMax = 20;
+						}
+						Else If (Killer.CountInv("EOA_BulletAmmo") > EOA_BulletAmmo.MaxAmount * 0.2 && Killer.CountInv("EOA_BulletAmmo") <= EOA_BulletAmmo.MaxAmount * 0.5)
+						{
+							DropBulletsChanceMin = 0;
+							DropBulletsChanceMax = 55;
+						}
+						If (random(1, 100) <= random(DropBulletsChanceMin, DropBulletsChanceMax)) /* (1 + (Killer.CountInv("EOA_BulletAmmo") <= EOA_BulletAmmo.LowAmount)) * (1 + (Killer.CountInv("EOA_BulletAmmo") <= EOA_BulletAmmo.MaxAmount / 3)))*/
+						{
+							DropBullets = True;
+						}
+					}
+					If (EOA_ShellAmmo && !Killer.CheckInventory("EOA_ShellAmmo", 0) && (Killer.CountInv("EOA_CombatShotgun") || Killer.CountInv("EOA_SuperShotgun")))
+					{
+						If (GK && Killer.CountInv("EOA_ShellAmmo") <= 0)
+						{
+							DropShellsChanceMin = 100;
+							DropShellsChanceMax = 100;
+						}
+						Else If (Killer.CountInv("EOA_ShellAmmo") <= EOA_ShellAmmo.MaxAmount * 0.2)
+						{
+							DropShellsChanceMin = 20;
+							DropShellsChanceMax = 40;
+						}
+						Else If (Killer.CountInv("EOA_ShellAmmo") > EOA_ShellAmmo.MaxAmount * 0.2 && Killer.CountInv("EOA_ShellAmmo") <= EOA_ShellAmmo.MaxAmount * 0.5)
+						{
+							DropShellsChanceMin = 0;
+							DropShellsChanceMax = 40;
+						}
+						If (random(1, 100) <= random(DropShellsChanceMin, DropShellsChanceMax)) /* (1 + (Killer.CountInv("EOA_ShellAmmo") <= EOA_ShellAmmo.LowAmount)) * (1 + (Killer.CountInv("EOA_ShellAmmo") <= EOA_ShellAmmo.MaxAmount / 3)))*/
+						{
+							DropShells = True;
+						}
+					}
+					If (EOA_RocketAmmo && !Killer.CheckInventory("EOA_RocketAmmo", 0) && Killer.CountInv("EOA_RocketLauncher"))
+					{
+						If (GK && Killer.CountInv("EOA_RocketAmmo") <= 0)
+						{
+							DropRocketsChanceMin = 0;
+							DropRocketsChanceMax = 20;
+						}
+						Else If (Killer.CountInv("EOA_RocketAmmo") <= EOA_RocketAmmo.MaxAmount * 0.2)
+						{
+							DropRocketsChanceMin = 0;
+							DropRocketsChanceMax = 15;
+						}
+						Else If (Killer.CountInv("EOA_RocketAmmo") > EOA_RocketAmmo.MaxAmount * 0.2 && Killer.CountInv("EOA_RocketAmmo") <= EOA_RocketAmmo.MaxAmount * 0.5)
+						{
+							DropRocketsChanceMin = 2;
+							DropRocketsChanceMax = 10;
+						}
+						If (random(1, 100) <= random(DropRocketsChanceMin, DropRocketsChanceMax)) /* (1 + (Killer.CountInv("EOA_RocketAmmo") <= EOA_RocketAmmo.LowAmount)) * (1 + (Killer.CountInv("EOA_RocketAmmo") <= EOA_RocketAmmo.MaxAmount / 3)))*/
+						{
+							DropRockets = True;
+						}
+					}
+					If (EOA_CellAmmo && !Killer.CheckInventory("EOA_CellAmmo", 0) && (Killer.CountInv("EOA_PlasmaRifle") || Killer.CountInv("EOA_GaussCannon")))
+					{
+						If (GK && Killer.CountInv("EOA_CellAmmo") <= 0)
+						{
+							DropCellsChanceMin = 75;
+							DropCellsChanceMax = 75;
+						}
+						Else If (Killer.CountInv("EOA_CellAmmo") <= EOA_CellAmmo.MaxAmount * 0.2)
+						{
+							DropCellsChanceMin = 0;
+							DropCellsChanceMax = 25;
+						}
+						Else If (Killer.CountInv("EOA_CellAmmo") > EOA_CellAmmo.MaxAmount * 0.2 && Killer.CountInv("EOA_CellAmmo") <= EOA_CellAmmo.MaxAmount * 0.5)
+						{
+							DropCellsChanceMin = 0;
+							DropCellsChanceMax = 50;
+						}
+						If (random(1, 100) <= random(DropCellsChanceMin, DropCellsChanceMax)) /* (1 + (Killer.CountInv("EOA_CellAmmo") <= EOA_CellAmmo.LowAmount)) * (1 + (Killer.CountInv("EOA_CellAmmo") <= EOA_CellAmmo.MaxAmount / 3)))*/
+						{
+							DropCells = True;
+						}
+					}
+				}
+			}
+		}
+		Super.AttachToOwner(Other);
+	}
+	Override Void DoEffect()
+	{
+		If (Owner)
+		{
+			LastPos = Owner.Pos;
+			If (Owner.bKILLED && GetClassName() == "EOA_KillCounter" && !(Owner Is "EOA_KillRewardDropper"))
+			{
+				OwnerDied();
+				Destroy();
+				Return;
+			}
+		}
+		Super.DoEffect();
+	}
+	Override Void OwnerDied()
+	{
+		If (GetClassName() == "GloryKillCounter" && Owner && Owner.CountInv("ChainsawGloryKillCounter"))
+		{
+			Destroy();
+			Return;
+		}
+		EOA_KillRewardDropper Rewarder = EOA_KillRewardDropper(Spawn("EOA_KillRewardDropper", LastPos));
+		If (Rewarder)
+		{
+			If (Owner)
+			{
+				Rewarder.Owner = Owner;
+			}
+			Rewarder.GK = GK;
+			Rewarder.CSGK = CSGK;
+			Rewarder.Boss = Owner.bBOSS;
+			Rewarder.NeedsHealth = NeedsHealth;
+			Rewarder.DelayTics = DelayTics;
+			Rewarder.HealthDrops = HealthDrops;
+			Rewarder.ArmorDrops = ArmorDrops;
+			Rewarder.AmmoDrops = AmmoDrops;
+			Rewarder.DropBullets = DropBullets;
+			Rewarder.DropShells = DropShells;
+			Rewarder.DropRockets = DropRockets;
+			Rewarder.DropCells = DropCells;
+			Rewarder.DropBFGCell = DropBFGCell;
+		}
+	}
+}
+
+Class EOA_KillRewardDropper : Actor
+{
+	Actor Owner;
+	Int DelayTics;
+	Int HealthDrops;
+	Int ArmorDrops;
+	Int AmmoDrops;
+	Bool DropBullets;
+	Bool DropShells;
+	Bool DropRockets;
+	Bool DropCells;
+	Bool DropBFGCell;
+	Bool GK;
+	Bool CSGK;
+	Bool NeedsHealth;
+	Bool Boss;
+	Default
+	{
+		Radius 0;
+		Height 0;
+		+NOINTERACTION
+	}
+	Override Void Tick()
+	{
+		If (Owner)
+		{
+			Warp(Owner, Flags: WARPF_NOCHECKPOSITION);
+		}
+		If (DelayTics-- > 0)
+		{
+			Super.Tick();
+			Return;
+		}
+		If (Boss)
+		{
+			A_DropItem("MegaTempStim", -1);
+			A_DropItem("MegaTempBulletAmmo", -1);
+			A_DropItem("MegaTempShellAmmo", -1);
+			A_DropItem("MegaTempRocketAmmo", -1);
+			A_DropItem("MegaTempCellAmmo", -1);
+		}
+		Else If (HealthDrops-- > 0)
+		{
+			If (GK)
+			{
+				A_DropItem("TempStimGK", -1);
+			}
+			Else
+			{
+				A_DropItem("TempStim", -1, random(0, 166) + 256 * NeedsHealth);
+			}
+			Super.Tick();
+			Return;
+		}
+		If (ArmorDrops-- > 0)
+		{
+			A_DropItem("TempArmor", -1);
+			Super.Tick();
+			Return;
+		}
+		If (AmmoDrops-- > 0)
+		{
+			If (CSGK)
+			{
+				A_DropItem("TempChainsawBulletAmmo", -1);
+				A_DropItem("TempChainsawShellAmmo", -1);
+				A_DropItem("TempChainsawRocketAmmo", -1);
+				A_DropItem("TempChainsawCellAmmo", -1);
+			}
+			Else If (!Boss)
+			{
+				If (DropBullets)
+				{
+					A_DropItem("TempBulletAmmo", -1);
+				}
+				If (DropShells)
+				{
+					A_DropItem("TempShellAmmo", -1);
+				}
+				If (DropRockets)
+				{
+					A_DropItem("TempRocketAmmo", -1);
+				}
+				If (DropCells)
+				{
+					A_DropItem("TempCellAmmo", -1);
+				}
+			}
+			Super.Tick();
+			Return;
+		}
+		If (DropBFGCell)
+		{
+			A_DropItem("TempBFGAmmo", -1);
+		}
+		Super.Tick();
+		Destroy();
+	}
+}
+
+Class SectorDefaults
+{
+	String MapName;
+	Int DefLightLevel;
+	Int DefDamageAmount;
+	Int DefDamageInterval;
+}
+
+/*Class KillMilestoneData
+{
+	String MapName;
+	Int PointsAwarded;
+	Int KillThreshold;
+	Int CurrentKillThreshold;
+}*/
+
+Class EOA_StaticArchive : Thinker
+{
+	Bool ShotgunSpawned;
+	Bool ShotgunNeeded;
+	Bool ChaingunSpawned;
+	Bool ChaingunNeeded;
+	Bool ChainsawSpawned;
+	Bool ChainsawSpawnedInLevel;
+	Bool BFGSpawned;
+	Bool PowerCycle;
+	Bool ThrustBootsEquipped;
+	Bool ThrustBootsSpawned;
+	Bool AutomapSpawned;
+	Int ShotgunsSpawned;
+	Int ChaingunsSpawned;
+	Int PlasmaRiflesSpawned;
+	Int ArmorCycle;
+	Int AmmoCycle;
+	Int BackpackCycle;
+	Int UpgradeCycle;
+	Int PraetorTokensSpawned;
+	Int PraetorTokensClaimed;
+	Int FieldDronesSpawned;
+	Int FieldDronesClaimed;
+	Int ArgentCellsSpawned;
+	Int ArgentCellsClaimed;
+	Int RuneTrialStonesSpawned;
+	Int RuneTrialStonesClaimed;
+	Int EquipmentSpawned;
+	Int CellAmmoSpawned;
+	Int FuelAmmoSpawned;
+	Int FuelAmmoSpawnedInLevel;
+	Int MonsterKills;
+	//Array<KillMilestoneData> KillMilestone;
+	Array<SectorDefaults> SecDefaults;
+	EOA_StaticArchive Init()
+	{
+		ChangeStatNum(STAT_STATIC);
+		Return Self;
+	}
+	Static EOA_StaticArchive Get()
+	{
+		ThinkerIterator It = ThinkerIterator.Create("EOA_StaticArchive", STAT_STATIC);
+		Let GVars = EOA_StaticArchive(It.Next());
+		If (GVars == Null)
+		{
+			GVars = New("EOA_StaticArchive").Init();
+		}
+		Return GVars;
+	}
+	Static Clearscope EOA_StaticArchive Retrieve()
+	{
+		Let It = ThinkerIterator.Create("EOA_StaticArchive", STAT_STATIC);
+		Let GVars = EOA_StaticArchive(It.Next());
+		If (!GVars)
+		{
+			Return Null;
+		}
+		Return GVars;
+	}
+	Static Int GetPraetorTokensSpawned()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.PraetorTokensSpawned : 0;
+	}
+	Static Int GetPraetorTokensClaimed()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.PraetorTokensClaimed : 0;
+	}
+	Static Int GetFieldDronesSpawned()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.FieldDronesSpawned : 0;
+	}
+	Static Int GetFieldDronesClaimed()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.FieldDronesClaimed : 0;
+	}
+	Static Int GetArgentCellsSpawned()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.ArgentCellsSpawned : 0;
+	}
+	Static Int GetArgentCellsClaimed()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.ArgentCellsClaimed : 0;
+	}
+	Static Int GetRuneTrialStonesSpawned()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.RuneTrialStonesSpawned : 0;
+	}
+	Static Int GetRuneTrialStonesClaimed()
+	{
+		Let GVars = EOA_StaticArchive.Get();
+		Return GVars ? GVars.RuneTrialStonesClaimed : 0;
+	}
+}
+
+Class SolidThinker : Thinker
+{
+	Actor Owner;
+	Int TicCount;
+	Override Void Tick()
+	{
+		If (Owner && Owner.bISMONSTER)
+		{
+			If (TicCount < 2)
+			{
+				TicCount++;
+				Owner.bSHOOTABLE = True;
+				Owner.bKILLED = False;
+				Owner.A_SetSize(Owner.Default.Radius, Owner.Default.Height);
+			}
+			Else
+			{
+				Owner.bSHOOTABLE = False;
+				Owner.bKILLED = True;
+				Owner.A_SetSize(Owner.Default.Radius, Owner.Default.DeathHeight);
+				Destroy();
+				Return;
+			}
+		}
+		Else
+		{
+			Destroy();
+			Return;
+		}
+		Super.Tick();
+	}
+}
+
+Class BossKillReward : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0 ACS_NamedExecuteAlways("WeaponUpgradePointReward");
+		Stop;
+	}
+}
+
+Class EOA_SecretMarker : Actor //[DoomKrakken]: Also taken from Dr. Pyspy's "Doom Delta" project.
+{
+	Default
+	{
+		-SOLID
+		+DONTSPLASH
+		+NOTELEPORT
+		+NOINTERACTION
+		RenderStyle "None";
+	}
+	Override Void Tick()
+	{
+		Super.Tick();
+		If (CurSector.IsSecret())
+		{
+			Return;
+		}
+		Destroy();
+	}
+	States
+	{
+	Spawn:
+		TNT1 A -1;
+		Stop;
+	}
+}
+
+Class PowerBossProtection : PowerProtection
+{
+	Default
+	{
+		Powerup.Duration 2;
+		DamageFactor "Normal", 0.25;
+	}
+}
+
+Class PowerMeleeProtection : PowerProtection
+{
+	Default
+	{
+		Powerup.Duration 2;
+		DamageFactor "Melee", 0.5;
+	}
+}
+
+Class EOA_BackpackReplacer : Actor {}
+Class EOA_InfraredReplacer : Actor {}

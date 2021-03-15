@@ -1,0 +1,628 @@
+Class EMGPistolSelected : EOA_Token {}
+
+//Charged Energy Shot - Charges up a more powerful blast.
+//[DoomKrakken]: As the Pistol has this mod pre-installed, there's no need to make a counter for indicating that it's selected.
+Class ChargeEfficiency : EOA_Token {} //Faster Charge Rate.
+Class QuickRecovery : EOA_Token {} //Faster Cooldown Rate.
+Class EMGLightWeight : EOA_Token {} //Full speed while charging.
+
+Class MC_IncreasedPower : EOA_MasteryChallengeToken //Get 15 headshot kills using the Charged Energy Shot.
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "IncreasedPower";
+		EOA_MasteryChallengeToken.ChallengeCounter "IncreasedPowerMasteryCounter";
+		Tag "Increased Power";
+	}
+}
+Class IncreasedPower : EOA_Token {} //Mastery Upgrade - Charged Energy Shots deal more damage.
+
+Class IncreasedPowerMasteryCounter : EOA_Token {Default {Inventory.MaxAmount 15;} }
+
+Class EMGChargeCounter : EOA_Token {Default {Inventory.MaxAmount 88;} }
+Class EMGCooldownCounter : EOA_Token {Default {Inventory.MaxAmount 70;} }
+Class EMGAccuracyCounter : EOA_Token {Default {Inventory.MaxAmount 20;} }
+Class EMGCharging : EOA_Token {}
+
+Class EMGUpgrades : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("ChargeEfficiency");
+			A_GiveInventory("QuickRecovery");
+			A_GiveInventory("EMGLightWeight");
+		}
+		Stop;
+	}
+}
+
+//Class EMGAmmo : Ammo {} //[DoomKrakken]: So that we have a legit ammotype, so that the Equipment Charge shows up.
+
+Class EOA_Pistol : EOA_Weapon Replaces Pistol
+{
+	Default
+	{
+		Inventory.Icon "ICONEMG";
+		Weapon.AmmoType "None";
+		Weapon.AmmoUse 0;
+		Weapon.AmmoGive 0;
+		Weapon.SlotNumber 1;
+		Inventory.PickupMessage "EMG Pistol";
+		Tag "EMG Pistol";
+		+EOA_WEAPON.SEMIAUTO
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("EMG/Fire");
+		MarkSound("EMG/Vent");
+		MarkSound("EMG/ChargeIdle");
+		MarkSound("EMG/Charge");
+		MarkSound("EMG/ChargeBeep");
+		MarkSound("EMG/ChargeFire");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void DoEffect()
+	{
+		//Cooldowns
+		Owner.A_TakeInventory("EMGCooldownCounter", (1 + Owner.CountInv("QuickRecovery")) * (1 + Owner.CountInv("PowerHaste")));
+		Owner.A_TakeInventory("EMGAccuracyCounter", 1 + Owner.CountInv("PowerHaste"));
+		
+		//Mastery - Increased Power (Charged Energy Shot)
+		If (!Owner.CountInv("IncreasedPower") && Owner.CountInv("ChargeEfficiency") && Owner.CountInv("QuickRecovery") && Owner.CountInv("EMGLightWeight"))
+		{
+			Owner.A_GiveInventory("MC_IncreasedPower");
+			If (Owner.CountInv("IncreasedPowerMasteryCounter") >= 15)
+			{
+				Owner.A_GiveInventory("IncreasedPower");
+				Owner.A_TakeInventory("IncreasedPowerMasteryCounter");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_IncreasedPower");
+		}
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon != Self)
+		{
+			If (Owner.CountInv("EMGPistolSelected"))
+			{
+				Owner.A_TakeInventory("EMGPistolSelected");
+				Owner.A_TakeInventory("EMGCharging");
+				Owner.A_TakeInventory("EMGChargeCounter");
+				Owner.A_TakeInventory("EMGAccuracyCounter");
+				Owner.A_TakeInventory("EMGChargeCounter");
+				FOVScale = 1;
+			}
+		}
+		Super.DoEffect();
+	}
+	Override Double GetSpeedFactor()
+	{
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon == Self)
+		{
+			If ((Owner.GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !Owner.CountInv("EMGLightWeight"))
+			{
+				Return 0.5;
+			}
+		}
+		Return 1.0;
+	}
+	States
+	{
+	Spawn:
+		PSTL A -1;
+		Stop;
+	Select:
+		EMGP A 0
+		{
+			Invoker.SemiAutoOverride = True;
+			A_WeaponOffset();
+			A_GiveInventory("EMGPistolSelected");
+			If (GetCVar("EOA_Reticles"))
+			{
+				ACS_NamedExecuteAlways("EMGReticle", 0);
+				A_SetCrosshair(99);
+			}
+			Else
+			{
+				A_SetCrosshair(0);
+			}
+		}
+		TNT1 A 0 A_Raise();
+		Wait;
+	Deselect:
+		EMGP A 0
+		{
+			A_TakeInventory("EMGCharging");
+			A_TakeInventory("EMGChargeCounter");
+			A_TakeInventory("EMGAccuracyCounter");
+			A_ZoomFactor(1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 1);			
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 4);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+		}
+		EMGR HFDB 1;
+		TNT1 A 4
+		{
+			A_TakeInventory("EMGPistolSelected");
+			A_SetTics(4 * !CountInv("Adept") * !CountInv("PowerBerserk"));
+		}
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	Ready:
+		TNT1 A 0
+		{
+			If (Level.Time)
+			{
+				EOA_SpawnNoiseMaker("Weapon/Switch");
+			}
+		}
+		EMGR ACEG 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		Goto ReadyLoop;
+	ReRaise:
+		TNT1 A 0 A_WeaponOffset(-144, 32);
+		EMGR ABDEGH 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_WeaponOffset(24, 0, WOF_KEEPY|WOF_ADD);
+		}
+	ReadyLoop:
+		EMGP A 1
+		{
+			EOA_WeaponReady(WRF_NOSWITCH * Invoker.SemiAutoOverride|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK) * !Invoker.SemiAutoOverride|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+			Invoker.SemiAutoOverride = False;
+		}
+		Wait;
+	Fire:
+		EMGP A 0
+		{
+			A_TakeInventory("EMGChargeCounter");
+			A_TakeInventory("EMGCharging");
+			EOA_SpawnNoiseMaker("EMG/Fire");
+			EOA_SpawnCustomDynamicLight("EMGLight", DynamicLight.PulseLight, (25, 204, 255), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			EOA_FireBullets(1 + 0.15 * CountInv("EMGAccuracyCounter"), 1 + 0.15 * CountInv("EMGAccuracyCounter"), -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "EMGTracer", GetViewZ(), 3 + GetRelVelY() / 6, 1.25);
+			EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -1.5, 0, 0.25);
+			A_AlertMonsters();
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+			A_ZoomFactor(1);
+			A_GiveInventory("EMGAccuracyCounter", 15);
+			A_FireProjectile("EMGCasingSpawner", -40, 0, 3, 1);
+		}
+		EMGP BCDEFGH 1 EOA_WeaponReady(WRF_NOSWITCH|WRF_NOFIRE, EOA_ALLOWMANTLE);
+		EMGP IJ 1 EOA_WeaponReady(WRF_NOSWITCH|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY, EOA_ALLOWMANTLE);
+		Goto ReadyLoop;
+	AltFire:
+		EMGP A 0 
+		{
+			A_TakeInventory("EMGAccuracyCounter");
+			A_ZoomFactor(1.25, ZOOM_NOSCALETURNING);
+			If (!CountInv("EMGCooldownCounter"))
+			{
+				A_GiveInventory("EMGCharging");
+			}
+		}
+		EMGP KLMN 1
+		{
+			A_WeaponOffset(-10, 0, WOF_KEEPY|WOF_ADD);
+			If (CountInv("Grabbing_A_Ledge"))
+			{
+				Return ResolveState("LedgeClimb");
+			}
+			Return ResolveState(Null);
+		}
+		EMGP A 0 EOA_SpawnNoiseMaker("EMG/Vent");
+	ChargeIdle:
+		EMGP O 1 EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "EMG/ChargeIdle", 1, CHANF_LOOPING);
+		EMGP O 0
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_ALLOWMANTLE);
+			A_WeaponOffset(-50, 0, WOF_KEEPY|WOF_INTERPOLATE);
+			If (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK)
+			{
+				If (CountInv("EMGCooldownCounter"))
+				{
+					Return ResolveState("ChargeIdle");
+				}
+				Return ResolveState("Charge");
+			}
+			Return ResolveState(Null);
+		}
+	ChargeSound:
+		EMGP A 0 
+		{
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "EMG/Charge", 6);
+			A_GiveInventory("EMGCharging");
+		}
+	Charging:
+		EMGP O 1 
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_WEAPSPEEDUPGRADE * CountInv("ChargeEfficiency"));
+			A_WeaponOffset(-50, 0, WOF_KEEPY|WOF_INTERPOLATE);
+			A_GiveInventory("EMGChargeCounter");
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("Uncharge");
+			}
+			Else If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK))
+			{
+				Return ResolveState("Discharge");
+			}
+			Return A_JumpIfInventory("EMGChargeCounter", 0, "Charged");
+		}
+		Wait;
+	Charged:
+		EMGP A 0 EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "EMG/ChargeBeep", 6);
+	ChargedLoop:
+		EMGP O 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE);
+			A_WeaponOffset(-50, 0, WOF_KEEPY|WOF_INTERPOLATE);
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) || ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM)) || CountInv("Grabbing_A_Ledge") || (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge")))
+			{
+				Return ResolveState("Uncharge");
+			}
+			Else If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK))
+			{
+				Return ResolveState("Discharge");
+			}
+			Return ResolveState(Null);
+		}
+		Wait;
+	Discharge:
+		EMGP A 0
+		{
+			A_TakeInventory("EMGCharging");
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+			EOA_SpawnCustomDynamicLight("EMGLight", DynamicLight.PulseLight, (25, 204, 255), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+			EOA_SpawnNoiseMaker("EMG/ChargeFire");
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot"); 
+			}
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "EMGChargeTracer", -1 + GetViewZ(), 2 + GetRelVelY() / 6, 2.5);
+			EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -3, 0, 0.25);
+			A_AlertMonsters();
+			A_GiveInventory("EMGCooldownCounter", 70);
+			A_FireProjectile("EMGCasingSpawner", -40, 0, 1, 1);
+		}
+		EMGP PQRSTTTTTUUVWXY 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE, EOA_ALLOWMANTLE);
+			A_WeaponOffset(-50, 0, WOF_KEEPY|WOF_INTERPOLATE);
+		}
+		EMGP A 0 
+		{
+			A_TakeInventory("EMGChargeCounter");
+			If (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK)
+			{
+				Return ResolveState("ChargeIdle");
+			}
+			Return ResolveState(Null);
+		}
+	Uncharge:
+		EMGP A 0 
+		{
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 1);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
+			A_TakeInventory("EMGChargeCounter");
+			A_TakeInventory("EMGCharging");
+			A_ZoomFactor();
+		}
+		EMGP NMLK 1
+		{
+			A_WeaponOffset(10, 0, WOF_KEEPY|WOF_ADD);
+			If (CountInv("Grabbing_A_Ledge"))
+			{
+				A_WeaponOffset();
+				Return ResolveState("LedgeClimb");
+			}
+			If (CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
+			{
+				A_WeaponOffset();
+				Return ResolveState("UseEquipment");
+			}
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				A_WeaponOffset();
+				Return ResolveState("Zoom");
+			}
+			Return ResolveState(Null);
+		}
+		Goto ReadyLoop;
+	Zoom:
+		EMGT A 0;
+		Goto Super::Melee;
+	UseEquipment:
+		EMGT A 0;
+		Goto Super::UseEquipment;
+	}
+}
+
+Class EMGTracer : EOA_FastProjectile
+{
+	Default
+	{
+		Radius 0.5;
+		Height 1;
+		DamageFunction 8;
+		Decal "EMGPuffScorch";
+		Scale 0.375;
+		RenderStyle "Add";
+		EOA_Projectile.PuffType "EMGPuff";
+		+BRIGHT
+		+DONTBLAST
+		+NOEXTREMEDEATH
+		+DONTREFLECT
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		If (Headshot)
+		{
+			Damage *= 1.2 + (4.8 * (Target.Default.Health <= 50));
+		}
+		Return Damage;
+	}
+	States
+	{
+	Spawn:
+		TRAC A 1 EOA_SpawnCustomDynamicLight("EMGLight", DynamicLight.PointLight, (25, 204, 255), 8, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, Tics, (0, 0, Height / 2), 0.1);
+		Wait;
+	Death:
+	Crash:
+		TNT1 A 1
+		{
+			A_StartSound("EMG/Impact");
+		}
+		Stop;
+	XDeath:
+		TNT1 A 1
+		{
+			A_StartSound("Projectile/HitFlesh");
+		}
+		Stop;
+	}
+}
+
+Class EMGChargeTracer : EMGTracer
+{
+	Double EMGCharge;
+	//Int Charge;
+	//Int Power;
+	Default
+	{
+		DamageFunction 16;
+		Decal "EMGPuffBigScorch";
+		EOA_Projectile.PuffType "ChargedEMGPuff";
+	}
+	Override Void PostBeginPlay()
+	{
+		//EMGCharge = CountInv("EMGChargeCounter", AAPTR_TARGET) * (4 + 3 * CountInv("IncreasedPower", AAPTR_TARGET)) / 88.0;
+		EMGCharge = CountInv("EMGChargeCounter", AAPTR_TARGET);
+		Super.PostBeginPlay();
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		If (!GetAge()) //Read as GetAge == 0.
+		{
+			EMGCharge = CountInv("EMGChargeCounter", AAPTR_TARGET); //[DoomKrakken]: In case the projectile collides before PostBeginPlay finishes.
+		}
+		Damage += max(4 * CountInv("IncreasedPower", AAPTR_TARGET), Damage * (4 + 3 * CountInv("IncreasedPower", AAPTR_TARGET)) * EMGCharge / 88.0);
+		If (Target Is "DoomImp")
+		{
+			Damage *= 0.83;
+		}
+		Else If (Target Is "HellKnight" || Target Is "Revenant")
+		{
+			Damage *= 0.8;
+		}
+		Else If (Target Is "Fatso")
+		{
+			Damage *= 0.7;
+		}
+		Return Super.DoSpecialDamage(Target, Damage, DamageType);
+	}
+	States
+	{
+	Death:
+	Crash:
+		TNT1 A 1
+		{
+			A_StartSound("EMG/Impact");
+		}
+		Stop;
+	XDeath:
+		TNT1 A 1
+		{
+			A_StartSound("Projectile/HitFlesh");
+		}
+		Stop;
+	}
+}
+
+Class EMGPuff : Actor
+{
+	Default
+	{
+		Radius 0.1;
+		Height 0.1;
+		RenderStyle "Add";
+		Alpha 0.99;
+		Scale 0.125;
+		//Translation "0:255=%[0,0,0]:[0.6,1.0,1.8]";
+		+BRIGHT
+		+ROLLSPRITE
+		+ROLLCENTER
+		+NOINTERACTION
+		+FORCEXYBILLBOARD
+		+DONTBLAST
+		+DONTTHRUST
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SetRoll(random(0, 359));
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "EMGAddLight", DynamicLight.PulseLight, (25, 204, 255), 32, 1, DYNAMICLIGHT.LF_ADDITIVE, 4, (0, 0, Height / 2), 0.1);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "EMGAttLight", DynamicLight.PulseLight, (25, 204, 255), 32, 1, DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+			A_SpawnItemEx("EOA_PlasmaPuff", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSCALE);
+			A_SpawnItemEx("EMGPuffFXSmall", Flags: SXF_NOCHECKPOSITION);
+			A_SetScale(0.2);
+		}
+		TNT1 AAAAAAAAAAAAAAAAAAAAAAAA 0 A_SpawnItemEx("GaussCannonImpactSpark", 0, 0, 0, frandom(0, 5), 0, frandom(-5, 5), random(1, 360), SXF_NOCHECKPOSITION|SXF_TRANSFERSCALE);
+		TNT1 A 0 
+		{
+			A_SetScale(0.25);
+			Return A_Jump(256, "FX1", "FX2");
+		}
+	FX1:
+		PPUF ACEGIKMO 1;
+		Stop;
+	FX2:
+		PPUF BDFHJLNP 1;
+		Stop;
+	}
+}
+
+Class ChargedEMGPuff : EMGPuff
+{
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SetRoll(random(0, 359));
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "EMGAddLight", DynamicLight.PulseLight, (25, 204, 255), 48, 1, DYNAMICLIGHT.LF_ADDITIVE, 4, (0, 0, Height / 2), 0.1);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "EMGAttLight", DynamicLight.PulseLight, (25, 204, 255), 48, 1, DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
+			A_SetScale(0.125);
+			A_SpawnItemEx("EOA_PlasmaPuff", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSCALE);
+			A_SpawnItemEx("EMGPuffFX", Flags: SXF_NOCHECKPOSITION);
+			A_SetScale(0.2);
+		}
+		TNT1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 0 A_SpawnItemEx("GaussCannonImpactSpark", 0, 0, 0, frandom(0, 5), 0, frandom(-5, 5), random(1, 360), SXF_NOCHECKPOSITION|SXF_TRANSFERSCALE);
+		TNT1 A 0 
+		{
+			A_SetScale(0.5);
+			Return A_Jump(256, "FX1", "FX2");
+		}
+		Stop;
+	}
+}
+
+Class EMGPuffFX : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Translation "0:255=%[0, 0, 0]:[0.85, 0.98, 1.20]";
+		Scale 0.025;
+		+BRIGHT
+		+DONTBLAST
+		+FORCEXYBILLBOARD
+		+NOINTERACTION
+		+ROLLSPRITE
+		+ROLLCENTER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_SetRoll(random(0, 359));
+		ZXP0 GIKMOQSUWY 1 Bright A_SetScale(Scale.X + 0.015 / (1 + !(Self.GetClassName() == "EMGPuffFX")));
+		ZXP1 ACE 1 Bright;
+		Stop;
+	}
+}
+
+Class EMGPuffFXSmall : EMGPuffFX
+{
+	Default
+	{
+		Scale 0.0125;
+	}
+}
+
+Class EMGPuffPlain : EMGPuff
+{
+	Default
+	{
+		Scale 0.25;
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SetRoll(random(0, 359));
+			Return A_Jump(256, "FX1", "FX2");
+		}
+		Goto FX1;
+	}
+}
+
+//Code written by strongbelly, edited further by me [DoomKrakken]...
+Class EMGCasingSpawner : Actor
+{
+	Default
+	{
+		Projectile;
+		Radius 1;
+		Height 1;
+		Speed 17;
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1 NoDelay A_SpawnItemEx("EMGCasing", 0, 0, frandom(2, 3), frandom(1.5, 1.8), frandom(1.8, 2.0), frandom(1.7, 2.0));
+		Stop;
+	}
+}
+
+Class EMGCasing : Actor
+{
+	Default
+	{
+		Projectile;
+		Radius 2;
+		Height 4;
+		Speed 2;
+		Mass 4;
+		BounceFactor 0.4;
+		Scale 0.15;
+		BounceType "Doom";
+		BounceSound "Casing/Brass";
+		+BOUNCEONACTORS
+		+FLOORCLIP
+		+FORCEXYBILLBOARD
+		+ROLLSPRITE
+		+ROLLCENTER
+		-NOGRAVITY
+		+NOTRIGGER
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_ChangeVelocity(0, frandom(0.0, 2.0), frandom(0.0, 2.0), CVF_RELATIVE);
+	SpawnLoop:
+		PBCS ABCDEFGH 1 A_SetRoll(Roll - 30);
+		Loop;
+	Death:
+		TNT1 A 0 
+		{
+			A_SetRoll(0);
+			Return A_Jump(256, random(1, 2));
+		}
+		PBCS DH 0 A_Jump(256, "SetSprite");
+	SetSprite:
+		"####" "#" 400 A_StartSound("Casing/Brass");
+		"####" "##########" 1 A_FadeOut(0.1);
+		Stop;
+	}
+}

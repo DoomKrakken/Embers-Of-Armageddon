@@ -1,0 +1,266 @@
+// DO NOT COMPILE.  This is merely an archive.
+
+Script "HARReticle" (void)
+{
+	Int Z0Scale = 0;
+	Int Z1Scale = 0;
+	Int Z1Alpha = 1.0;
+	Int Z1Dist = 0;
+	Int Z1Tick = 0;
+	Int Z2Scale = 0;
+	Int Z2Alpha = 1.0;
+	Int Z3Scale = 0;
+	Int Z3Alpha = 1.0;
+	Int Z2Dist = 0.75;
+	/*If(CheckInventory("MicroMissiles"))
+	{
+		Int HARCharge = CheckInventory("MicroMissileCounter");
+		If (CheckInventory("MicroMissileCounter") >= 6 && ChargedHAR == False)
+		{
+			ChargedHAR = True;
+			LocalAmbientSound("Weapons/ShotgunExploCharged",128);
+		}
+		Else If (CheckInventory("HARCharge") < 6)
+		ChargedHAR = False;
+	}*/
+	While (CheckWeapon("EOA_HeavyAssaultRifle") && GetActorProperty(0, APROP_HEALTH) > 0) // Micro
+	{
+		Int HUDW = GXHairW;
+		Int HUDH = GXHairH;
+		SetHUDSize(HUDW, HUDH, 1);
+		If (!CheckInventory("TacticalScopeReady"))
+		{
+			SetFont("HARXHR");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.75);
+		}
+		If (CheckInventory("MicroMissilesSelected"))
+		{
+			SetHUDSize(HUDW, HUDH, 1);
+			Int HARTickie;
+			Int HARChargeAlpha;
+			Int HARCharge = CheckInventory("MicroMissileCounter");
+			If (!CheckInventory("MicroMissilesReady"))
+			{
+				Int HARPSeudoCharge = 0;
+			}
+			If (CheckInventory("MicroMissilesReady"))
+			{
+				HARTickie = (HARTickie + 1) % 4;
+				If (!HARTickie)
+				HARPSeudoCharge++;
+				If (HARPSeudoCharge > HARCharge || CheckInventory("QuickLauncher"))
+				HARPSeudoCharge = HARCharge;
+
+				HARChargeAlpha = 0;
+				If (CheckInventory("BottomlessMissiles"))
+				{
+					HARPSeudoCharge = 6;
+				}
+				SetFont("HARMXH0");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.75);
+				If (HARCharge && HARPSeudoCharge)
+				{
+					Str FuenteDeAgua = StrParam(s:"HARMXH", d:HARPSeudoCharge);
+					SetFont(FuenteDeAgua);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, 0.75);
+				}
+			}
+			Else If (!CheckInventory("MicroMissilesReady") && !CheckInventory("BottomlessMissiles"))
+			{
+				If (HARChargeAlpha)
+				{
+					SetFont("HARMXH0");
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, HARChargeAlpha);
+					FuenteDeAgua = StrParam(s:"HARMXL", d:HARCharge);
+					SetFont(FuenteDeAgua);
+					HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, HUDW / 2 * 1.0, HUDH / 2 * 1.0, 0.033, HARChargeAlpha);
+				}
+				If (HarCharge < 6)
+				{
+					HARChargeAlpha = 0.75;
+				}
+				Else
+				{
+					HARChargeAlpha -= 0.2;
+				}
+				If (HARChargeAlpha < 0)
+				{
+					HARChargeAlpha = 0;
+				}
+			}
+			/*If (CheckInventory("MicroMissiles")) // Copypasta here
+			{
+				HARCharge = CheckInventory("MicroMissileCounter");
+				If(CheckInventory("MicroMissileCounter")>=6 && ChargedHAR == False)
+				{
+					ChargedHAR = True;
+					LocalAmbientSound("Weapons/ShotgunExploCharged",128);
+				}
+				Else If(CheckInventory("MicroMissileCounter") < 6)
+				ChargedHAR = False;
+			}*/
+			//Tactical Scope - [DoomKrakken]: This ain't workin' out. :(
+			/*Bool Zoomed = False;
+			If (CheckInventory("TacticalScopeSelected") && CheckInventory("TacticalScopeReady"))
+			Zoomed = True;
+			If (CheckInventory("TacticalScopeSelected"))
+			{
+				If (Zoomed && CheckInventory("ChargedBurstChargeCounter"))
+				{
+					TakeInventory("ChargedBurstChargeCounter", 999);
+					Z0Scale = 0.1;
+					Z2Dist += 0.1;
+				}
+				Z0Scale -= 0.02;
+				If (Z0Scale < 0)
+				{
+					Z0Scale = 0;
+				}
+				HUDW = GXHairW + FixedMul(GXHairW, Z0Scale);
+				HUDH = GXHairH + FixedMul(GXHairH, Z0Scale);
+
+				Int Z1SSpeed = 0.15;
+				Int Z1ASpeed = 0.15;
+				If (Zoomed)
+				{
+					If (Z1Alpha)
+					{
+						Z1Scale += Z1SSpeed;
+						Z1Alpha -= Z1ASpeed;
+						Z1Dist += 0.015;
+						Z1Tick++;
+					}
+					If (Z1Tick >= 5)
+					{
+						Z2Scale += Z1SSpeed;
+						Z2Alpha -= Z1ASpeed;
+						Z3Scale += Z1SSpeed;
+						Z3Alpha -= Z1ASpeed / 3;
+						Z2Dist -= Z1SSpeed;
+					}
+				}
+				Else
+				{
+					Z1Scale -= Z1SSpeed;
+					Z1Alpha += Z1ASpeed;
+					Z2Scale -= Z1SSpeed;
+					Z2Alpha += Z1ASpeed;
+					Z3Scale -= Z1SSpeed;
+					Z3Alpha += Z1ASpeed;
+					Z1Dist -= 0.015;
+					Z2Dist += Z1SSpeed;
+					Z1Tick--;
+				}
+				If (Z1Alpha < 0) Z1Alpha = 0; 
+				If (Z1Alpha > 1.0) Z1Alpha = 1.0;
+				If (Z1Scale > 2.0) Z1Scale = 2.0; 
+				If (Z1Scale < 0) Z1Scale = 0;
+				If (Z1Dist > 0.1) Z1Dist = 0.1; 
+				If (Z1Dist < 0) Z1Dist = 0;
+				If (Z2Dist < 0.125) Z2Dist = 0.125; 
+				If (Z2Dist > 0.75) Z2Dist = 0.75;
+				If (Z1Tick > 5) Z1Tick = 5; 
+				If (Z1Tick < 0) Z1Tick = 0;
+				If (Z2Alpha < 0) Z2Alpha = 0; 
+				If (Z2Alpha > 1.0) Z2Alpha = 1.0;
+				If (Z2Scale > 0.75) Z2Scale = 0.75; 
+				If (Z2Scale < 0) Z2Scale = 0;
+				If (Z3Scale > 0.775) Z3Scale = 0.775; 
+				If (Z3Scale < 0) Z3Scale = 0;
+				If (Z3Alpha < 0) Z3Alpha = 0; 
+				If (Z3Alpha > 1.0) Z3Alpha = 1.0;
+			}
+			Else
+			{
+				Z0Scale = 0;
+				Z1Scale = 0;
+				Z1Alpha = 1.0;
+				Z1Dist = 0;
+				Z1Tick = 0;
+				Z2Scale = 0;
+				Z2Alpha = 1.0;
+				Z3Scale = 0;
+				Z3Alpha = 1.0;
+				Z2Dist = 0.75;
+			}
+			Int XHRW = HUDW - FixedMul(HUDW, Z1Scale); // Main Crosshair
+			Int XHRH = HUDH - FixedMul(HUDH, Z1Scale);
+			SetHUDSize(XHRW, XHRH, 1);
+			SetFont("HARXHR");
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, XHRW / 2 * 1.0, XHRH / 2 * 1.0, 0.033, Z1Alpha);
+			HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, XHRW / 2 * 1.0, XHRH / 2 * 1.0, 0.033, FixedMul(Z1Alpha, 0.5));
+			If (CheckInventory("TacticalScopeSelected") && (Z1Alpha || Z2Alpha || Z3Alpha || Z1Scale || Z2Scale || Z3Scale))
+			{
+				Int ZXHRW = (HUDW + FixedMul(HUDW, Z1Scale)) * 2/5;
+				Int ZXHRH = (HUDH + FixedMul(HUDH, Z1Scale)) * 2/5;
+				SetHUDSize(ZXHRW, ZXHRH, 1);
+				SetFont("HARTSX"); // (zoom) Center Cross
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, 1.0 - Z1Alpha);
+				ZXHRW = HUDW * 2 / 3;
+				ZXHRH = HUDW * 2 / 3;
+				SetHUDSize(ZXHRW, ZXHRH, 1);
+				SetFont("HARTSX2"); // (zoom) Left static thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, 0.08)) * 1.0 + 0.2, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.5));
+				SetFont("HARTSX2B"); // (zoom) Right static thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, 0.08)) * 1.0 + 0.1, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.5));
+
+				ZXHRW = (HUDW + FixedDiv(HUDW, Z1Scale)) * 2 / 5;
+				ZXHRH = (HUDH + FixedDiv(HUDH, Z1Scale)) * 2 / 5;
+				SetHUDSize(ZXHRW, ZXHRH, 1);
+				SetFont("HARTST4"); // (zoom) Left curved thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, (ZXHRW - FixedMul(ZXHRW, Z1Dist)) / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+				SetFont("HARTST4B"); // (zoom) Right curved thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, (ZXHRW + FixedMul(ZXHRW, Z1Dist)) / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+
+				ZXHRW = (HUDW + FixedMul(HUDW, Z2Scale)) * 7 / 30; // (zoom) Big Circle
+				ZXHRH = (HUDH + FixedMul(HUDH, Z2Scale)) * 7 / 30;
+				SetHUDSize(ZXHRW, ZXHRH, 1);
+				SetFont("HARTSBA2");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+				ZXHRW = (HUDW + FixedMul(HUDW, Z3Scale)) * 6 / 30; // (zoom) Inner Circle
+				ZXHRH = (HUDH + FixedMul(HUDH, Z3Scale)) * 6 / 30;
+				SetHUDSize(ZXHRW, ZXHRH, 1);
+				SetFont("HARTSBA3");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+				SetFont("HARTSB3B");
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(FixedMul(1.0 - Z2Alpha, 0.25), Z3Alpha));
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ZXHRW / 2 * 1.0, ZXHRH / 2 * 1.0, 0.033, FixedMul(FixedMul(1.0 - Z2Alpha, 0.25), Z3Alpha));
+
+				Int BXHRW = (HUDW + FixedMul(HUDW, Z1Scale)) / 12;
+				Int BXHRH = (HUDH + FixedMul(HUDH, Z1Scale)) / 12;
+				SetHUDSize(BXHRW, BXHRH, 1);
+				SetFont("HARTSBK2"); // BackGround
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, BXHRW / 2 * 1.0, BXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+				BXHRW = (HUDW + FixedMul(HUDW, Z2Scale)) / 11;
+				BXHRH = (HUDH + FixedMul(HUDH, Z2Scale)) / 11;
+				SetHUDSize(BXHRW, BXHRH, 1);
+				SetFont("HARTSBAK"); // BackGround 2
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA, 0, 0, BXHRW / 2 * 1.0, BXHRH / 2 * 1.0, 0.033, FixedMul(1.0 - Z2Alpha, 0.25));
+
+				ZXHRW = HUDW * 2 / 3;
+				ZXHRH = HUDW * 2 / 3;
+				SetHUDSize(ZXHRW, ZXHRH, 1);
+				SetFont("HARTST2"); // (zoom) Left thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, FixedMul(ZXHRW / 2, 0.2) * 1.0 + 0.2, FixedDiv(ZXHRH / 2, 0.75) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+				SetFont("HARTST2B"); // (zoom) Right thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, FixedDiv(ZXHRW / 2, 0.55) * 1.0 + 0.1, FixedDiv(ZXHRH / 2, 0.75) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.25));
+
+
+				SetFont("HARTST3B"); // (zoom) Left thingy
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, 0.25)) * 1.0 + 0.2, FixedMul(ZXHRH / 2, 0.85) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.1));
+				SetFont("HARTST3"); // (zoom) Right thingy
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, 0.25)) * 1.0 + 0.1, FixedMul(ZXHRH / 2, 0.85) * 1.0, 0.033, FixedMul(1.0 - Z1Alpha, 0.1));
+
+				SetFont("HARTST"); // Bottom Left thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.2, ((ZXHRH / 2) + FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.1, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+				SetFont("HARTSTB"); // Top Left thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) - FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.2,((ZXHRH / 2) - FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.2, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+				SetFont("HARTSTD"); // Bottom Right thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.1,((ZXHRH / 2) + FixedMul(ZXHRH / 2,Z2Dist)) * 1.0 + 0.1, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+				SetFont("HARTSTC"); // Top Right thing
+				HudMessage(s:"A";HUDMSG_PLAIN|HUDMSG_NOTWITHFULLMAP|HUDMSG_ALPHA|HUDMSG_ADDBLEND, 0, 0, ((ZXHRW / 2) + FixedMul(ZXHRW / 2, Z2Dist)) * 1.0 + 0.1,((ZXHRH / 2) - FixedMul(ZXHRH / 2, Z2Dist)) * 1.0 + 0.2, 0.033, FixedMul(1.0 - Z1Alpha, 0.15));
+			}*/
+		}
+		Delay(1);
+	}
+}

@@ -1,0 +1,157 @@
+Class LightningBeamBase : Actor //Based on D4D's lightning effect.
+//[DoomKrakken]: Harvested from ZION.  Modified to personal tastes. ;)
+{
+	Int Dist[2];
+	Int Stats[3]; //0 - Step Dist; 1 - Max Dist; 2 - Random Turn
+	Default
+	{
+		Radius 1;
+		Height 1;
+		RenderStyle "Add";
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+NOBLOCKMAP
+		+NOBLOCKMONST
+		+NOINTERACTION
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			If (Tracer)
+			{
+				Dist[1] = Distance3D(Tracer);
+				Stats[0] = 64;
+				Stats[1] = 1200;
+				Stats[2] = 8;
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Null");
+		}
+	Fly:
+		TNT1 A 0 
+		{
+			A_Face(Tracer, 0, 0, 180, 180, FAF_MIDDLE);
+			If ((Dist[0] >= Dist[1]) || (Dist[0] >= Stats[1]))
+			{
+				Return ResolveState("Null");
+			}
+			A_SetPitch(Pitch + frandom(-Stats[2], Stats[2]));
+			A_SetAngle(Angle + frandom(-Stats[2], Stats[2]));
+			If (Distance3D(Tracer) < Stats[0] + 10)
+			{
+				A_Face(Tracer, 0, 0, 180, 180, FAF_MIDDLE);
+			}
+			If (Distance3D(Tracer) < Stats[0] * 0.75)
+			{
+				Return ResolveState("XDeath"); 
+			}
+			Dist[0] += Stats[0];
+			Return A_Jump(256, "Missile");
+		}
+	Missile:
+		TNT1 A 0
+		{
+			A_SpawnItemEx("LightningBeamTrailBase", cos(-Pitch) * (Stats[0] / 2), 0, sin(Pitch) * (Stats[0] / 2), cos(-Pitch) * (Stats[0] * 0.0001), 0, sin(Pitch) * (Stats[0] * 0.0001), 0, SXF_TRANSFERPITCH|SXF_TRANSFERTRANSLATION|SXF_TRANSFERALPHA);
+			Return A_Jump(256, "Move");
+		}
+		Goto Move;
+	Move:
+		TNT1 A 0 A_Warp(AAPTR_DEFAULT, cos(-Pitch) * Stats[0], 0, sin(Pitch) * Stats[0], 0, WARPF_NOCHECKPOSITION, "Fly");
+		TNT1 A 0 A_Jump(256, "Death");
+	XDeath:
+		TNT1 A 0
+		{
+			A_Warp(AAPTR_TRACER, 0, 0, 0, 0, WARPF_NOCHECKPOSITION);
+			Return A_Jump(256, "XDeathAnim");
+		}
+		Stop;
+	Death:
+		TNT1 A 0
+		{
+			A_Warp(AAPTR_TRACER, 0, 0, 0, 0, WARPF_NOCHECKPOSITION);
+			Return A_Jump(256, "DeathAnim");
+		}
+		Stop;
+	XDeathAnim:
+	DeathAnim:
+		TNT1 A 1;
+		Stop;
+	}
+}
+
+Class LightningBeamTrailBase : Actor
+{
+	Default
+	{
+		RenderStyle "Add";
+		Scale 0.25;
+		Alpha 0.75;
+		+BRIGHT
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+NOBLOCKMAP
+		+NOBLOCKMONST
+		+NOINTERACTION
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_Jump(256, random(1, 3));
+		TFOG FGH 0 A_Jump(256,"Fade");
+	Fade:
+		"####" "#" 2;
+		Stop;
+	}
+}
+
+Class EOA_GenericExplosionFX : Actor
+{
+	Default
+	{
+		Radius 0.5;
+		Height 1;
+		Gravity 0.66;
+		RenderStyle "Add";
+		+BRIGHT
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+NOBLOCKMAP
+		+NOBLOCKMONST
+		+NOINTERACTION
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SetScale(Scale.X * randompick(-1, 1), Scale.Y * randompick(-1, 1));
+			Return A_Jump(256, "Spawn1", "Spawn2", "Spawn3", "Spawn4", "Spawn5");
+		}
+	Spawn1:
+		X003 ACEGHJKMNPQSTUWYZ 1;
+		Stop;
+	Spawn2:
+		X004 ABCDEFGHIJKLMNOPQ 1;
+		Stop;
+	Spawn3:
+		X005 ACDFGHJKMOPQSUVWX 1;
+		Stop;
+	Spawn4:
+		X006 ABCDEFGHIJKLMNOP 1;
+		Stop;
+	Spawn5:
+		X015 ACDFGHIKLNOPRSUWX 1;
+		Stop;
+	}
+}

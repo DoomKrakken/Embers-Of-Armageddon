@@ -1,0 +1,306 @@
+//[DoomKrakken]: Written entirely by phantombeta.
+Class EOA_ActorExtensions : Actor
+{
+    /* Summary:
+    **  Checks if an actor is in the "void".
+    **
+    ** Arguments:
+    **  mo: The actor to be checked.
+    **
+    ** Returns:
+    **  Returns a bool indicating whether the actor is in the "void".
+    */
+	/*
+	static bool IsInVoid (Actor mo) {
+        let secPoly = new ("EOA_Polygon");
+
+        Sector sec = mo.CurSector;
+        for (int i = 0; i < sec.lines.Size (); i++) {
+            let line = new ("EOA_Line");
+
+            line.v1 = sec.lines [i].v1.p;
+            line.v2 = sec.lines [i].v2.p;
+
+            secPoly.lines.Push (line);
+        }
+        
+        return !EOA_Math.PointInPolygon (mo.pos.XY, secPoly);
+    }
+	*/
+    /* Summary:
+    **  Checks if an actor can be ripped by a projectile.
+    **
+    ** Arguments:
+    **  victim: The actor to be checked.
+    **  projectile: The projectile doing the ripping.
+    **
+    ** Returns:
+    **  Returns a bool indicating whether the actor can be ripped through.
+    */
+	Static Clearscope Int PointOnLineSidePrecise (Double X, Double Y, In Line ld)
+	{
+        return (Y - ld.v1.p.Y) * ld.Delta.X + (ld.v1.p.X - X) * ld.Delta.Y > 1 / 65536.0;
+    }
+	Static Clearscope Bool CanRip (Actor Victim, Actor Projectile) 
+	{
+		If (!Projectile.bRIPPER || Victim.bDONTRIP || (Projectile.bNOBOSSRIP && Victim.bBOSS) || (Victim.RipLevelMin > 0 && Projectile.RipperLevel < Victim.RipLevelMin) || (Victim.RipLevelMax > 0 && Projectile.RipperLevel > Victim.RipLevelMax))
+		{
+			Return False;
+		}
+		Return True;
+	}
+
+    // This only exists because P_RipperBlood wasn't exported to ZScript.
+	Static Void RipperBlood (Actor Mo, Actor Bleeder)
+	{
+		Class<Actor> bloodcls = Bleeder.GetBloodType(0);
+
+		Double Xo = Random2[RipperBlood]() / 16.0;
+		Double Yo = Random2[RipperBlood]() / 16.0;
+		Double Zo = Random2[RipperBlood]() / 16.0;
+		Vector3 pos = Mo.Vec3Offset (Xo, Yo, Zo);
+
+		If (bloodcls)
+		{
+			Actor th;
+			th = Spawn(bloodcls, pos, NO_REPLACE); // GetBloodType already performed the replacement
+			// [NG] Applying PUFFGETSOWNER to the blood will make it target the owner
+
+			If (th.bPuffGetsOwner)
+			{
+				th.target = bleeder;
+			}
+			If (gameinfo.gametype == GAME_Heretic)
+			{
+				th.bNOGRAVITY = true;
+			}
+			th.Vel.X = Mo.Vel.X / 2;
+			th.Vel.Y = Mo.Vel.Y / 2;
+			th.Tics += Random[RipperBlood]() & 3;
+
+			// colorize the blood!
+			If (!th.bDONTTRANSLATE)
+			{
+				th.Translation = bleeder.BloodTranslation;
+			}
+		}
+    }
+	Static Void SpawnNoiseMaker(Actor Owner, Sound WhatToPlay = "Weapons/Pistol", Int Slot = 0, Int Flags = 0, Double Volume = 1.0, Double Attenuation = ATTN_NORM, Double Pitch = 0.0)
+	{
+		Owner.A_StartSound(WhatToPlay, Slot, Flags|CHANF_LISTENERZ, Volume, Attenuation, Pitch);
+	}
+	Static Void SpawnCustomDynamicLight(Actor Owner, Name LightID, Int Type = DynamicLight.PointLight, Vector3 RGB = (0, 0, 0), Int Radius1 = 0, Int Radius2 = 0, Int Flags = 0, Int Duration = 8, Vector3 Ofs = (0, 0, 0), Double Param = 0, Double SpotI = 10, Double SpotO = 25, Double SpotP = 0)
+	{
+		ThinkerIterator It = ThinkerIterator.Create("EOA_CustomDynamicLight");
+		EOA_CustomDynamicLight DLT;
+		While (DLT = EOA_CustomDynamicLight(It.Next()))
+		{
+			If (DLT.ID == LightID && DLT.Owner == Owner)
+			{
+				If (DLT.Type != Type)
+				{
+					DLT.Destroy();
+					Break;
+				}
+				Else
+				{
+					For (Int i = 0; i <= 4; i++)
+					{
+						Int Check;
+						Switch (i)
+						{
+						Case 0:
+							Check = Int(RGB.X);
+							Break;
+						Case 1:
+							Check = Int(RGB.Y);
+							Break;
+						Case 2:
+							Check = Int(RGB.Z);
+							Break;
+						Case 3:
+							Check = Radius1;
+							Break;
+						Case 4:
+							Check = Radius2;
+							Break;
+						}
+						If (DLT.Args[i] != Check)
+						{
+							DLT.Destroy();
+							Break;
+						}
+					}
+				}
+				Break;
+			}
+		}
+		If (!DLT)
+		{
+			Switch(Type)
+			{
+			Case DynamicLight.PointLight:
+				DLT = EOA_CustomDynamicLight(Owner.Spawn("EOA_CustomPointLight", Owner.Pos));
+				Break;
+			Case DynamicLight.PulseLight:
+				DLT = EOA_CustomDynamicLight(Owner.Spawn("EOA_CustomPulseLight", Owner.Pos));
+				Break;
+			Case DynamicLight.FlickerLight:
+				DLT = EOA_CustomDynamicLight(Owner.Spawn("EOA_CustomFlickerLight", Owner.Pos));
+				Break;
+			Case DynamicLight.RandomFlickerLight:
+				DLT = EOA_CustomDynamicLight(Owner.Spawn("EOA_CustomRandomFlickerLight", Owner.Pos));
+				Break;
+			Case DynamicLight.SectorLight:
+				DLT = EOA_CustomDynamicLight(Owner.Spawn("EOA_CustomSectorLight", Owner.Pos));
+				Break;
+			}
+		}
+		If (DLT)
+		{
+			Int R = RGB.X;
+			Int G = RGB.Y;
+			Int B = RGB.Z;
+			DLT.Owner = Owner;
+			DLT.ID = LightID;
+			DLT.Type = Type;
+			DLT.R = R;
+			DLT.G = G;
+			DLT.B = B;
+			DLT.Radius1 = Radius1;
+			DLT.Radius2 = Radius2;
+			DLT.Flags = Flags;
+			DLT.Duration = Duration;
+			DLT.Ofs = Ofs;
+			DLT.Param = Param;
+			DLT.SpotI = SpotI;
+			DLT.SpotO = SpotO;
+			DLT.SpotP = SpotP;
+		}
+	}
+}
+
+Class EOA_CustomDynamicLight : DynamicLight
+{
+	Actor Owner;
+	Name ID;
+	Int Type, R, G, B, Radius1, Radius2, Flags, Duration;
+	Vector3 Ofs;
+	Double Param, SpotI, SpotO, SpotP;
+	Bool PowerLight;
+	Override Void PostBeginPlay()
+	{
+		If (Duration == -1)
+		{
+			Duration = 0x7FFFFFFF;
+			PowerLight = True;
+		}
+		SpawnAngle = TICRATE * Param;
+		A_SetSpecial(0, R, G, B, max(0, Radius1), max(0, Radius2));
+		bSUBTRACTIVE = Flags & LF_SUBTRACTIVE;
+		bADDITIVE = Flags & LF_ADDITIVE;
+		bDONTLIGHTSELF = Flags & LF_DONTLIGHTSELF;
+		bATTENUATE = Flags & LF_ATTENUATE;
+		bNOSHADOWMAP = Flags & LF_NOSHADOWMAP;
+		bDONTLIGHTACTORS = Flags & LF_DONTLIGHTACTORS;
+		bSPOT = Flags & LF_SPOT;
+		SpotInnerAngle = SpotI;
+		SpotOuterAngle = SpotO;
+		Pitch = SpotP;
+		Super.PostBeginPlay();
+	}
+	Override Void Tick()
+	{
+		If ((!Level.IsFrozen() && Duration-- <= 0) || !Owner || !(EOA_DynLights || PowerLight))
+		{
+			Destroy();
+			Return;
+		}
+		If (Owner)
+		{
+			If (Pos != Owner.Pos + Ofs)
+			{
+				SetOrigin(Owner.Pos + Ofs, True);
+			}
+			Prev = Owner.Prev;
+		}
+		Super.Tick();
+	}
+}
+
+Class EOA_CustomPointLight : EOA_CustomDynamicLight {Default {DynamicLight.Type "Point";} }
+Class EOA_CustomPulseLight : EOA_CustomDynamicLight {Default {DynamicLight.Type "Pulse";} }
+Class EOA_CustomFlickerLight : EOA_CustomDynamicLight {Default {DynamicLight.Type "Flicker";} }
+Class EOA_CustomRandomFlickerLight : EOA_CustomDynamicLight {Default {DynamicLight.Type "RandomFlicker";} }
+Class EOA_CustomSectorLight : EOA_CustomDynamicLight {Default {DynamicLight.Type "Sector";} }
+
+//[DoomKrakken]: Use this version once A_[Attach/Remove]Light stops acting retarded...
+/*	Static Void SpawnCustomDynamicLight(Actor Owner, Name LightID, Int Type, Vector3 RGB, Int Radius1 = 0, Int Radius2 = 0, Int Flags = 0, Int Duration = 8, Vector3 Ofs = (0, 0, 0), Double Param = 0, Double SpotI = 10, Double SpotO = 25, Double SpotP = 0)
+	{
+		ThinkerIterator It = ThinkerIterator.Create("EOA_DynLightTimer");
+		EOA_DynLightTimer DLT;
+		While (DLT = EOA_DynLightTimer(It.Next()))
+		{
+			If (DLT.ID == LightID && DLT.Owner == Owner)
+			{
+				Break;
+			}
+		}
+		Let DynLightTimer = DLT ? DLT : New("EOA_DynLightTimer");
+		If (DynLightTimer)
+		{
+			Int R = RGB.X;
+			Int G = RGB.Y;
+			Int B = RGB.Z;
+			DynLightTimer.Owner = Owner;
+			DynLightTimer.ID = LightID;
+			DynLightTimer.Type = Type;
+			DynLightTimer.R = R;
+			DynLightTimer.G = G;
+			DynLightTimer.B = B;
+			DynLightTimer.Radius1 = Radius1;
+			DynLightTimer.Radius2 = Radius2;
+			DynLightTimer.Flags = Flags;
+			DynLightTimer.Duration = Duration;
+			DynLightTimer.Ofs = Ofs;
+			DynLightTimer.Param = Param;
+			DynLightTimer.SpotI = SpotI;
+			DynLightTimer.SpotO = SpotO;
+			DynLightTimer.SpotP = SpotP;
+		}
+	}*/
+
+Class EOA_DynLightTimer : Thinker
+{
+	Actor Owner;
+	Name ID;
+	Int Type, R, G, B, Radius1, Radius2, Flags, Duration;
+	Vector3 Ofs;
+	Double Param, SpotI, SpotO, SpotP;
+	Bool Attached;
+	Override Void Tick()
+	{
+		If (Owner)
+		{
+			If (!Level.IsFrozen() && Duration-- <= 0)
+			{
+				Owner.A_RemoveLight(ID);
+				Destroy();
+				Return;
+			}
+			Else
+			{
+				If (EOA_DynLights && !Attached)
+				{
+					Attached = Owner.A_AttachLight(ID, Type, Color(255, R, G, B), Radius1, Radius2, Flags, Ofs, Param, SpotI, SpotO, SpotP);
+				}
+				Else If (Attached && !EOA_DynLights)
+				{
+					Attached = !Owner.A_RemoveLight(ID);
+				}
+				Return;
+			}
+		}
+		Destroy();
+	}
+}

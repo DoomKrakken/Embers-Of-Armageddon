@@ -1,0 +1,2 @@
+StartupTitle = "Embers Of Armageddon"
+StartupColors = "2AFC00", "000000"

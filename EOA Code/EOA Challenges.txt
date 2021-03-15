@@ -1,0 +1,63 @@
+This will contain a list of the actual in-game challenges from DOOM, off of which the list of generic challenges that follows this one will be based.
+
+=== DOOM Challenges ===
+
+= Resource Operations
+- Two-fer: Kill 2 [fodder zombies] with one trigger pull from the [Combat] Shotgun.
+- Variety is the Spice of Death I: Perform 5 different Glory Kills on [fodder zombies].
+- Quite the Explorer: Find 3 Secrets.
+
+= Foundry
+- Three [fodder zombies], One Barrel: Kill 3 [fodder zombies] with one Explosive Barrel.
+- Curb Stomp: Perform 3 "Death From Above" Glory Kills on Zombie Soldiers.
+- Quite the Collector: Find 2 Collectibles.
+
+= Argent Facility
+- Walk the Path: Interact with a Rune Trial Stone.
+- Bird's Eye View: Acquire the AutoMap for the Argent Facility.
+- To Be Knighted: Perform 2 "Death from Above" Glory Kills on Bruiser Knights.
+
+= Argent Energy Tower
+- Chiropractor: Perform 4 Neck or Jaw Breaker Glory Kills on the Imp (attack from behind).
+- Searching High and Low: Find 3 Secrets.
+- Overkiller: Kill 15 enemies using Quad Damage.
+
+= Kadingir Sanctum
+- Dead Man Stalking: Earn 4 Praetor Tokens.
+- Momentum Swing: Kill 10 enemies while using powerups.
+- Sweep the Leg: Perform 4 "Leg Sweep" Glory Kills on the Hell Razer (attack right leg). 
+
+= Argent Facility (Destroyed)
+- Skeet Shoot: Kill a Revenant while it is in mid-air.
+- Close Encounters: Kill 5 enemies with the Chainsaw.
+- Knowledge is Power: Acquire 3 Data Logs.
+
+= Advanced Research Complex
+- Bottle Opener: Perform 5 "Screw Top" Glory Kills on Fodder Zombies (attack lower right leg or head from behind).
+- Double Take: Interact with 2 Rune Trial Stones.
+- Hide and Seek: Find 2 Collectibles.
+
+= Lazarus Labs
+- Variety is the Spice of Death II: Perform 5 different glory kills on Zombie Soldiers.
+- Thread the Needle: Kill 10 enemies with a single shot.
+- Time Well Spent: Play a game of [Bejeweled]. 
+
+= Titan's Realm
+- Trick Shot: Kill a Lost Soul with another Lost Soul.
+- Atop the Mountain: Perform a "Death from Above" Glory Kill on a Bruiser Baron (attack from above).
+- Dominator: Kill 20 enemies while using powerups.
+
+= The Necropolis
+- A Pin Pops a Balloon: Kill a Mancubus with the Pistol.
+- Two Mouths to Feed: Kill two Cacodemons with one shot.
+- Wait For It: Kill ten enemies with Explosive Barrels.
+
+= VEGA Central Processing
+- Variety is the Spice of Death III: Perform 5 different Glory Kills on Imps.
+- Gore Piñata: Kill 3 enemies with one Frag Grenade.
+- My Teeth are Sharper: Kill a Cacodemon with the Chainsaw.
+
+= Argent D'Nur
+- Hold Still: Kill 2 Bruiser Barons with one shot.
+- Uncharted Territory: Find all 3 "Skull Switch" secrets.
+- Big [REDACTED] Gun: Kill 25 enemies with the BFG.

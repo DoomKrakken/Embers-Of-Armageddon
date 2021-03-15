@@ -1,0 +1,812 @@
+===== v1.9 =====
+- Standard rockets fired by the Rocket Launcher now have a full damage radius equal to twice their radius (previously 0).
+- Increased deployed Mobile Turret projectile spread to 3, horizontally and vertically (previously 1, horizontally and vertically).
+- Hazard Protection's fire damage reduction now only applies to environmentally-sourced fire damage (previously environmentally and monster-sourced).
+- Lock-On Burst rockets now have an angular turn threshold of 45 (previously 60).
+- Created an essentials utility that can be edited by an inventory item in each monster's inventory, which defines custom weakpoints, stagger/GK stats, and other utilities.
+- Renamed EOA_Thinker to EOA_Essentials.
+- Monsters now spawn a head hitbox in the top 2/11 of the actor with a radius equal to 4/7 of their own radius and 2/11 of their height (while their "ProjectilePassHeight" property is lowered by 2/11 [this behavior can be disabled in EOA Settings]).
+- Shifted stagger/stun/Glory Kill functionalities to the EOA_Essentials item.
+- Monsters that have the NOKILLSCRIPTS flag will not drop items upon death.
+- Siege Mode's Outer Beam and Heat Blast damage effects are now flagged as explosive damage.
+- Fixed an issue with players being able to mantle a ledge right after launching into a Glory Kill.
+- Added the ALLOWTHRUFLAGS and THRUGHOST flags to EOA_NullPuff2.
+- Lock-On Burst no longer locks onto monsters possessing the SHADOW flag.
+- Added a check to the Explosive Shot grenade to include EOA_WeakPoint for constituting a valid target to launch cluster bombs.
+- The Slayer now performs a dash toward an enemy he's aiming at whenever performing a melee attack from the ground.
+- Converted all DECORATE actors to ZScript.
+- Transferred all weapon-specific ZScript functions from the base weapon class and player pawn to their respective weapons.
+- Updated deprecated action functions to their proper respective replacements.
+- Transferred Micro Missile mastery challenge tracking code from the Slayer to the Heavy Assault Rifle.
+- Prefixed various custom action functions with "EOA_".
+- Fixed an issue with the Incendiary Rounds Mastery Challenge being able to be completed without the Gatling Rotator being equipped.
+- All weapons (especially semi-automatic weapons) can now fire upon raising even if the Fire button was held down prior.
+- The Chainsaw now causes monsters to play their Pain sound only once, upon the player entering into a Chainsaw Glory Kill (previously had monsters constantly play it while getting chainsawed).
+- Fixed an issue with the Chainsaw failing to clear the NOTARGET flag after performing a Chainsaw Glory Kill.
+- Fixed an issue with the Berserk Fists failing to clear the NOTARGET flag after performing a Glory Kill.
+- Fixed an issue with the Super Shotgun being able to fire if holding down the Fire key while pressing/releasing the Alt-Fire key.
+- Cached CVars for better performance.
+- Overhauled Rune system to use integer constants instead of strings, for better performance.
+- Renamed EOA_MediStim to EOA_SmallHealth.
+- Renamed EOA_MediKit to EOA_MediumHealth.
+- Renamed EOA_MediPack to EOA_LargeHealth.
+- "EOA_SpawnNoiseMaker"/"EOA_SpawnPersistentNoiseMaker"/"EOA_DestroyPersistentNoiseMaker" now play a sound directly on the caller instead of spawning a warping actor to play the sound.
+- Overhauled temp item movement.  Temp items now arc and NOCLIP while in flight, and no longer perform sight checks to determine movement.
+- Temp item speed changed to 25 (previously 20).
+- Temp item vacuum speed bonuses changed to 12.5 (previously 20).
+- Transferred all functionality from the Slayer's Ammo Overlay to the EOA_Ammo base class.
+- Micro Missile homing range increased to 128 (previously 96).
+- Fixed an issue with Micro Missiles not latching onto a wall if fired at the wall point-blank.
+- Condensed code for the Siege Mode projectile's trails to utilize iteration.
+- Fixed Berserk Death From Above leg overlays to be in the correct position.
+- Fixed an issue with the Heavy Assault Rifle not zooming out if selecting another weapon while zooming in (thank you, Fat Tony!).
+- Transferred Gutamatics libraries to the Gutamatics folder.
+- Sorted various classes to their own files under the Items folder or under previously existing files outside of Base.txt.
+- Overhauled weapon spawners for code cleanup.
+- Distributed weapon mastery messages among their respective mastery challenge tokens.
+- Distributed GetSpeedFactor overrides among their respective weapons.
+- The Slayer now moves at full speed while the Mobile Turret is deployed, but will still move at half speed while the Mobile Turret fires.
+- Removed all present shaders and shader code.
+- Removed all DECORATE files.
+- Updated ZScript to version 4.5.
+- Changed all strings in the SavageryArray to names.
+- Transferred Savagery Mastery array to the Savagery Rune (previously held by the Doom Slayer).
+- The Slayer is now able to throw punches while utilizing alt-fire functions.
+- Overhauled Homing Rocket homing code.  Homing rockets fired from a Lock-On Burst now have a slow initial turning angle/pitch, but also become more precise the longer they remain in the air.
+- Lock targets for Lock-On Burst homing rockets are now always centered on the victim's position plus 75% of the victim's height (previously wherever the lock target spawned on the victim).
+- The Gauss Cannon now plays its standard firing sound in addition to the Precision Bolt's firing sound when firing the Precision Bolt.
+- Reduced angle check iterations for GetLedgeOffset to 8 45-degree intervals (previously 360 1-degree intervals... thank you Cherno!).
+- Micro Missile pod now instantly closes upon tossing a grenade.
+- Overhauled Secret Finder system.
+- Gauss/Add gets played at full volume (previously half).
+- Fixed an issue with Gauss/Cycle failing to play if scoping out from the Precision Bolt scope too soon.
+- Increased Precision Bolt projectile's base damage to 120 (previously 100).
+- Updated sprites for the Chaingun's blue muzzleflashes in EOA Assets (thank you, BerserkerNoir!).  [EOA Assets download is optional.]
+- Removed obsolete Chaingun sprites from EOA Assets.  [EOA Assets download is optional.]
+- Overhauled stun/stagger systems.
+- Staggered/stunned monsters have their Speed set to 0 until unstaggered/unstunned or killed.
+- Changed standard Rocket Launcher rocket speed to 20 (previously 30).
+- Changed Lock-On Burst homing rocket speed to 36 (previously 60).
+- Rockets fired from the Rocket Launcher now spawn a smoke actor that disappears twice as fast as the Frag Grenade's smoke.
+- Fixed an issue with "Death From Above" Glory Kills counting towards completion of the Chiropractor challenge.
+- Heat Blast damage now deals 140 max damage and 240 max damage with the Expanded Threshold upgrade (previously 150 max damage and 300 max damage with the Expanded Threshold upgrade).
+- Increased HeatBlastChargeCounter max amount to 140 + 100 with Expanded Threshold (previously 30 + 30 with Expanded Threshold).
+- Replaced EOA_PlasmaBall translation with a desaturated translation.
+- Added a check for Level.Time not being 0 to all weapons' respective Ready state sequences to bypass a strange level loading crash in GZDoom 4.5.0 (this will likely be removed when a subsequent version of GZDoom fixes this issue).
+- Added code to ensure proper removal of tokens for specific weapons should said weapons suddenly be rendered inactive (for example, an instant switch to a weapon of class EOA_InteractWeapon).
+- Added "MarkPrecacheSounds" overrides to each instance of EOA_InteractWeapon and their respective interactable items.
+- CGN/Rotor and CGN/Spin now play on the same channel (6) and are automatically stopped if ChaingunSpinCounter is not present in the player's inventory.
+- Removed all calls to "EOA_SpawnPersistentNoiseMaker" in the Chaingun that stopped the 6th and 7th local channels on the Chaingun outside of its DoEffect override.
+- Transferred Chaingun-specific code in the LedgeMantle state sequence for EOA_Weapon to a custom LedgeMantle state sequence for the Chaingun.
+- Implemented an overdue update for Glory Kill checking in the Chainsaw's Zoom state sequence.
+- Removed checks for [Chainsaw]GloryKillCounter in the Challenge Event Handler's QueueGloryKills function.
+- Fixed a bug that triggered Saving Throw's slow-motion effect whenever the player died with the Saving Throw rune equipped while having no Saving Throws.
+- Changed all calls for "A_StopSound" in powerups'/runes' OnDestroy overrides to use one call to "A_StopAllSounds".
+- Deleted ZScript/Base/OldFastProjectile.txt.
+- Removed extraneous parentheses in a multitude of GetClassName comparisons.
+- Overhauled Chainsaw Glory Kill detection system to use information output by the EOA_Essentials thinker to determine how much fuel to consume when chainsawing a monster.
+- Created a menu option for disabling custom weakpoints and opting for the old system (targeting the top fraction of a monster's hitbox to score a headshot).
+- Overhauled PowerStaggered to handle staggering, recovery, and the Intimacy Is Best rune's damage protection.
+- Progression for the Intimacy Is Best rune upgrade challenge is now applied whenever any monster gets staggered by anything.  Any players with Intimacy Is Best I equipped will recieve a point whenever this happens.
+- The ticking sound played whenever progress is made on a challenge is now handled by their respective counters and play a sound directly on the player (previously executed an ACS script within code blocks that also incremented the challenge count).
+- Changed "EOA_HeatBlast" to use "CheckIfCloser" for the distance check in its actor vetting (previously "Distance3D").
+- Changed "EOA_HeatBlast" to use "AbsAngle" for the angle check in its actor vetting (previously "DeltaAngle").
+- Removed call to "A_FaceTarget" from "EOA_HeatBlast".
+- Removed target reassignment from "EOA_HeatBlast".
+- Changed "EOA_HeatBlast" to utilize a BlockThingsIterator to handle actor vetting (previously a ThinkerIterator).
+- Changed the Siege Mode projectile to use "CheckIfCloser" for the distance check in its actor vetting (previously "Distance3D").
+- Changed the Siege Mode projectile to use "AbsAngle" for the angle check in its actor vetting (previously "DeltaAngle").
+- Removed target reassignment from the Siege Mode projectile.
+- Changed the Siege Mode projectile to utilize a BlockThingsIterator to handle actor vetting (previously a ThinkerIterator).
+- Changed the EMG Pistol's Charged Energy Shot's base damage to 16 + 4 (with Increased Power) (previously 20).
+- Changed the EMG Pistol's Charged Energy Shot's max damage to 80 + 48 (with Increased Power) (previously 80 + 80 with Increased Power).
+- Updated "EOA_CheckGloryKill" to use "CheckIfCloser" for its distance check (previously "Distance3D").
+- Fixed an issue with non-default ripper projectiles dealing damage twice to monsters if fired point blank.
+- Accommodated for line normals in "EOA_ExplodeMissile" to have projectile puffs spawn in the correct place (should work about 99% of the time with those pillars).
+- Overhauled all EOA_Projectile classes to correctly spawn effects.
+- Changed EOA_Projectile's "EEffectsStepsMode" property to "EFXStepMode_Accurate" for more accurate trail spawning placement (previously "EFXStepMode_FastProj").
+- Changed calls from "Distance3D" to "CheckIfCloser" in "EOA_FireBullets".
+- Changed max range for "A_SprayDecal" in ChaingunSlug to 5 (previously 1).
+- Fixed a bug with multiple invalid sound position/velocity errors being puked to the console whenever firing a Charged Burst point blank at a wall.
+- Removed calls to "Super.Tick()" in various Thinker classes.
+- Micro Missiles now spray a Scorch decal on walls upon detonation via "A_SprayDecal".
+- EOA_Berserk will not store the current ReadyWeapon of the player if the weapon is an EOA_InteractWeapon.
+- BFG Ammo now randomly plays any of its three rotation sounds while idle (previously selected only one and looped it ad nauseam).
+- Added the "SKYEXPLODE" flag to EOA_Projectile with a generic "Death.Sky" state sequence that calls "A_StopAllSounds".
+- Overhauled "EOA_SpawnCustomDynamicLight".  It now calls the static "SpawnCustomDynamicLight" function in EOA_ActorExtensions and supports better light behaviors.
+- Removed "EOA_SpawnCustomDynamicLight" from EOA_ExplosiveBarrelFX.  It now directly calls the static "SpawnCustomDynamicLight" function.
+- Reduced the light radius of EOA_ExplosionBarrelExplosionFX to 128 (previously 204).
+- Monsters firing the enemy plasma ball projectiles now play PLR/Enemy/Fire on slot CHAN_WEAPON (previously CHAN_BODY).
+- Most projectile puffs now spawn dynamic lights (previously handled by the projectiles themselves).
+- Fixed a crash with EOA_InteractWeapon's "ReselectWeapon" pointer becoming null upon EOA_BerserkFist being removed from the player's inventory upon PowerBerserk's expiration (if EOA_BerserkFist was set to be the "ReselectWeapon" pointer).
+- Dynamic lights spawned by ArgentCellWeapon are now handled via an overlay.
+- Fixed an issue with the hands in the tearing animation for the Berserk Fists being improperly positioned if launched into immediately after performing a "Death From Above" Glory Kill.
+- Removed all calls to "SetPlayerProperty" that dealt with instant weapon switching.
+- All calls to "A_Raise" in all weapons now loop on a 0-tic delay.
+- Changed all calls to "A_Raise" to use their default arguments (previously passed 60 as its RaiseSpeed).
+- Changed all tracer projectiles to have a minimum radius and height of 0.5 and 1, respectively.
+- Changed all puffs spawned by tracer projectiles to have a minimum radius and height of 0.1.
+- Added a delay counter to the mantling animation to prevent it from retriggering early.
+- Changed code pertaining to the maximum amount of armor the player can pick up to retrieve the base default value via "GetDefaultByType".
+- Fixed an issue with temp armor shards homing in on the Slayer and armor-related challenges not triggering correctly if he had picked up a non-EOA_Armor-derived armor item that had a bigger MaxSaveAmount than EOA_Armor and had less armor than the non-EOA_Armor-derived armor item came with but more armor than EOA_Armor's current "TrueMaxSaveAmount".
+
+===== v1.8.2 (Hotfix) =====
+- Added a null-check to TransferPointerFromMicroMissile.
+- Changed some comments in the Combat Shotgun's source file.
+- Automap Stations that spawn in place of non-Automap items will now only spawn in place of non-Automap items that are found in a secret.
+- Fixed a bug where the Gauss Cannon would not properly jump to its respective state sequences (entering into an infinite loop at worst) if mantling a ledge or using equipment while readying/firing/recovering from a Precision Bolt.
+- Adjusted scale for the Precision Bolt Gauss Cannon's mod-switching animation to fix an arm graphic.
+- Fixed a bug where the Automap Item Tracker stopped working if a player died and resurrected.
+
+===== v1.8.1 (Hotfix) =====
+- Fixed an issue that allowed players to trigger other interaction animations while performing an interaction animation.
+- Fixed a condition concerning the selection of the Bird's Eye View challenge.
+
+===== v1.8 =====
+- Fixed a bug where Powerup sounds were not properly precached (precache calls were not stored in the base class that would've defined them).
+- Removed the SHOOTABLE flag from interactable actors, since they got in the way of certain progression sequences.
+- Added an option to turn off the minimum sector light levels (will require a map restart to fully take place).
+- Added an option to turn off Glory Kill highlights.
+- Added an option to disable the custom crosshairs.
+- Un-nullified GetViewZ.  It now compensates again for player's view-bobbing.
+- The Mobile Turret will now clear all kill counters for the current deployment for the mastery challenge if it stalls.
+- Added the UNDROPPABLE flag to the Thrust Boots.
+- Added credits to Titlemap.txt.
+- Jagged Shrapnel bleed damage increased to 8 per iteration (previously 2 per iteration).
+- Jagged Shrapnel no longer forces damage every 4 iterations.
+- Jagged Shrapnel now triggers with standard rocket detonations as well as remote detonations if External Payload is acquired.
+- Changed various looping/ambient sounds to play at 75% volume.
+- Changed various looping/ambient sounds to have dramatically reduced sound range.
+- Changed the Automap Station's height to 32 (previously 42).
+- Player now faces the top of the Automap Station's hitbox (previously middle).
+- If the player has the Combat Shotgun start enabled, the Combat Shotgun will delay an additional 10 tics before raising to perform its pumping animation.
+- Powerups no longer decrement in duration whenever a Glory Kill is being performed.
+- Changed Ammo Crate to dispense ammo pickups for each ammo type simultaneously.
+- Ammo crate pickups now have a tighter forward velocity for 1 tic before changing velocity to spread out.
+- Removed all Textures.Archive TEXTURES entries.
+- GetLedgeOffset now returns the offset for the highest mantleable ledge within the player's vicinity.
+- Mantling a ledge no longer sets the Slayer's pitch to 0.
+- Mantling animation now raises/lowers depending on how far up/down the Slayer is looking.
+- Lowered mantling animation offset by 16 units.
+- GetLedgeOffset now implements an angular check to see if there's room to mantle before attempting to do so (previously a quad-directional check).
+- Doubled GetLedgeOffset's height check threshold.
+- Removed GZF_3DRESTRICT from various calls to GetZAt.
+- Moved calls to setting the UseEquipment weapon variable to False within code blocks pertaining to PSprite state jumps for their respective actions.
+- Weapons that support external mods now play a clicking sound if Alt-Fire is pressed but no mod is equipped.
+- The Rocket Launcher now plays a clicking sound if the Lock-On Burst is equipped and Alt-Fire is pressed, but there are no viable targets in sight.
+- Mantling animation duration is now reduced by 5 tics.
+- Removed calls to A_RadiusThrust in temporary items.
+- Items can now get passively picked up if they touch the player, without the player needing any velocity.
+
+===== v1.7.2 (Hotfix) =====
+- Fixed a bug that caused Automap stations to spawn much more frequently than intended (thanks, Strongbelly!).
+- Fixed a bug that caused the total number of Elite Guard Corpses in the map to show up negative in the Automap item tracker.
+
+===== v1.7.1 (Hotfix) =====
+- Changed powerup overlays' virtual width/height to 1920 x 1080 (previously Screen.GetWidth()/Screen.GetHeight()), with DTA_KeepRatio set to True (thank you, JudgementKnightsof, and your CHAD PC monitor). :P
+
+===== v1.7 =====
+- Moved the title for the Upgrades hub menu to (88, 64) (previously (88, 72)).
+- Fixed midair movement code to not slow the player while movement buttons were being pressed in the same direction as the player's velocity.
+- Fixed projectile puff-spawning code to spawn puffs on an actor when killed by a ripper projectile.
+- Siege Mode effect radius reduced to 8 units, 64 units with Outer Beam (previously 32 units and 96 units with Outer Beam).
+- Fixed an issue with Gauss Cannon projectile puffs not spawning if the projectile directly impacts something immediately upon spawning.
+- Fixed an issue with desyncing in the player's CheckJump override.
+- Overhauled BFG damage mechanics, to spawn thinkers attached to its victims that will damage said monsters after a random amount of time.
+- BFG ball now deals 400 impact damage and 1200 splash damage at a radius of 1200.
+- Reduced max arc targets to 6 (previously 10).
+- Overhauled stagger system to trigger staggering via WorldThingDamaged.  BFG projectiles are exempt from staggering enemies.
+- Change Plasma Rifle projectile's speed to 50 (previously 75).
+- Fixed an issue with the Chaingun being able to jump to its Reload state sequence if there were no mods available to equip.
+- Rescaled all weapon sprites to better suit the size of the weapons as they appear in DOOM, and projectile offsets to match.
+- Reversed Plasma Rifle's standard firing frame scales.
+- Fixed Plasma Rifle's brightmaps to not use the firing brightmap for the non-firing sprites in the Stun Bomb's launch sequence.
+- EMG Charge Tracer's base damage increased to 20 (previously 8).
+- EMG Charge Tracer's max base damage changed to x5 (x8 with Increased Power).
+- EMG base headshot damage factor reducded to 1.2 (previously 3).  It still deals x6 headshot damage to enemies with 50 or fewer default health points.
+- Overhauled Field Drone, Elite Guard Corpse, and Rune Trial Stone.  They now each yield faux-weapons for first person interaction animations.
+- Faux-weapons yielded by interactable upgrade items now inherit from "EOA_InteractWeapon".
+- Custom Map Markers have now been assigned to powerups, upgrade items, and a few other useful items.
+- Ported the Allmap pickup to ZScript, merging it with EOA_AllmapItem.  It is now EOA_Allmap.
+- Added new checks to projectile-spawning code in EOA_FireBullets that allow projectiles to take the caller's pitch into account, to better appear to exit the gun's muzzle regardless of pitch.  Also added a new parameter to EOA_FireBullets that controls the intensity of the compensation.
+- Early termination of ledge-mantling now requires the Doom Slayer to be at least his MaxStepHeight above the ground.
+- Ledge-mantling minimum forward velocity changed to 0.3333... (ad nauseam) (previously 0).
+- Changed Thrust Boots' pickup sprites.
+- Overhauled health/ammo drop systems to behave more like they do in DOOM.
+- Fixed an issue with the EOA_KillCounter, where it would call AttachToOwner in OwnerDied, causing item drop calculations to be calculated again.
+- BFG ammo drop chance changed to 5-8% (previously 5%).
+- Changed pickup sprites for various items, adjusting scale to compensate.
+- Jagged Shrapnel sounds now has randomized pitch.
+- Added a call to "A_WeaponOffset" in all weapons' Select state sequence to reset weapons to their original position, in case of interruption.
+- Added new Glory Kill animations.  Heavy punch animations replaced with a new animation.
+- Added a check for the SHOOTABLE flag in "EOA_CheckGloryKill".
+- Added a check for the existance of the Tracer pointer in the "EOA_GKSeeker" class.
+- Shifted Mobile Turret Chaingun's sprites to the right by 10 units.  Adjusted firing offsets to compensate.
+- Gauss Cannon projectile's damage increased to 252 (previously 200).
+- Gauss Cannon's splash damage reduced to 32 (previously 50).
+- Siege Mode projectile's damage reduced to 672 (previously 1344).
+- Specific Glory Kill animation sequences now execute depending on the victim's angle in relation to the Slayer.
+- Fixed a bug with certain functions called in PostBeginPlay not getting called when hitting a monster directly upon spawning (fired point blank).
+- Renamed EOA Resources to EOA Assets.
+- Fixed an issue where engaging in a first-person upgrade item interaction would nullify any active Powerups' noisemakers.
+- Shifted all Rocket Launcher sprites to the right by 20 units.  Adjusted firing offsets to compensate.
+- Added a call to "A_WeaponOffset" in the GloryKillEnd state sequence to reset weapon offsets after a Glory Kill.
+- Fixed a bug with EOA_Explode being able to damage the player through walls (thanks, Warrior Eternal!).
+- Nullified the GetViewZ function for projectile-firing offsets.
+- Added screen effects for active powerups.
+- Merged various Quality-of-Life addons from Strongbelly and ScrubHead to the mod.
+- Created a smoother Super Shotgun reload animation.
+- EMG pistol's base primary firing accuracy set to 1 degree (previously 0).
+- Overhauled Allmap to be an interactable item with a first-person interaction animation.
+- Automap station now has a DECORATE counterpart that replaces the Allmap, so that it doesn't get overwritten by other replacers that may be loaded.
+- Automap stations added to upgrade item spawn lists to guarantee a station spawn in place of a present item, if one hasn't already spawned.
+- Ported warping code from EOA_PowerupFXBase to EOA_PersistentNoisemaker.
+- Changed A_SpawnPersistentNoisemaker to spawn a class of type "EOA_PersistentNoisemaker" instead of "EOA_PowerupFXBase", so that the correct noisemakers are destroyed when A_DestroyPersistentNoisemaker.
+- Chainsaw Glory Kills no longer yield guaranteed health drops in the same fashion as standard Glory Kills.
+- Fixed an issue with the Mobile Turret's Uranium Coating upgrade not functioning.
+- Updated credits as necessary.
+
+===== v1.6.3 (Hotfix) =====
+- Added a check for the SHOOTABLE flag in ripper collision code.
+- Rearranged a couple sounds in the Argent Cell Cache's opening animation.
+- Fixed Super Shotgun not deselecting if there isn't sufficient ammo upon firing.
+- Added code to the BFG projectile tracer spawner's AcquireTracerTargets function which allows it to iterate through its entire list of previously acquired targets if its current target couldn't be found.
+- Added code to the Argent Cell "Weapon's" Select state sequence to destroy all present persistent noisemakers.
+
+===== v1.6.2 (Hotfix) =====
+- Turned GetSpeedCounter/SetSpeedCounter into action functions.  This fixed an ambiguity issue that caused it to crash occasionally in GZDoom versions up to 4.2.4.
+- Added "EOA_PlasmaRifleReplacer" and "EOA_BFGReplacer" to the list of conditions determining whether or not a cell pickup spawns as a BFG cell pickup.
+- BFG/Gauss Cannon's extra raise sound now moved to the Ready state sequence.
+
+===== v1.6.1 (Hotfix) =====
+- Fixed mantling code to return a null vector only when dealing with 3D floors above the player.
+- Fixed an error that caused energy cell packs to spawn as BFG cells when a BFG had spawned but nowhere in sight (even if spawned by a Plasma Rifle/Gauss Cannon in sight).
+- Fixed an issue with Elite Guard Corpses not displaying at full brightness (added BRIGHT flag).
+
+===== v1.6 =====
+- Removed the BFG and Chainsaw from checks for the Dexterity set of Praetor Suit Upgrades.
+- Chaingun slugs now deal 30 damage each (previously 20).
+- Chaingun slugs fired from a deployed Mobile Turret now deal 35 damage each (previously 20).
+- Incendiary slugs now deal 38 damage each (previously 30).
+- Combat Shotgun pellet spread changed to 7.5 x 3 (previously 7 x 2).
+- Combat Shotgun's Charged Burst pellet spread changed to 2 x 2 (previously 2 x 1).
+- Super Shotgun's pellet spread changed to 16 x 4 (previously 15 x 3).
+- Super Shotgun's tightened choke pellet spread changed to 10 x 2.5 (previously 10 x 2).
+- Adjusted stagger health levels.
+	= Monsters with fewer than 50 default health stagger at 60% health.
+	= Monsters with fewer than 500 default health and more than 50 default health stagger at 30% health.
+	= Monsters with fewer than 1000 default health and more than 500 default health stagger at 15% health.
+	= Monsters with more than 1000 default health stagger at 7.5% health.
+	= Monsters with the boss flag stagger at half the percentage threshold depending on their default health level.
+- Monster damage factor granted by Intimacy Is Best changed to 0.2 (previously 0.25).
+- Monster damage factor granted by Intimacy Is Best II changed to 0.34 (previously 0.25).
+- Stagger recovery health now given directly by thinker instances.
+- Changed stagger recovery amounts to be higher depending on the amount of health a monster has left.
+- Added credit entries to CREDITS.txt that should have been added there since v1.5 (thank you, strongbelly!).
+- Created EOA_WeaponReady, which also handles speed ups for Haste and weapon upgrades, mantling animations, and grenade tossing.
+- Implemented EOA_WeaponReady in all weapons.
+- Heat Blast now checks if there is any amount of "HeatBlastChargeCounter" in the inventory prior to launch (previously required at least 3 counters, 6 with Expanded Threshold).
+- Berserk Fists now punch faster with Haste.
+- Fixed a bug where holding down the Fire button after quitting the Precision Bolt firing mode will automatically cause the Gauss Cannon to fire a round.
+- Added EOA_WeaponReady with the EOA_ALLOWMANTLE flag to raising animations to allow for mantling in those areas.
+- EOA_CellAmmo2 (cell pack replacement) is now exempt from checks for other nearby cell ammo pickups to prevent BFG cell spawning.
+- Fixed an issue with medium/large health/armor pickups not spawning occasionally if no upgrade items can spawn.
+- Changed calls to EOA_FireBullets for the Combat/Super Shotgun so that the number of projectiles fired is positive.
+- Overhauled EOA_FireBullets to make it so that projectiles are spawned a number of units away from the caller equal to the caller's radius.
+- Lowered projectile spawn heights for all weapons by 3.
+- Added DoomEdNums to specific actors in EOA to allow for EOA-specific maps.
+- Fixed an issue with the Gauss Cannon's Precision Bolt being able to fire despite insufficient ammo being present in the player's inventory.
+- Added null-checks to the custom projectile base in places where it attempts to spawn the BloodType of the actor it hit.
+- Fixed an issue with the EMG Pistol not slowing the player down if in its charging position while cooling down and if the player doesn't have the Light Weight upgrade for the EMG Pistol.
+- Overhauled mantling system: now solely written in ZScript.
+- Added new Rune Trial Stone graphics (thank you, strongbelly and Simploo!).
+- Changed Mobile Siege challenge to require 3 kills per shot to obtain mastery (previously 2).
+- Added a redundant null-check into EOA_GKSeeker's "Death From Above" check.
+- Modified EOA_StaticHandler's "WorldThingDied" event to check for the default setting of the ISMONSTER flag (previously checked for the current setting of the flag).
+- Added the SKYEXPLODE flag to EOA_NullPuff.
+- Fixed an issue that arose from the implementation of EOA_WeaponReady with the Super Heated Rounds loop sound continuing to loop for the Plasma Rifle when mantling during a firing sequence.
+- The Doom Slayer's landing sounds now play if the player is airborn for at least 5 tics (10 if it's his first step, so that it doesn't play upon the player spawning).
+- The Doom Slayer's "FirstStep" variable is no longer set to False at any time while airborne.
+- Precached all weapon sounds.
+- Volatile Discharge explosion radius set to 192 (previously 256).
+- Homing Rocket's explosion radius set to 64 (previously 120).
+- Fixed an issue with Plasma Rifles not spawning in place of every 3rd Heavy Assault Rifle on "Condensed" Item Sparsity (as Chainguns would otherwise spawn in place of every 3rd Heavy Assault Rifle).  With both the "Plasma Rifle Spawn" and "Condensed" settings enabled, Chainguns now spawn in place of every 6th Heavy Assault Rifle, while Plasma Rifles spawn in place of every 3rd Heavy Assault Rifle between Chainguns or the first Heavy Assault Rifle.
+- Rocket Launcher's rockets no longer have a "Max Damage" radius.
+- Plasma Rifle's projectile speed increased to 75 (previously 60).
+- Jagged Shrapnel bleed interval increased to 4 tics (previously 3).
+- Created custom explosive barrels for use in EOA.
+- Changed Lock-On Burst's homing rockets' speed to 60 (previously 45).
+- Changed Lock-On Burst's homing rockets' angle limits to 60 (min) and 90 (max) (previously randomly 15-30 degrees with both parameters).
+- Increased Micro Missile explosion sprite scale to 0.75 (previously 0.5).
+- Added brightmaps to barrels and Field Drones.
+- Overhauled custom FastProjectile code, which fixed collision errors with 3D floors (thanks, phantombeta!).
+- Set the Doom Slayer's default Air Control factor to 0.2 (previously 3).
+- Double Jump now adds vertical velocity to the Slayer's current vertical velocity if the Slayer's vertical velocity is greater than his standard jump velocity at the time of launch.
+- Gauss Cannon's kickback now adds vertical velocity to the Slayer's current vertical velocity if the Slayer's vertical velocity is greater than 0.  Else, it'll replace the Slayer's vertical velocity depending on the Slayer's pitch at the time of launch.
+- Gauss Cannon projectile's explosion radius set to 80 (previously 96).
+- Gauss Cannon projectile's max damage explosion radius set to 80 (previously 32).
+- Siege Mode projectile no longer deals splash damage.
+- Killing enemies normally will now yield temp stims that last for 30 seconds (previously 10).  Glory-Killing enemies will still yield the 10-second temp stims.
+- Added an eighth entry into the Lock-On Burst's lock cone (-1, -1).
+- Overhauled Argent Cell item.
+- Removed SOLID flag from all upgrade items and Ammo Crates.
+
+===== v1.5.1 (Hotfix) =====
+- Changed the long parameter section of EOA_CheckGloryKill to remove redundancies.
+- Changed the radius for the call to the BlockThingIterator's Create function to 1024 (previously 300, 600 with Seek And Destroy, and 1200 with Seek And Destroy II).  This fixed an issue with Glory Kills not launching properly.
+
+===== v1.5 =====
+- Got rid of resolution change and other extraneous bits from SBARINFO.
+- Got rid of exemption checks for EOA_HolgramProjection.
+- Created and utilized the function "IsClassOrSpecies" in Event Handlers to check if a monster is or is descended from another monster or is the same species as that monster.  This allows these handlers to accept same-species monsters as prerequisites for generating/completing challenges.
+- Berserk speed multiplier changed to 1.25 (previously 2).
+- Berserk damage prevention multiplier changed to 0.5 (previously 0.2).
+- Haste speed multiplier changed to 1.4 (previously 2).
+- Blood Fueled speed multiplier changed to 1.25 (previously 2).
+- Fixed a bug with the BFG occasionally needing a double-click in order to fire the weapon.
+- Blood Fueled II duration changed to 8 seconds (previously 10).
+- Added new properties to EOA_Projectile for Shotgun tracers, determining damage at different ranges.  They now deal more damage depending on where they are in relation to the player.
+- Combat Shotgun now fires 10 pellets per shot (previously 11).
+- Power Shot now deals 15% more damage per pellet (previously 25%).
+- Created an ammo crate, which will dispense ammo in relation to how much ammo the user needs.
+- Added an option that makes hitscan monsters that utilize the "BulletPuff" actor to fire slower-moving plasma balls instead.
+- Explosive Shot Grenade's standard explosion radius increased to 115 (previously 96).
+- Explosive Shot Grenade's bigger explosion radius increased to 171 (previously 144).
+- Explosive Shot's full damage radius no longer changes depending on the presence of Bigger Boom.
+- Chainsaw now fires actors of type EOA_MeleePuff when sawing monsters (previously BulletPuff).
+- EOA_Explode no longer manipulates the player's mass before/after radius damage is dealt.
+- EOA_Explode now has a parameter determining the factor at which it damages the player that launched the projectile.
+- Fixed an issue with Chain Stun sometimes not launching after killing a monster.  Moved the launch code to WorldThingDamaged so that the proper actors are given due credit.
+- Fixed an issue with Chain Stun mastery sometimes not incrementing after killing a monster.  Changed code in WorldThingDamaged to ensure the proper actor recieves due credit.
+- Updated ZScript to version 4.0.
+- Replaced all checks for the Frozen/GlobalFreeze variables with IsFrozen.
+- Replaced all Frozen variable manipulations with SetFrozen.
+- Replaced IsPointInMap with IsPointInLevel.
+- Implemented shaders for rescaling (they are currently not in use, as they are gross hacks that will unfortunately make the rest of the game look blurrier... they will stay for future reference, though).
+- Inserted ammo crates in the spawn cycle for upgrade items.
+- Upgrade items can now appear in place of every 24th ammo box.
+- Delta V Thrust Boots now spawn in place of the usual items occasionally.  Once picked up, it will give the item to ALL players present and cease to spawn thereafter.  If a player joins the game, and the boots had been picked up, then the newly-joined player will receive boots as well.
+- Added a CVar that allows players to start the game with a pair of Delta V Thrust Boots.
+- Frag Grenade deals 8 damage from direct impact.
+- Frag Grenade deals 50% more damage with each level of Equipment Power.
+- Frag Grenade's explosion radius changed to 212 (previously 192).  The explosion radius increases by 20 per level of Equipment Power.
+- Frag Grenade's maximum damage radius changed to 0 (previously 48), 48 with Equipment Power, and 64 with Equipment Power II (previously 72).
+- Added an exception in DoSpecialDamage to exclude the Frag Grenade from dealing headshot damage.
+- Removed additional self-damage soaking from Doom Slayer's DamageMobj override.
+- Cluster Bombs now deal no damage to the Doom Slayer (previously 16).
+- Changed Y and Z scale of BFG lightning tracer models to 15 each (previously 6 each).
+- Created a separate actor for the Chain Stun lightning tracer models.
+- BFG lightning tracer amplitude deviation range increased to 12 (previously 8).
+- Doom Slayer converts any armor in his possession to have 100% damage protection and a MaxAmount equal to 50 plus 25 per armor upgrade.
+- Created EOA_CheckGloryKill, an overhaul to the Glory Kill system which allows non-Chainsaw Glory Kills to be launched at any elligible actor within the player's FOV.  The closer a monster is to the crosshair, the more likely an actor will be selected for Glory Kill.
+- Fixed Berserk Fists to not launch another attack while buttons are held down when reentering the ReRaise state sequence.
+- Melee attack (Zoom button) can now cause Berserk Fists to fire the primary attack.
+
+===== v1.4.3 (Hotfix) =====
+- Fixed an issue with armor shards not spawning at all.
+
+===== v1.4.2 (Hotfix) =====
+- Health/Armor proxy actors now inherit directly from Actor (previously RandomSpawner).  This fixes an issue of upgrade items not spawning in place of selected Health/Armor items.
+- Added an entry to the v1.4 Changelog that I failed to list before release.
+
+===== v1.4.1 (Hotfix) =====
+- Renamed multiple generic-looking classnames to prevent conflict with other mods.
+- Added entries to the previous changelog that I failed to list before release.
+- Fixed Health/Armor proxy actors so that they themselves can spawn their corresponding actors upon successfully spawning.
+
+===== v1.4 =====
+- Added a CVar that will give the player a Combat Shotgun at the beginning of a game.
+- Added a CVar that disables Combat Shotguns occasionally spawning in place of certain shell boxes.
+- Added a CVar that disables Super Shotguns occasionally spawning in place of Combat Shotguns.
+- Added a CVar that disables Heavy Assault Rifles occasionally spawning in place of certain bullet boxes.
+- Added a CVar that disables Plasma Rifles spawning in place of every 3 Heavy Assault Rifles.
+- Added a CVar that disables Chainsaws spawning in place of every 5 fuel cannisters.
+- "BFGKillCounter" MaxAmount increased to 18.
+- Monsters with 1000 or more health require a BFGKillCounter Amount of 18 to be killed by the BFG's tracers.  Monsters with 300 or more health require an Amount of 13.  All other monsters require an amount of 9.
+- Removed checks for monsters of type "Fatso" to determine if the Chainsaw should use 5 fuel to kill the monster.
+- If on the ground, the player cannot mantle ledges greater than 36 units above his current position.
+- Changed angle parameter in the AcquireTracerTargets function for BFGKillIterator to 1 (previously 45).
+- Slowed down pitch/angle/roll adjustments for Glory Kill animations by 50%.  They increase by 25% if Savagery is selected, and by another 25% if Savagery II is also present in the inventory.
+- Added another parameter to EOA_SetGKRecoilOffset for ignoring Savagery speedups (for melee attacks and "Death From Above" Glory Kills.
+- "Last Weapon Selected" button no longer switches back to weapons that have the newly created custom POWERWEAPON flag.
+- Removed sound limits for projectiles within a certain proximity from each other.
+- Fixed dynamic lights to be able to warp to their targets properly in versions of GZDoom from 4.0.0 onward.
+- Removed ability to fire the BFG from it finishing its raising animation whilst holding down the fire button.
+- Added a null-check for the Owner pointer in EOA_Powerup's EndEffect override, in case the game crashes from one picking up 2 of the same powerup.
+- Rocket Launcher is no longer capable of firing while unloading a Lock-On Burst.  It is still capable of firing after the launch of a Lock-On Burst.
+- Added functionality to weapons to allow them to interrupt a melee/equipment animation sequence in order to fire a weapon.
+- Cut extraneous calls to A_WeaponReady in various weapons.
+- Streamlined weapon code slightly.
+- Heat Blast can now be launched while firing the Plasma Rifle.
+- Changed sprite scale of all temporary items to 0.375 (previously 0.5).
+- If the player has Berserk and purchases a mod from a Field Drone, then the mod will automatically be installed on the weapon (previously, if you switched to the weapon after Berserk expired, it would then go to the mod-equipping animation, which it should do when you auto-switch to the weapon from selecting a mod, which is impossible when you have Berserk because the Berserk Fists weapon disallows weapon switching until Berserk has expired).
+- Updated entries for Pinkies/Spectres in EOAMonsters.txt.
+- A_SpawnPersistentNoiseMaker now automatically updates its sound volume using A_SoundVolume.
+- Chaingun code changed to play spinning sounds at a volume depending on how fast the Chaingun is currently spinning.
+- Charged Burst reticle now has its two side elements draw closer together when the mod is being prepared.
+- "EOA Settings" menu is now also accessible through the Options menu, in case other mods are loaded that interfere with EOA's main menu.
+- Updated EMG Pistol's sprites to have a gray handle when held in hand and a more advanced charging animation (thank you, strongbelly!).
+- EMG Pistol now launches casings upon firing the weapon (thank you, strongbelly!).
+- Added a null-check within the EOA_GKSeeker projectile's PostBeginPlay virtual, to prevent potential VM Execution abortions.
+- Gauss Cannon's projectiles now only damage actors once (excluding explosions), whether they hit them or pass by them.
+- Siege Mode projectile's damage increased to 1344 (previously 200).
+- XDeath and Recoil for Berserk Glory Kills are now dependant on the monster's target possessing the Berserk Fists in its inventory (previously dependant on possessing the Berserk powerup).
+- Medium armor pickups can now be replaced by upgrade items.
+- BFG Cells can now replace every 4th cell pickup that replaces small cell ammo pickups.  However, there cannot be 2 or more other static cell ammo pickups or a Plasma Rifle or a Gauss Cannon within 256 units of clear sight from said cell pickup.  This behavior is overridden if there also happens to be a BFG within 256 units of clear sight from said cell pickup.
+- Cell ammo that replaces large cell ammo pickups are now replaced with BFG cells if there aren't 2 or more other static cell ammo pickups or a Plasma Rifle or a Gauss Cannon within 256 units of clear sight from said cell pickup.  This behavior is overridden if there also happens to be a BFG within 256 units of clear sight from said cell pickup.
+- Ported item drop system completely over from ACS to ZScript.  Drop probability adjusted accordingly.
+- Increased BFG tracer amount to 10 (previously 8).  ReactionTime and angle change adjusted accordingly.
+- BFG tracers now have a max length of 600 units (previously 1536).
+- BFG kill iterators now have a max length of 1200 units (previously 1536).
+- Added a smoother circular meter for reticles (thank you, strongbelly!).
+- Proxy actors now spawn in place of all appropriate vanilla actors, which will spawn their corresponding actors.  These proxy actors will be subject to the Event Handler's spawning events, instead of the corresponding actors which the proxies spawn.  This way, the Event Handler won't interfere with item placement in any custom maps utilizing EOA's items directly.
+- Removed the ISMONSTER flag from EOA_HologramProjection.
+- Removed most exception checking for EOA_HologramProjection.
+- Actors inheriting from "EOA_Health", "EOA_Armor", or "EOA_Ammo" now execute their pickup specials upon being touched (previously had to be successfully picked up in order to do so).  As these items cannot be picked up when the player is at full capacity of said items, and several such items replace actors that can always be picked up, this will fix any progression issues that may arise from this without the player having to sacrifice resources or cheat in order to continue.
+
+===== v1.3 =====
+- Dropped BFG Ammo now only drops from monsters only if the player has possession of a BFG-9000.
+- Mantling now only requires the forward button to be pressed in order for mantling to occur.
+- The player no longer has to be airborne in order to mantle a ledge.
+- Berserk Fists now use Fire to punch with the right fist and Alt-Fire to punch with the left fist.
+- Berserk Fists no longer have any attack recoil.  Recoil still occurs with Glory Kills though.
+- Fixed an issue with the player being able to mantle through 3D ceilings.
+- Created the LockOnBurstFiring inventory item, which allows for seamless transition for the Rocket Launcher's reticle between locking and firing.
+- "Thread The Needle" and "Big [REDACTED] Gun" challenges changed to see if there are at least 250 monsters present in the map.
+- "Two-Fer", "Hold Still", and "Two Mouths To Feed" challenges changed to see if there are any of the target monsters near enough to complete the challenge.
+- "Variety Is The Spice Of Death III" and "Chiropractor" challenges changed to make it so that these two challenges are less likely to be selected together.
+- "Wait For It" now needs a minimum of 10 barrels to spawn in order for it to be viable for selection.
+- The player's now needs to be airborne for at least 10 tics (5 if mantling a ledge) in order for the landing sound to be played upon touching the ground (previously didn't accommodate for mantling).
+- Changed calls to SetOrigin in EOA_GKSeeker to A_Warp, to support better warping.  This also fixed a bug with the player occasionally getting stuck in map anatomy whenever Glory Killing a monster too close to an edge.
+- Shaved off 4 tics from the beginning of the melee attack sequence, and 2 tics from the beginning of the equipment usage sequence.
+- Added 13 tics to the end of the melee attack sequence so that Glory Kill checkers can still be launched up to the end of the weapon budging sequence.
+- The Doom Slayer will not mantle a ledge lower than his MaxStepHeight.
+- Fixed a potential issue with temporary Ammo items crashing the game.
+- Renamed "Items.txt" to "Pickups.txt".
+- Added a check in the "GloryKillChecker" to see if the player does not already have the "RipAndTear" item in his inventory, in case he somehow fires off more checkers which could cause multiple monsters (and even the player) to be stuck in a Glory Kill sequence.
+- Changed sound limits for Argent Cell/Rune Trial Stone ambient sounds to 0 (unlimited).
+- Base factor for all standard ammo drops increased to 1/16 (previously 5/128).
+- BFG Cells now drop at a rate of 3/64 probability (previously 5/128).
+- Fixed interpolation for health/armor bars so that overhealth/overarmor bars interpolated at the same speed as the standard bars, regardless of how much maximum overhealth/overarmor the player possesses.
+- Fixed an issue with projectiles harmlessly passing through frozen corpses.  They now check to see if the monster is still shootable, as opposed to being killed.
+- Changed the Parkmore height-finder actors to automatically disappear after half of a second of existence.
+- Changed the mantling code to not operate until at least one tic has passed in the map.
+- Fixed a bug with stunned monsters occasionally remaining stunned for an extended period of time.
+- Changed the scale of Rocket explosion effects to be increased by 1/16 whenever remotely detonated.
+- Changed External Payload mastery challenge conditions to not give more counters if External Payload is already present in the player's inventory.
+- Fixed an issue with the game crashing with the player dying an Ice death.
+- Changed the sprite name of the temp armor shard to "TSHD" (previously "TARM") to prevent overlap with the Terminator Arm gib in any mods that use the Terminator monster.
+- Added a 30-degree cone-like spread to the Lock-On Burst's targeting system.
+- Fixed an occasional bug with the Chaingun's engine still looping after the player having successfully mantling a ledge.
+- Re-added 6 tics back to the Super Shotgun's reloading sequence, though at the very end of the animation.
+- Gauss Cannon and Super Shotgun no longer are capable of auto-firing at the end of their (re)raise animations.
+- Super Shotgun now (again) automatically reloads if its chambers are empty after performing a Glory Kill or melee strike or equipment usage.
+- Changed limits for all Gauss Cannon sound effects to 0.
+
+===== v1.2.3 (Hotfix) =====
+- Fixed a potential issue with the VM Execution being aborted if something damaged a non-player Doom Slayer playerpawn.
+
+===== v1.2.2 (Hotfix) =====
+- Fixed a bug with overlapping persistent noisemakers terminating shortly after switching weapons and then immediately being assigned sounds to play (which would also terminate immediately).
+
+===== v1.2.1 (Hotfix) =====
+- Fixed a bug with the Chainsaw continuing to play its firing sound after you successfully chainsaw-kill a monster and run out of ammo.
+
+===== v1.2 =====
+- Changed checks for homing items so that they don't perform a distance check if they're currently in a void (an area outside of the map's boundaries).
+- Changed dropped Bullet Ammo items to yield 10 ammo (previously 12).
+- Updated v1.1.3 changelog to accommodate for changes that weren't mentioned before.
+- Pain flashes now show up fully if you have armor equipped.
+- Added the DMSS_NOPROTECT flag to all calls to A_DamageTracer for the BFG Ball and related actors.
+- Holding down Zoom will now again automatically fire off Glory Kill Checkers until the punch itself is launched (you will still have to press the Zoom button every time you wish to perform a punch or Glory Kill).
+- Changed default air control factor to 0.3 (previously 0.5).
+- Changed player's personal gravity to 0.6 (previously 0.7).
+- Changed player's jump height to 7 (previously 8).
+- Created special effects for bullets fired by the Heavy Assault Rifle.
+- Added a PuffType property to all actors inheriting from EOA_Projectile, which allows said actors to spawn the specified puff upon collision with something.
+- Added two tics back to the Combat Shotgun's pumping animation, and another 4 tics to the end of that animation.
+- Fixed a long-standing bug where hitting a wall point-blank with a weapon's projectiles would cause said projectiles to fly off in a different direction.
+	= Default initial speed for EOA_Projectile reduced to 1 (previously 60).
+	= Projectiles now instantly accelerate to a speed of 70 in PostBeginPlay, and then to their "true speed" (as defined by their TrueSpeed property) when they are one tic old.
+- Gauss Cannon now has half recoil with firing from Siege Mode (which is now equivalent to the standard fire mode's recoil) and zero recoil from firing a Precision Bolt.
+- Created special effects for Cluster Bombs spawned by the Explosive Shot grenade.
+- Cluster Bombs spawn 9-10 tics after the Explosive Shot grenade's impact (previously 3-4 tics).
+- Cluster Bombs' speed reduced to 3 (previously 10).
+- Reduced Frag Grenade's full-damage radius to 64 units (previously 160 units).
+- Monsters now get staggered at 4/9 of their original health (2/3 if their original health is 50 or fewer), and 8/17 of their original health with Intimacy Is Best II active (8/11 if their original health is 50 or fewer).
+- Changed all calls to A_KillTracer to A_DamageTracer with the DMSS_KILL flag, since A_KillTracer did not account for protection items.
+- Changed the explosion effects for all "hard" (non-plasma) explosives.
+- Homing rockets now properly stop their flying sound upon death.
+- Added special effects to the BFG's impact sequence.
+- Removed the THRUACTORS flag from the Cluster Bombs.
+- Changed the graphic used for the Stun Bomb's shockwave.
+- Saturated the Gauss Cannon's impact effects slightly more.
+- Added special effects to the Chaingun's slugs.
+- Super Shotgun no longer automatically transitions to its reload sequence if the animation was interrupted.  You must press Fire to transition to the reload sequence if you need to reload.
+- Returned decrementing of the BFG Kill Counter's "Amount" variable to a call to A_TakeInventory.
+- Overhauled Lock-On Burst locking system to allow for you to home on whatever area of the actor you were pointing at.
+- Homing rockets fired from a Lock-On Burst now home at a random angle between 15 and 30 degrees.
+- Added special effects to the Combat/Super Shotgun's tracers.
+- Added special effects to the EMG Pistol's tracers.
+- Added entries to the empty DECALDEF lump.
+- Changed the Chaingun to be more accurate the slower it's spinning.
+- Updated ZScript to 3.7.
+- Lock-On Burst now checks to see if it can lock onto another target before allowing the player to attempt to lock on to another monster, allowing the reloading animation to play even if the attempt fails.
+- Homing rockets fired from a Lock-On Burst now deal 120 impact damage (previously 150).
+- Homing rockets fired from a Lock-On Burst now deal 150 impact damage if it hits an Arch-Vile or an actor with fewer than 300 default health.
+- Removed the NODAMAGETHRUST flag from all custom attacks.
+- Created EOA_Explode, a variation of A_Explode that thrusts the shooter of the calling projectile actor by a limited amount.  All player-damaging explosives now use this.
+- Changed graphics for the Rocket projectiles.
+- Changed the slayer's AttackZOffset to 11 (previously 8).
+- Lowered all attacks launched by the Doom Slayer by 3 units.
+- Created EOA_FireBullets, a variation of A_FireBullets that has some minor changes (such as working properly with negative numbers).
+- Changed velocity-based spawn offsets for EOA_FireBullets attacks to accommodate for new interpolation changes.
+- If a locked target dies, the Rocket Launcher's Lock-On Burst module will allow you to lock onto other targets.
+- Added special effects to the Plasma Rifle's projectiles.
+- Ported Gauss Cannon projectile's impact effects over to a "PuffType" actor.
+- Headshot damage multipliers are now variable depending on the default health of the monster (monsters get 6x damage with 50 or fewer default health, 3x damage with fewer than 300 default health, 2x damage with fewer than 1000 health, and 1.5x damage with 1000+ default health) (previously 3x damage all across the board).
+- Changed increased damage factor of pellets fired from a Power Shot to 50% (previously 25%).
+- Boss monsters are now subject to the standard stagger-state health levels (1/3 of max health or 90 (+45 w/ Intimacy Is Best II), whichever is lower).
+- Created a function, GetFrame, which will return the integer of the current sprite frame of the weapon.
+- The Chaingun is now able to stop spinning if you have a low enough torque (less than 6 Chaingun spin counters) whenever it hits its idle frame anywhere in the spinning state sequences.
+- Chainsaw now emits sparks when it hits something it can't cut and plays a grinding sound.
+- Created a new function, A_SpawnPersistentNoiseMaker, which spawns a more permanent form of the Noisemaker actor that will play looping sounds and whatnot.
+- Fixed an issue with stunned monsters warping to you immediately when being Glory Killed by a Chainsaw.
+- Changed the pickup sound for all dropped ammo pickups to the standard item pickup sound.
+- Argent Cells now only give ammo to you for weapons you currently have in your inventory.
+- Cluster Bombs' explosive damage increased to 40 (16 of which will also affect the player).
+- Created a function, EOA_SpawnCustomDynamicLight, which allows one to create just about any form of dynamic light on the fly.
+- Previously "Outer Beam" Siege Mode shockwave effects now spawn without Outer Beam being purchased.
+- Lowered BFG's beam divergence to 8 (previously 12).
+- Added a menu option to EOA Settings that'll allow you to disable the custom dynamic lights.
+- Created two new functions: EOA_SetWeaponRecoilOffset and EOA_SetGKRecoilOffset.  These each handle changes to angle, pitch, and roll altogether, with code to spawn thinkers that will automatically gradually change the angle/pitch/roll of the player back to where it was by default.
+- Fixed an issue in the Chaingun that sometimes didn't allow it to close if Fire was being pressed but AltFire wasn't.
+- Damaging floors now deal their damage 3x per second, but deal 1/3 of their original damage to you.
+- Rocket Launchers now yield 2 rockets each (previously 10).
+- Combat Shotguns now yield 15 shells each (previously 20).
+- Plasma Rifles and Gauss Cannons now yield 120 cells each (previously 150).
+- Fixed an issue with the Super Shotgun being able to fire upon re-raise if it has no shots loaded (which was the cause of some other weird bug with the firing sound playing when it's not supposed to).
+- Added a menu option that'll allow you to disable angle/pitch/roll shifting for weapon/Glory Kill recoil.
+- Added a menu option to enable DOOM-style damaging floors.
+- Added a menu option to nullify the Slayer's view-bobbing without affecting his weapon-bobbing.
+- BFG-9000 now zooms out when it begins its firing sequence.
+- Mobile Turret's smoke spawners now have the NOTRIGGER flag.
+- Changed EOA_Item to a PowerupGiver (previously CustomInventory).
+- Exported Powerups and Powerup effects to ZScript.
+- Changed EOA_PowerupFXBase to directly use the ReactionTime variable.
+- Rocket detonation radius increased to 160 units (previously 128).
+- Rocket detonation max radius multiplier (yielded by the Improved Warhead upgrade) decreased to 1.2 (previously 2).
+- Homing Rocket detonation radius increased to 120 (previously 96).
+- Remote detonation of a rocket increased to 170 units by default (previously 128) and 204 units with the Improved Warhead upgrade present (previously 256).
+- Stun Bomb's item giving handled via A_Explode amd DoSpecialDamage.
+- Stun Bomb projectile now has the FORCERADIUSDMG flag.
+- Stun Bomb's detonation radius reduced to 48 units by default (previously 128) and 160 units when the Big Shock upgrade is present (previously 256).
+- Chain Stun's detonation radius reduced to 400 units (previously 512 units).
+- Exported PowerStunned to ZScript.  It now solely handles all stun effects.
+- Created lightning effects for Chain Stun.  Monsters stunned by Chain Stun are now zapped with a bolt of Argent energy, like in DOOM.
+- Restricted Chain Stun's effect to affect a maximum of 12 monsters at once.
+- Weapon behaviors that adjust player speed now all do so in the base class's GetSpeedFactor virtual.
+- Outer Beam now increases the radius of Siege Mode's beam to 96 units (previously 128 units).
+- Changed the teleportation sound, and increased them each by 10 DB.
+- Increased punching sounds by 5-10 DB.
+- Precached all ambient powerup sounds.
+
+===== v1.1.3 (Hotfix) =====
+- Added the NOAUTOFIRE flag to the Berserk Fists.
+- Messages now accommodate for alternate resolutions other than 1920 x 1080.
+- Changed the player's GruntSpeed property to 24 (previously 72).
+
+===== v1.1.2 (Hotfix) =====
+- Updated descriptions in EOA Settings menu that needed updating.
+- Changed datatypes for screen dimension factors from Int to Double (messages weren't displaying properly if they were smaller than a 1920 x 1080 resolution).
+- Updated RenderOverlay for both event handlers to check in more places for the presence of other challenge progress messages being present.
+- Added many more controls to EOA Settings, for easier accessibility and control tracking.
+
+===== v1.1.1 (Hotfix) =====
+- Added null-checks to projectile code concerning blood spawning.
+
+===== v1.1 =====
+- Made multiple changes to the previous version's changelog, to accommodate for changes I had failed to list then.
+- Added a call to take the "BFGKillCounter" item from the current tracer of the BFGKillIterator.
+- Default base damage for the EMG's Charged Energy Shot increased to 2.5x original base damage (previously 2x).
+- Fixed an issue with BFG flashes not properly spawning upon monsters dying from it or any tracer spawners it spawned.
+- Quick Melee and Berserk punches cannot be launched automatically anymore.  You have to press the Zoom button (or Fire if it's the Berserk Fists) every time you wish to perform a punch or Glory Kill.  The part where you actually launch the punch will remain unchanged (you can still hold down Zoom at that point in order to launch into a Glory Kill so that you don't accidentally punch the monster you're trying to Glory Kill).
+- Jumping is no longer automatic.  You can no longer hold down the Jump button to jump (you can still hold it down to continuously swim/fly).
+- Removed the half-second delay for jumping after landing.
+- Removed the call to add velocity with a double jump if the player's upward velocity is greater than the player's standard jumping velocity.
+- Mantling is no longer automatic.  In order to mantle a ledge, you must be holding down the jump and forward movement buttons in addition to approaching the ledge you wish to mantle.
+- The Doom Slayer is now able to crouch regardless of level settings regarding crouching.
+- Changed calls to A_PlaySound in CheckJump and Tick for the Doom Slayer to the custom A_SpawnNoiseMaker function.
+- Shaved off 12 tics from the ends of both Gauss Cannon mod-switching animations.
+- Fixed Cluster Strike not coming into effect on non-bleeding monsters.
+- Added an additional null-check to ripping projectiles after damage has been dealt, to deal with actors with 0-tic Death state sequences.
+- Added a CVar for allowing players to switch between the original Doom's footspeed and the new DOOM's footspeed.
+- Fixed a major issue with certain challenges not incrementing when other certain challenges are also active.
+- Overhauled BFG Tracer homing system so that tracers stay trained on their current targets until they are dead or otherwise out of reach (at which point these tracers proceed to search for new victims).
+- Fixed an aesthetic bug where BFG tracers appeared not able to go beyond 1024 units.
+- Player will automatically uncrouch whenever he's performing a Glory Kill.
+- Reduced health stim drop rate by 25%.
+- Added the WARPF_STOP flag to the call to A_Warp in the "WarpToMe" item.
+- Fixed the non-fatal return issues for the Tick and Effect functions.
+
+===== v1.0 =====
+- Increased mantling height limit by 8 units.
+- Shaved off 6 tics from the Super Shotgun's firing/reloading sequence.
+- Large Armor Pickups (50 Armor) now replace both Green Armor and Blue Armor.
+- Medium Armor Pickups (25 Armor) now replace every 21st Small Armor Pickup (5 Armor).
+- Shortened animation and added two tics delay between melee swipes/equipment usage and readying the weapon for such.
+- Adjusted the Glory Kill projectile to have a height equal to half of its target's height and spawn at its target's Z position, so that it does not hit ceilings upon first spawning, for better functionality in cramped corridors.
+- Siege Mode's travelling base AOE radius converted to 32 units (thereby changing the radius with Outer Beam to 128 units).
+- Decreased the MaxAmount of "BFGKillCounter" by 25%, so monsters die 25% faster.
+- Increased BFG tracer damage dealt to bosses from 15 to 20 (33% increase).
+- Projectiles now spawn with an initial speed of 60, which gets set to their intended speed the next tic.  This makes projectiles more able to be seen leaving their respective guns' muzzles.
+- Added a function that will offset the horizontal offset of spawned projectiles depending on the player's relative strafing velocity.
+- Reduced number of BFG tracers from 12 to 8.
+- Indicators highlighting Elite Guard corpses that still possess a viable token now show up on the Automap.
+- Frag Grenade now only begins its detonation countdown as soon as it first bounces.
+- Frag Grenade's base maximum explosion range reduced from 256 to 192 (25% decrease).
+- Frag Grenade deals 128 max base damage, deals 25% more damage if Equipment Power is equipped, and has its max range extended to 288 units if Equipment Power is equipped and upgraded.
+- Frag Grenade timer shortened to 53 tics maximum.  Countdown does not initiate until it makes its first bounce.
+- Hologram is now killable, if it's shootable.
+- Hologram's starting health set to 100 (doubled to 200 with Equipment Power equipped, tripled to 300 with Equipment Power equipped and upgraded), from 300.
+- Hologram's reaction time set to 5 seconds (doubled to 10 with Equipment Power equipped, tripled to 15 with Equipment Power equipped and upgraded), from 5 (doubled to 10 with Equipment Power selected).
+- All equipment now works independently of you having Equipment Power equipped.  If they were launched before you decide to unequip Equipment Power, they will still be enhanced.  If they were launched before you decide to equip Equipment Power, they will be in their unenhanced state.
+- Mastery progress messages now accomodate for the player's current resolution.  This should allow those who play with lower resolutions to actually see the message. :D
+- Damage dealt by explosions now also deal triple damage to the monster that a projectile hit directly in the head.
+- Fixed an issue with the Stun Bomb's "Longer Stun" upgrade not working on monsters if there is an active hologram present.
+- Fixed a potential issue that arose with the Heat Blast module being able to kill Holograms for upgrade points.
+= Overhauled Glory Kill system:
+	= Glory Kill system now almost totally handled via ZScript (more specifically, the thinkers attached to each monster).
+	= Monsters can no longer be Glory Killed while stunned.
+	= Effects on monsters for Intimacy Is Best and Dazed And Confused now depend on ANY player having said runes equipped, as opposed to whatever actor had staggered that monster.
+- In-Flight Mobility now grants you 100% air-control when its effect comes into play (previously 75%).
+- Projectiles now have the NODAMAGETHRUST flag.
+- Gauss Cannon's projectiles now each deal 200 base damage and 50 radius damage (plus another 50 if it is a Siege Mode projectile) (previously 100 direct damage, 100 radius damage, and the Siege Mode projectile dealt 250 radius damage).
+- Siege Mode projectile damage reduced to 200 (previously 750).  It now continuously deals damage to anything it passes through/by, until it's not close enough.
+- Precision Bolt now deals 100 base damage and up to 400 max damage (previously 150 base damage and 250 max damage).
+- Rockets fired from the Rocket Launcher now each deal 52 direct damage (previously 60 direct damage).
+- Rockets fired from the Lock-On Burst now each deal 150 direct damage and 10 explosive damage (previously 25 direct damage and 100 explosive damage).
+- EMG Pistol's bullets now deal 8 base damage each (previously 10).
+- EMG's Charged Energy Shot now deals 16 base damage (previously 10), 64 max (previously 50), and 96 max with Increased Power (previously 75).
+- Combat Shotgun now fires 11 pellets per shot (previously 10).
+- Combat Shotgun's pellets now deal 8 base damage each (previously 7).  Pellets launched via a Charged Burst still deal 10 damage each.
+- Explosive Shot's Cluster Bombs now deal 25 damage each at a full-damage and maximum radius of 64 units, 10 of which will be dealt to the player himself if close enough.
+- Super Shotgun now fires 16 pellets (previously 20).
+- Super Shotgun's pellets now deal 16 base damage each (previously 10).
+- Heavy Assault Rifle's bullets now deal 16 base damage each (previously 12).
+- Heavy Assault Rifle's Micro Missiles now deal 40 radius damage each and 4 impact damage (previously 30 radius damage and 0 impact damage).
+- Heavy Assault Rifle's Devastator Rounds now deal 28 base damage each (previously 20).
+- Plasma Rifle's projectiles now deal 10 direct damage and 4 radius damage each (previously 7 direct damage and 5 radius damage).
+- Plasma Rifle's Heat Blast now deals 5 damage for every shot fired from the Plasma Rifle (10 with Super Heated Rounds), up to a maximum of 150 base damage (300 with Expanded Threshold).
+- Chaingun's slugs now deal 20 base damage each (previously 16).
+- Chaingun's Incendiary Rounds now deal 30 base damage each (previously 24).
+- Gauss Cannon's projectiles can now rip through enemies by grazing them.
+- Activation of Volatile Discharge is now triggered via ZScript.
+- Fixed a potential issue with staggered monsters not properly warping to the player.
+- Monsters with less than 300 max health now cost only 1 fuel ammo to successfully chainsaw (previously 150 health threshold).
+- Monsters with 120 or less max health can now be staggered at 50% health (previously 50 health threshold).
+- Super Shotgun's spread reduced from 30 units to 15 units.
+- Combat Shotgun's spread for one pellet reduced from 15 units to 7 units.
+- Non-boss monsters now get staggered whenever their health is reduced to 90 or lower, or if they reach 1/3 of their default health (or 1/2 default health if their spawn health is less than 150, whichever is lower).
+- With Intimacy Is Best II, non-boss monsters get staggered whenever their health is reduced to 135 or lower, or if they reach 1/2 of their default health (or 2/3 default health if their spawn health is less than 150, whichever is lower).
+- Non-boss monsters regenerate to 5/8 their original health when they exit a staggered state.
+- Precision Bolt projectile will travel faster depending on how much charge was obtained prior to launch.
+- "Re-raise" animations shortened to 6 tics each.
+- Siphon Grenade's gravity increased to 0.625 (previously 0.5).
+- BFG cells' orbiting ring-grinding sounds now play every 24 tics, instead of every second.
+- Removed the WOF_KEEPY flag from the Heavy Assault Rifle's calls to A_WeaponOffset.
+- Changed the shrapnel bleeding actor to last for 100 tics (almost 3 seconds, instead of exactly 3 seconds), dealing 1 damage to the inflicted monster every 2 tics (for a total of 5 damage).
+- Shrapnel bleeding actor now spawns blood with the victim's blood color.
+- You can now punch and use Equipment while the Mobile Turret is deployed/deploying/undeploying.
+- Power Shot now activates when all three shots launched from a Charged Burst volley land on any monster.  They no longer have to all land on the same monster in order for Power Shot to activate.
+- Power Shot's extra damage now accounts for the current headshot damage factor upon landing a headshot (x3).
+- Fixed item drop system.  Apparently, random ammo drops were contained within the random health drops function, meaning a higher drop probability was needed in order to have ammo drop at a decent rate.
+- Temporary ammo items dropped by monsters not killed by a Chainsaw now last for 30 seconds before disappearing.
+- Standard ammo is now twice as likely to drop from monsters if you're carrying 1/3 (or less) of your max ammo capacity, and four times as likely if low on ammo.
+- Fixed an issue with Glory Kills not properly warping the player to the victim's position after firing the Super Shotgun (failure to update the Glory Kill-checking code).
+- Fixed Double Jump not recharging if standing on an actor.
+- Exported Double Jump code to ZScript.
+- Added the A_SpawnNoiseMaker function to the DoomSlayer player pawn class.
+- Doom Slayer's footsteps now play via A_SpawnNoiseMaker.
+- Charged Burst beep sounds now play via A_SpawnNoiseMaker.
+- Upon detonation, the BFG's projectile only kills monsters that already have a BFGKillCounter inventory item present in their inventory.  Before dealing that out, it will also give 8 random monsters a BFGKillCounter item (ensuring that something dies/gets damaged if the ball detonates immediately upon spawning).
+- Doom Slayer recieves 1/4 damage from self-inflicted Frag Grenade damage (1/16 if Self-Preservation is present).
+- Created ACS functions that retrieve the Argent armor and ammo upgrades the Slayer has obtained thus far.
+- Monsters killed by the Chainsaw drop 7 of each kind of standard ammo upon death, plus 1 additional unit for every level of Argent diverted to ammo capacity that the Slayer has obtained thus far.
+- Shotgun projectiles can cause XDeath if they have the EXTREMEDEATH flag by default or if enough of the same type of projectile are within a certain proximity of the inflicting projectile to deal enough damage to reach or exceed the monster's GibHealth, and if they are 200 or fewer units away from the player.
+- Micro Missiles now detonate automatically after launch, taking one second to explode, instead of waiting to latch onto something and then counting down to explode.
+- Micro Missiles speed now reduced to 40 from 60.
+- Added a check to take PowerShotFiring upon unloading a map.
+- Extra damage dealt via Power Shot is now dealt through DoSpecialDamage.
+- Headshot damage now dealt through DoSpecialDamage.
+- Charge damage for the Charged Energy Shot is dealt through DoSpecialDamage and now deals a full maximum of 225 damage upon headshot.
+- EMG Charge Tracer now deals a base of 20 damage.
+- Changed the Devastator Rounds Mastery Challenge so that it only gives credit whenever monsters are killed via headshot.  Also fixed the description to reflect that change.
+- Changed "PraetorSuitToken" to "PraetorToken".  Changed all items and menus featuring the item to reflect that change.
+- Changed Precision Bolt's damage to 100.  When fully charged, it deals 150 more damage.
+- Added DONTSPLASH flag to NullPuff and its derivatives.
+- Changed Rocket speed to 30, from 40.
+- Changed Doom Slayer's jump height from 7.5 to 8.
+- Changed Doom Slayer's air control from 0.375 to 0.5.  In-Flight Mobility gives an additional 0.5 air control when equipped and active.
+- Added an option to all of the weapon upgrade menus to detach the currently selected mod, if so desired.  Added functionality to all corresponding weapons to accommodate such a change.
+- Added additional places in the weapon code where one could utilize equipment.
+- The Event Handler will only spawn up to the difference between the amount of Field Drones/Argent Cells/Rune Trial Stones/Elite Guard Corpses and the maximum number of them to spawn (12/12/12/36).  At the end of each level, the number of each item that had spawned will be set to the number of each respective item that had been collected, so that they will continue spawning until all of them have been collected.
+- Added more variables to be reinitialized upon entering a new level.
+- "Death From Above" Glory Kills no longer automatically have the victim monster face you.
+- Cluster Bombs now have the EXTREMEDEATH flag.
+- BFG tracers, power surges and volatile discharges now have the NODAMAGETHRUST flag.
+- Lock-On Burst charge counter max inventory now set to 32 (previously 36).
+- Plasma Rifles now spawn in place of every 3rd Heavy Assault Rifle (regardless of sparsity settings).
+- Stun Bomb/Chain Stun is now able to stun boss monsters that have less than 3000 max health.
+- Berserk Fists are now able to instantly Glory Kill boss monsters that have less than 3000 max health.
+- Berserk Fists now jump to the "simple" Glory Kill state sequences for monsters that have fewer than 300 health (previously 150 health threshold).
+- Changed the challenges' "Completed" message to say "Challenge Complete" (previously "Completed!").
+- Lock-On Burst is no longer able to fire without locking onto a target prior.
+- Lock-On Burst's loading speed no longer accounts for Haste, but is quadrupled with the Quick Lock upgrade.
+- Tracer spawners now credit the BFG Ball that spawned them for kills they perform.
+- Implemented an optional upgrade challenge system.  'Nuff said. :D
+- The Allmap now gives a custom ZScript item for the Allmap.  It will increment the Bird's Eye View challenge if active.
+- Rune Trial Stones and Elite Guard Corpses now increment their corresponding challenges when used.
+- Changed all calls to A_Die to calls to A_DamageSelf with the DMSS_KILL flag (which will kill the actor).  This also allows for greater expansion with kill credits.
+- Zooming sequences for the Super Shotgun can no longer interrupt the firing sequence.  However, choke/zoom adjustment will still be changed within said firing sequence at the (un)press of the Alt-Fire button.
+- The Heavy Assault Rifle now uses A_PlaySound to play its (un)deployment of the micro missile rack.
+- Changed calls to GiveInventory/TakeInventory to A_GiveInventory/A_TakeInventory in NetworkProcess, to bypass the previously needed CustomInventory chain.
+- Heat Blast wave now spawned in A_HeatBlast.  Damage dealt to monsters via A_HeatBlast is now credited to this Heat Blast wave.
+- Launching a Heat Blast spawns four more Heat Blast waves alongside the original Heat Blast wave for added stacked effect.
+- Volatile Discharge now deals 320 explosive damage (previously 200).
+- Power Surge now deals 320 explosive damage (previously 200).
+- BFGKillCounter now decrements its amount every tic its "owner" is not close enough to a BFG Ball, instead of going away entirely.
+- Remote Detonation's Jagged Shrapnel no longer has the DMSS_NOFACTOR and DMSS_NOPROTECT flags.
+
+===== v0.4 =====
+- Chaingun and Gauss Cannon spawn sparsity are now influenced by item sparsity settings.
+- Fixed a bug with Saving Throw not being triggered the first time you die when it's equipped.
+- Radsuits are now replaced with Quad/Haste spawners.
+- Fuel Ammo now only spawns after a Chainsaw has spawned.  However, Chainsaws can still be spawned wherever Fuel Ammo would have typically spawned (in place of every 160th ammo pickup) if a chainsaw hadn't spawned prior.
+- Super Shotguns spawn in place of every 6th Combat Shotgun at DOOM (2016) sparsity settings.  This way, the Super Shotgun can spawn in The Ultimate Doom. :D
+- Chainsaws now spawn in place of every 5 fuel canisters (or in place of the 80th ammo pickup, if it's able to spawn and hadn't spawned prior).
+- The additional sound that plays when firing the Plasma Rifle while the Heat Blast module is equipped now only plays if Super Heated Rounds is in the player's inventory. 
+- Increased drop rate for all droppable ammo pickups... each to have a 25% chance of dropping, if needed (BFG ammo drops whenever, at a 25% chance, but of course you will need to have Ammo Boost II equipped).
+- Changed the bleed rate for Jagged Shrapnel affliction from a random delay of 3-5 tics to a flat 3 tics.
+- Extended the range of the BFG's tracers to 1536 units.
+- Got rid of the "BFG Catch Item", which would kill any monsters that were in range of the BFG ball, regardless of whether or not they could be "seen" by the BFG ball, if they had recieved counters from its tracers prior to its detonation.
+- Tripled BFG tracer damage to boss monsters, from 5 to 15.
+- Changed the Ultimate Cooling Mastery Challenge so that you don't have to close the Mobile Turret in order to obtain mastery counters for Ultimate Cooling.
+- Increased the rolloff value for the BFG's explosion sound so that it can be heard from even further away.
+- Shaved off a whopping 5 tics from the Combat Shotgun's standard pumping animation, allowing it to fire slightly faster.
+- Subtracted tic from each standard Glory Kill sequence.  Again.
+- Added 1 tic to all Berserk Glory Kill sequences.
+- Super Shotgun firing sequences can now be interrupted by the zooming animation (only with Double Trouble, if there is still one shot left in the barrel.  Also, the Super Shotgun's zooming sequence can now be interrupted by firing.
+- Added the RGF_NOSIGHT flag to calls to A_RadiusGive for yielding weapon upgrade points from monsters.
+- Shaved off 4 tics from the Chaingun's base (minimum) ROF.
+
+===== v0.3 =====
+- Changed the PlayerInfo variable in EOA_HandlerItem to fetch player info via Owner.Player.
+- Sped up punching animations for all punches, to make them feel more impactful.  Punches and Glory Kills themselves still take the same amount of time to execute.
+
+===== v0.2 =====
+- Changed Explosive Shot grenade's explosion radius multiplier (with Bigger Boom) from 2.0 to 1.5.
+- Fuel Ammo is now half as likely to spawn as before.
+- Elite Guard Corpses no longer occasionally spawn in place of certain ammo boxes.
+- Fixed a rare bug where the charged sound for the Heat Blast module wouldn't play upon acquiring a full charge if it was fully charged prior to the purchase of Expanded Threshold.
+- Fixed a rarer bug where the charged sound for the Heat Blast module would play when switching to it, if the above bug had happened.
+- Added back 1 tic to all non-Chainsaw/non-Death From Above Glory Kill sequences.
+- Fixed an issue with Argent Cells not yielding progress toward the Armored Offensive Upgrade Challenge if your current armor was over its maximum.
+- Ensured that ammo pickups dropped by monsters that aren't the temporary items don't get picked up if colliding with a player within the very first tic of its existence (rare bug).
+
+===== v0.1 =====
+- Reverted Chain Stun's detonation radius back from 256 units to 512 units.
+- Double Jump replaces Z velocity when Z velocity is less than 0, as opposed to less than the player's jump height.
+- Made "triggered on use" items call A_CallSpecial upon being used.
+- Removed the call to Console.PrintF that would show the amount of Saving Throws the player had before getting one taken away.  This should've been done before the initial Alpha Release.
+- Changed sound limit for "BFGAmmo/Rotate" to 0, because some instances of the sound will cancel each other out if there are more than two instances playing within 256 units from each other.
+- Updated Credits to include Jimmy's work on the fonts.
+- Fixed a potential crash on titlemaps and such by adding a null-check for the player's ReadyWeapon in the functions that determine the weapon icon and ammo count to display.
+- Fixed the Double Jump giving the player too much velocity.
+- Fixed limitless Double Jumps granted by repeatedly bashing the player's head against the ceiling (yes, this was an actual bug).
+- Fixed a major issue with Argent Cells reducing your armor amount to its maximum if it was beyond its maximum prior to diverting the Argent Cell's power to the Armor subsystem.
+- Changed conditions so that the Chainsaw can work on monsters with the BOSS flag whose max HP is less than 3000.
+- Shaved off 2 tics from each Glory Kill sequence, except for those of the Chainsaw and the Death From Above sequences.
+
+===== v0.0 =====
+- Alpha Release

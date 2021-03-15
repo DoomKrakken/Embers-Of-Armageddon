@@ -1,0 +1,1007 @@
+//[DoomKrakken]: I recieved a hell of a lot of help from phantombeta with this stuff, and a little bit from Nash Muhandes too. :)
+Class OptionMenuItemEOA_Submenu : OptionMenuItemSubmenu
+{
+	Int mParam;
+	Name invName;
+	Int minAmount;
+	Bool IsLessThan;
+	String ActivateSound;
+	//[DoomKrakken]: Init reflects the parameters you physically define in MENUDEF.  It has to be defined itself for every class you make.
+	OptionMenuItemEOA_Submenu Init(String label, Name invName, Name command, Int minAmount = 1, Int param = 0, Bool centered = False, Bool CheckLessThan = False, String ActivateSound = "DSEMPTY")
+	{
+		Super.Init (label, command, centered);
+		mParam = param;
+		Self.invName = invName;
+		Self.minAmount = minAmount;
+		IsLessThan = CheckLessThan;
+		Self.ActivateSound = ActivateSound;
+		Return Self;
+	}
+	
+	//[DoomKrakken]: Selectable says what it does.  It determines whether or not a menu item is selectable.
+	Override Bool Selectable() 
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		Return (Player && Player.Mo && ((Player.Mo.CountInv(invName) >= minAmount && !IsLessThan) || (Player.Mo.CountInv(invName) < minAmount && IsLessThan)));
+	}
+
+	//[DoomKrakken]: Draw renders the item on screen.
+	Override Int Draw(OptionMenuDescriptor Desc, Int y, Int Indent, Bool Selected)
+	{
+		Int X = DrawLabel(Indent, Y, Selected ? OptionMenuSettings.mFontColorSelection : OptionMenuSettings.mFontColorMore, !Self.Selectable ());
+		If (mCentered)
+		{
+			Return X - 16 * CleanXfac_1;
+		}
+		Return Indent;
+	}
+
+	//[DoomKrakken]: Activate is triggered when someone attempts to activate the menu item.
+	Override Bool Activate()
+	{
+		If (!Self.Selectable())
+		{
+			Menu.MenuSound("Menu/Error");
+			Return False;
+		}
+		Else
+		{
+			Menu.MenuSound(ActivateSound);
+			Menu.MenuSound("Menu/Choose");
+			Menu.SetMenu(mAction, mParam);
+			Return True;
+		}
+	}
+}
+
+Class OptionMenuItemEOA_PraetorSubmenu : OptionMenuItemSubmenu //[DoomKrakken]: Like the EOA_Submenu, but with an "exclusion" parameter, so that we can do tier-based upgrading like the Praetor Suit upgrade menu in DOOM.
+{
+	Int mParam;
+	Name invName;
+	Name invNameEx;
+	OptionMenuItemEOA_PraetorSubmenu Init(String label, Name invName, Name invNameEx, Name command, Int param = 0, Bool centered = False)
+	{
+		Super.Init (label, command, centered);
+		mParam = param;
+		Self.invName = invName;
+		Self.invNameEx = invNameEx;
+		Return Self;
+	}
+	
+	Override Bool Selectable() 
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		Return (Player && Player.Mo && (Player.Mo.CountInv(invName) && !Player.Mo.CountInv(invNameEx)));
+	}
+
+	Override Int Draw(OptionMenuDescriptor Desc, Int y, Int Indent, Bool Selected)
+	{
+		Int X = DrawLabel(Indent, Y, Selected ? OptionMenuSettings.mFontColorSelection : OptionMenuSettings.mFontColorMore, !Self.Selectable ());
+		If (mCentered)
+		{
+			Return X - 16 * CleanXfac_1;
+		}
+		Return Indent;
+	}
+
+	Override Bool Activate()
+	{
+		If (!Self.Selectable())
+		{
+			Menu.MenuSound("Menu/Error");
+			Return False;
+		}
+		Else
+		{
+			Menu.MenuSound("Menu/Choose");
+			Menu.SetMenu(mAction, mParam);
+			Return True;
+		}
+	}
+}
+
+Class OptionMenuItemEOA_PurchaseMenu : OptionMenuItemSubmenu
+{
+	CVar ChargedEnergyShotCost, ChargedBurstCost, ExplosiveShotCost, SSGImprovementsCost, MicroMissilesCost, TacticalScopeCost, LockOnBurstCost, RemoteDetonationCost, HeatBlastCost, StunBombCost, PrecisionBoltCost, SiegeModeCost, GatlingRotatorCost, MobileTurretCost, EnvironmentalResistanceCost, AreaScanningTechnologyCost, EquipmentSystemCost, PowerupEffectivenessCost, DexterityCost, WeaponUpgradePoints, PraetorTokens;
+	Int mParam, minAmount, RuneMinAmount;
+	Name PurchaseItem, CostItem, minAmountName;
+	Bool CheckLessThan, Costless, Comparison, IsRune;
+	OptionMenuItemEOA_PurchaseMenu Init(String label, Name PurchaseItem, Name CostItem, Name command, Name minAmount, Int param = 0, Bool centered = False, Bool CheckLessThan = False, Bool Costless = False, Bool Comparison = False, Bool IsRune = False, Int RuneMinAmount = 0)
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		Super.Init (label, command, centered);
+		mParam = param;
+		Self.PurchaseItem = PurchaseItem;
+		Self.CostItem = CostItem;
+		minAmountName = minAmount;
+		Self.CheckLessThan = CheckLessThan;
+		Self.Costless = Costless;
+		Self.Comparison = Comparison;
+		Self.IsRune = IsRune;
+		Self.RuneMinAmount = RuneMinAmount;
+		Return Self;
+	}
+
+	Override Bool Selectable() 
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (IsRune)
+		{
+			Return (Player && Player.Mo && !Player.Mo.CountInv(PurchaseItem) && (Player.Mo.CountInv("Vacuum") + Player.Mo.CountInv("DazedAndConfused") + Player.Mo.CountInv("AmmoBoost") + Player.Mo.CountInv("EquipmentPower") + Player.Mo.CountInv("Savagery") + Player.Mo.CountInv("SeekAndDestroy") + Player.Mo.CountInv("InFlightMobility") + Player.Mo.CountInv("ArmoredOffensive") + Player.Mo.CountInv("BloodFueled") + Player.Mo.CountInv("IntimacyIsBest") + Player.Mo.CountInv("RichGetRicher") + Player.Mo.CountInv("SavingThrow")) >= MinAmount);
+		}
+		Return (Player && Player.Mo && ((Player.Mo.CountInv(CostItem) >= minAmount && !CheckLessThan) || (Player.Mo.CountInv(CostItem) < minAmount && CheckLessThan)));
+	}
+	
+	Override Void Ticker() //[DoomKrakken]: I assume this works every render tic... or whatever.  Just not the game tic.
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		
+		//CVar Caching...
+		ChargedEnergyShotCost = ChargedEnergyShotCost ? ChargedEnergyShotCost : CVar.GetCVar("ChargedEnergyShotCost", Player);
+		ChargedBurstCost = ChargedBurstCost ? ChargedBurstCost : CVar.GetCVar("ChargedBurstCost", Player);
+		ExplosiveShotCost = ExplosiveShotCost ? ExplosiveShotCost : CVar.GetCVar("ExplosiveShotCost", Player);
+		SSGImprovementsCost = SSGImprovementsCost ? SSGImprovementsCost : CVar.GetCVar("SSGImprovementsCost", Player);
+		MicroMissilesCost = MicroMissilesCost ? MicroMissilesCost : CVar.GetCVar("MicroMissilesCost", Player);
+		TacticalScopeCost = TacticalScopeCost ? TacticalScopeCost : CVar.GetCVar("TacticalScopeCost", Player);
+		LockOnBurstCost = LockOnBurstCost ? LockOnBurstCost : CVar.GetCVar("LockOnBurstCost", Player);
+		RemoteDetonationCost = RemoteDetonationCost ? RemoteDetonationCost : CVar.GetCVar("RemoteDetonationCost", Player);
+		HeatBlastCost = HeatBlastCost ? HeatBlastCost : CVar.GetCVar("HeatBlastCost", Player);
+		StunBombCost = StunBombCost ? StunBombCost : CVar.GetCVar("StunBombCost", Player);
+		PrecisionBoltCost = PrecisionBoltCost ? PrecisionBoltCost : CVar.GetCVar("PrecisionBoltCost", Player);
+		SiegeModeCost = SiegeModeCost ? SiegeModeCost : CVar.GetCVar("SiegeModeCost", Player);
+		GatlingRotatorCost = GatlingRotatorCost ? GatlingRotatorCost : CVar.GetCVar("GatlingRotatorCost", Player);
+		MobileTurretCost = MobileTurretCost ? MobileTurretCost : CVar.GetCVar("MobileTurretCost", Player);
+		
+		EnvironmentalResistanceCost = EnvironmentalResistanceCost ? EnvironmentalResistanceCost : CVar.GetCVar("EnvironmentalResistanceCost", Player);
+		AreaScanningTechnologyCost = AreaScanningTechnologyCost ? AreaScanningTechnologyCost : CVar.GetCVar("AreaScanningTechnologyCost", Player);
+		EquipmentSystemCost = EquipmentSystemCost ? EquipmentSystemCost : CVar.GetCVar("EquipmentSystemCost", Player);
+		PowerupEffectivenessCost = PowerupEffectivenessCost ? PowerupEffectivenessCost : CVar.GetCVar("PowerupEffectivenessCost", Player);
+		DexterityCost = DexterityCost ? DexterityCost : CVar.GetCVar("DexterityCost", Player);
+		
+		WeaponUpgradePoints = WeaponUpgradePoints ? WeaponUpgradePoints : CVar.GetCVar("WeaponUpgradePoints", Player);
+		PraetorTokens = PraetorTokens ? PraetorTokens : CVar.GetCVar("PraetorTokens", Player);
+
+		//Upgrade Point Costs...
+		ChargedEnergyShotCost.SetInt(1 + 2 * (Player.Mo.CountInv("ChargeEfficiency") + Player.Mo.CountInv("QuickRecovery") + Player.Mo.CountInv("EMGLightWeight")));
+		ChargedBurstCost.SetInt(1 + 2 * (Player.Mo.CountInv("CBSpeedyRecovery") + Player.Mo.CountInv("RapidFire") + Player.Mo.CountInv("QuickLoad")));
+		ExplosiveShotCost.SetInt(1 + 2 * (Player.Mo.CountInv("ESSpeedyRecovery") + Player.Mo.CountInv("BiggerBoom") + Player.Mo.CountInv("InstantLoad")));
+		SSGImprovementsCost.SetInt(3 + 3 * (Player.Mo.CountInv("SSGUraniumCoating") + Player.Mo.CountInv("FasterReload")));
+		MicroMissilesCost.SetInt(1 + 2 * (Player.Mo.CountInv("AmmoEfficient") + Player.Mo.CountInv("AdvancedLoader") + Player.Mo.CountInv("QuickLauncher")));
+		TacticalScopeCost.SetInt(1 + 2 * (Player.Mo.CountInv("HARUraniumCoating") + Player.Mo.CountInv("SkullCracker") + Player.Mo.CountInv("HARLightWeight")));
+		LockOnBurstCost.SetInt(3 + 3 * (Player.Mo.CountInv("QuickLock") + Player.Mo.CountInv("FasterRecovery")));
+		RemoteDetonationCost.SetInt(3 + 3 * (Player.Mo.CountInv("ImprovedWarhead") + Player.Mo.CountInv("JaggedShrapnel")));
+		HeatBlastCost.SetInt(1 + 2 * (Player.Mo.CountInv("SuperHeatedRounds") + Player.Mo.CountInv("ImprovedVenting") + Player.Mo.CountInv("ExpandedThreshold")));
+		StunBombCost.SetInt(1 + 2 * (Player.Mo.CountInv("QuickRecharge") + Player.Mo.CountInv("BigShock") + Player.Mo.CountInv("LongerStun")));
+		PrecisionBoltCost.SetInt(3 + 3 * (Player.Mo.CountInv("GCNLightWeight") + Player.Mo.CountInv("EnergyEfficient")));
+		SiegeModeCost.SetInt(3 + 3 * (Player.Mo.CountInv("OuterBeam") + Player.Mo.CountInv("ReducedChargeTime")));
+		GatlingRotatorCost.SetInt(3 + 3 * (Player.Mo.CountInv("ImprovedTorque") + Player.Mo.CountInv("GRUraniumCoating")));
+		MobileTurretCost.SetInt(3 + 3 * (Player.Mo.CountInv("RapidDeployment") + Player.Mo.CountInv("MTUraniumCoating")));
+		
+		//Praetor Suit Upgrade Costs...
+		EnvironmentalResistanceCost.SetInt(1 + Player.Mo.CountInv("HazardProtection") + Player.Mo.CountInv("SelfPreservation")); //[DoomKrakken]: We only need to check for the first two upgrades, since these are always pruchased in order.
+		AreaScanningTechnologyCost.SetInt(1 + Player.Mo.CountInv("ItemAwareness") + Player.Mo.CountInv("SecretFinder"));
+		EquipmentSystemCost.SetInt(2 + Player.Mo.CountInv("QuickCharge") + Player.Mo.CountInv("StockUp"));
+		PowerupEffectivenessCost.SetInt(1 + Player.Mo.CountInv("PowerSurge") + Player.Mo.CountInv("HealingPower"));
+		DexterityCost.SetInt(2 + Player.Mo.CountInv("Adept") + Player.Mo.CountInv("QuickHands"));
+		
+		//"Currency"
+		WeaponUpgradePoints.SetInt(Player.Mo.CountInv("WeaponUpgradePoint"));
+		PraetorTokens.SetInt(Player.Mo.CountInv("PraetorToken"));
+		If (Player.Mo)
+		{
+			If (IsRune)
+			{
+				MinAmount = RuneMinAmount;
+			}
+			Else
+			{
+				MinAmount = (Player.Mo && (!Costless || Comparison)) ? CVar.GetCVar(minAmountName, Player).GetInt() : 0;
+			}
+		}
+	}
+
+	Override Int Draw(OptionMenuDescriptor Desc, Int y, Int Indent, Bool Selected)
+	{
+		Int X = DrawLabel(Indent, Y, Selected ? OptionMenuSettings.mFontColorSelection : OptionMenuSettings.mFontColorMore, !Self.Selectable());
+		If (mCentered)
+		{
+			Return X - 16 * CleanXfac_1;
+		}
+		Return Indent;
+	}
+
+	Override Bool Activate()
+	{
+		If (Self.Selectable())
+		{
+			String GiveItem = String.Format("GiveItem:%s", PurchaseItem);
+			String TakeItem = String.Format("TakeItem:%s", CostItem);
+			EventHandler.SendNetworkEvent(GiveItem);
+			If (!Costless)
+			{
+				Menu.MenuSound("Menu/Choose");
+				EventHandler.SendNetworkEvent(TakeItem, minAmount);
+				Menu.GetCurrentMenu().MenuEvent(Menu.MKEY_Back, True);
+				Return False;
+			}
+			Let curMenu = Menu.GetCurrentMenu();
+			If (curMenu) //Just to make sure
+			{ 
+				curMenu.mParentMenu = Null;
+				curMenu.Close();
+			}
+		}
+		Return False;
+	}
+}
+
+Class OptionMenuItemEOA_StaticText : OptionMenuItem
+{
+	String Label;
+	String CheckValue;
+	Bool IsCVar;
+	Int mColor;
+	OptionMenuItemEOA_StaticText Init(String Label, String CheckValue, Bool IsCVar = False, int cr = -1)
+	{
+		Self.Label = Label;
+		Self.CheckValue = CheckValue;
+		Self.IsCVar = IsCVar;
+		Super.Init("", 'None', True);
+		mColor = OptionMenuSettings.mFontColor;
+		If ((cr & 0xffff0000) == 0x12340000)
+		{
+			mColor = cr & 0xffff;
+		}
+		Else If (cr > 0) 
+		{
+			mColor = OptionMenuSettings.mFontColorHeader;
+		}
+		Return Self;
+	}
+
+	Override Void Ticker()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player.Mo)
+		{			
+			If (IsCVar)
+			{
+				mLabel = String.Format(Label, CVar.GetCVar(CheckValue, Player).GetInt());
+			}
+			Else
+			{
+				mLabel = String.Format(Label, Player.Mo.CountInv(CheckValue));
+			}
+		}
+	}
+	
+	Override Int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
+	{
+		DrawLabel(indent, y, mColor);
+		Return -1;
+	}
+
+	Override Bool Selectable()
+	{
+		Return False;
+	}
+}
+
+Class OptionMenuItemEOA_ChallengeText : OptionMenuItemEOA_StaticText
+{
+	String DisplayType;
+	Int Index;
+	OptionMenuItemEOA_ChallengeText Init(String DisplayType, Int Index, Int cr = -1)
+	{
+		Self.DisplayType = DisplayType;
+		Self.Index = Index;
+		Super.Init("", 'None', True);
+		mColor = OptionMenuSettings.mFontColor;
+		If ((cr & 0xffff0000) == 0x12340000)
+		{
+			mColor = cr & 0xffff;
+		}
+		Else If (cr > 0) 
+		{
+			mColor = OptionMenuSettings.mFontColorHeader;
+		}
+		Return Self;
+	}
+
+	Override Void Ticker()
+	{
+		Let Challenges = EOA_ChallengeArchive.Retrieve();
+		If (Challenges)
+		{
+			For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+			{
+				If (Challenges.ChallengeData[i].Active && Challenges.ChallengeData[i].ChallengeNum == Index)
+				{
+					If (DisplayType == "Name")
+					{
+						mLabel = String.Format("%s", Challenges.ChallengeData[i].Name);
+					}
+					Else If (DisplayType == "Description")
+					{
+						mLabel = String.Format("%s", Challenges.ChallengeData[i].Desc);
+					}
+					Else If (DisplayType == "Amount")
+					{
+						If (Challenges.ChallengeData[i].Amount >= Challenges.ChallengeData[i].MaxAmount)
+						{
+							mLabel = "Challenge Complete";
+						}
+						Else
+						{
+							mLabel = String.Format("%d / %d", Challenges.ChallengeData[i].Amount, Challenges.ChallengeData[i].MaxAmount);
+						}
+					}
+					Break;
+				}
+				Else
+				{
+					mLabel = "";
+				}
+			}
+		}
+	}
+	
+	Override Int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
+	{
+		DrawLabel(indent, y, mColor);
+		Return -1;
+	}
+
+	Override Bool Selectable()
+	{
+		Return False;
+	}
+}
+
+Class OptionMenuItemEOA_MasteryText : OptionMenuItem
+{
+	String Label;
+	Int mColor;
+	OptionMenuItemEOA_MasteryText Init(String Label, Int cr = -1)
+	{
+		Self.Label = Label;
+		Super.Init("", 'None', True);
+		mColor = OptionMenuSettings.mFontColor;
+		If ((cr & 0xffff0000) == 0x12340000)
+		{
+			mColor = cr & 0xffff;
+		}
+		Else If (cr > 0) 
+		{
+			mColor = OptionMenuSettings.mFontColorHeader;
+		}
+		Return Self;
+	}
+
+	Override Void Ticker()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player.Mo)
+		{
+			If (Player.Mo.CountInv(Label))
+			{
+				mLabel = "";
+			}
+			Else If (Label == "IncreasedPower" && (Player.Mo.CountInv("ChargeEfficiency") && Player.Mo.CountInv("QuickRecovery") && Player.Mo.CountInv("EMGLightWeight")))
+			{
+				mLabel = String.Format("Get 15 headshot kills using the Charged Energy Shot. %d/15", Player.Mo.CountInv("IncreasedPowerMasteryCounter"));
+			}
+			Else If (Label == "PowerShot" && (Player.Mo.CountInv("CBSpeedyRecovery") && Player.Mo.CountInv("RapidFire") && Player.Mo.CountInv("QuickLoad")))
+			{
+				mLabel = String.Format("Kill 5 Mancubi with the Charged Burst. %d/5", Player.Mo.CountInv("PowerShotMasteryCounter"));
+			}
+			Else If (Label == "ClusterStrike" && (Player.Mo.CountInv("ESSpeedyRecovery") && Player.Mo.CountInv("BiggerBoom") && Player.Mo.CountInv("InstantLoad")))
+			{
+				mLabel = String.Format("Get 20 direct hits on Imps with the Explosive Shot. %d/20", Player.Mo.CountInv("ClusterStrikeMasteryCounter"));
+			}
+			Else If (Label == "DoubleTrouble" && (Player.Mo.CountInv("SSGUraniumCoating") && Player.Mo.CountInv("FasterReload")))
+			{
+				mLabel = String.Format("Kill multiple enemies with one shot 30 times. %d/30", Player.Mo.CountInv("DoubleTroubleMasteryCounter"));
+			}
+			Else If (Label == "BottomlessMissiles" && (Player.Mo.CountInv("AmmoEfficient") && Player.Mo.CountInv("AdvancedLoader") && Player.Mo.CountInv("QuickLauncher")))
+			{
+				mLabel = "Hit 4 different enemies with Micro Missiles in 5 seconds.";
+			}
+			Else If (Label == "DevastatorRounds" && (Player.Mo.CountInv("HARUraniumCoating") && Player.Mo.CountInv("SkullCracker") && Player.Mo.CountInv("HARLightWeight")))
+			{
+				mLabel = String.Format("Get 50 headshot kills while using the Tactical Scope. %d/50", Player.Mo.CountInv("DevastatorRoundsMasteryCounter"));
+			}
+			Else If (Label == "MultiTargeting" && (Player.Mo.CountInv("QuickLock") && Player.Mo.CountInv("FasterRecovery")))
+			{
+				mLabel = String.Format("Kill 5 Arch-Viles with the Lock-On Burst. %d/5", Player.Mo.CountInv("MultiTargetingMasteryCounter"));
+			}
+			Else If (Label == "ExternalPayload" && (Player.Mo.CountInv("ImprovedWarhead") && Player.Mo.CountInv("JaggedShrapnel")))
+			{
+				mLabel = String.Format("Kill 3 or more enemies with a Remote Detonation 15 times. %d/15", Player.Mo.CountInv("ExternalPayloadMasteryCounter"));
+			}
+			Else If (Label == "HeatedCore" && (Player.Mo.CountInv("SuperHeatedRounds") && Player.Mo.CountInv("ImprovedVenting") && Player.Mo.CountInv("ExpandedThreshold")))
+			{
+				mLabel = String.Format("Kill multiple enemies with a single Heat Blast 20 times. %d/20", Player.Mo.CountInv("HeatedCoreMasteryCounter"));
+			}
+			Else If (Label == "ChainStun" && (Player.Mo.CountInv("QuickRecharge") && Player.Mo.CountInv("BigShock") && Player.Mo.CountInv("LongerStun")))
+			{
+				mLabel = String.Format("Kill 30 stunned enemies. %d/30", Player.Mo.CountInv("ChainStunMasteryCounter"));
+			}
+			Else If (Label == "VolatileDischarge" && (Player.Mo.CountInv("EnergyEfficient") && Player.Mo.CountInv("GCNLightWeight")))
+			{
+				mLabel = String.Format("Get 5 headshot kills on Hell Knights with the Precision Bolt. %d/5", Player.Mo.CountInv("VolatileDischargeMasteryCounter"));
+			}
+			Else If (Label == "MobileSiege" && (Player.Mo.CountInv("OuterBeam") && Player.Mo.CountInv("ReducedChargeTime")))
+			{
+				mLabel = String.Format("Kill 3 or more enemies with one Siege Blast 10 times. %d/10", Player.Mo.CountInv("MobileSiegeMasteryCounter"));
+			}
+			Else If (Label == "IncendiaryRounds" && (Player.Mo.CountInv("ImprovedTorque") && Player.Mo.CountInv("GRUraniumCoating")))
+			{
+				mLabel = "Kill 5 enemies within 5 seconds.";
+			}
+			Else If (Label == "UltimateCooling" && (Player.Mo.CountInv("RapidDeployment") && Player.Mo.CountInv("MTUraniumCoating")))
+			{
+				mLabel = String.Format("Kill 4 or more enemies in one deployment 5 times. %d/5", Player.Mo.CountInv("UltimateCoolingMasteryCounter"));
+			}
+			Else
+			{
+				mLabel = "===== Purchase all upgrades to unlock Mastery =====";
+			}
+		}
+	}
+	
+	Override Int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
+	{
+		DrawLabel(indent, y, mColor);
+		Return -1;
+	}
+
+	Override Bool Selectable()
+	{
+		Return False;
+	}
+}
+
+Class UnquittableOptionMenu : OptionMenu //[DoomKrakken]: An option menu for the Argent Cell reroute.  This will feature the MenuEvent override from the OptionMenu, but without the call to Super.MenuEvent (which contains the case for the Escape key, so that you don't quit out of the menu until after you've made a choice.
+{
+	Override Bool MenuEvent (Int mKey, Bool fromController)
+	{
+		Int startedAt = mDesc.mSelectedItem;
+
+		Switch (mKey)
+		{
+		Case MKEY_Back:
+			Return False;
+		}
+		Return Super.MenuEvent(mkey, fromcontroller);
+		If (mDesc.mSelectedItem != startedAt)
+		{
+			MenuSound ("menu/cursor");
+		}
+		Return True;
+	}
+}
+
+Class FieldDroneOptionMenu : OptionMenu //[DoomKrakken]: An option menu for the Field Drone.  All it does is take away the counter from the Field Drone that renders it unusable while someone has the menu open.  This way, players can access the Field Drone if one backs away from it, and so that only one can select a mod from a Field Drone at a time.
+{
+	Override Bool MenuEvent (Int mKey, Bool fromController)
+	{
+		Int startedAt = mDesc.mSelectedItem;
+
+		Switch (mKey)
+		{
+		Case MKEY_Back:
+			Close();
+			MenuSound (GetCurrentMenu() != Null? "menu/backup" : "menu/clear");
+			EventHandler.SendNetworkEvent("ClearDronePointers");
+			Return True;
+		}
+		Return Super.MenuEvent(mkey, fromcontroller);
+	}
+}
+
+Class RuneTrialStoneOptionMenu : OptionMenu //[DoomKrakken]: An option menu for the Rune Trial Stone.  All it does is take away the counter from the stone that renders it unusable while someone has the menu open.  This way, players can access the stone if one backs away from it, and so that only one can select a rune from a Rune Trial Stone at a time.
+{
+	Override Bool MenuEvent (Int mKey, Bool fromController)
+	{
+		Int startedAt = mDesc.mSelectedItem;
+
+		Switch (mKey)
+		{
+		Case MKEY_Back:
+			Close();
+			MenuSound (GetCurrentMenu() != Null? "menu/backup" : "menu/clear");
+			EventHandler.SendNetworkEvent("ClearStonePointers");
+			Return True;
+		}
+		Return Super.MenuEvent(mkey, fromcontroller);
+	}
+}
+
+Class OptionMenuItemEOA_RuneMenu : OptionMenuItemSubmenu
+{
+	Int mParam;
+	Int MinAmount;
+	//[DoomKrakken]: Init reflects the parameters you physically define in MENUDEF.  It has to be defined itself for every class you make.
+	OptionMenuItemEOA_RuneMenu Init(String label, Name command, Int MinAmount, Int param = 0, Bool centered = False)
+	{
+		Super.Init(label, command, centered);
+		mParam = param;
+		Self.MinAmount = MinAmount;
+		Return Self;
+	}
+	
+	//[DoomKrakken]: Selectable says what it does.  It determines whether or not a menu item is selectable.
+	Override Bool Selectable() 
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		Return (Player && Player.Mo && (Player.Mo.CountInv("Vacuum") + Player.Mo.CountInv("DazedAndConfused") + Player.Mo.CountInv("AmmoBoost") + Player.Mo.CountInv("EquipmentPower") + Player.Mo.CountInv("Savagery") + Player.Mo.CountInv("SeekAndDestroy") + Player.Mo.CountInv("InFlightMobility") + Player.Mo.CountInv("ArmoredOffensive") + Player.Mo.CountInv("BloodFueled") + Player.Mo.CountInv("IntimacyIsBest") + Player.Mo.CountInv("RichGetRicher") + Player.Mo.CountInv("SavingThrow")) >= MinAmount);
+	}
+
+	//[DoomKrakken]: Draw renders the item on screen.
+	Override Int Draw(OptionMenuDescriptor Desc, Int y, Int Indent, Bool Selected)
+	{
+		Int X = DrawLabel(Indent, Y, Selected ? OptionMenuSettings.mFontColorSelection : OptionMenuSettings.mFontColorMore, !Self.Selectable ());
+		If (mCentered)
+		{
+			Return X - 16 * CleanXfac_1;
+		}
+		Return Indent;
+	}
+
+	//[DoomKrakken]: Activate is triggered when someone attempts to activate the menu item.
+	Override Bool Activate()
+	{
+		If (!Self.Selectable())
+		{
+			Menu.MenuSound("Menu/Error");
+			Return False;
+		}
+		Else
+		{
+			Menu.MenuSound("Menu/Choose");
+			Menu.SetMenu(mAction, mParam);
+			Return True;
+		}
+	}
+}
+
+Class OptionMenuItemEOA_RuneSelectedText : OptionMenuItem
+{
+	CVar RuneCVar;
+	String Label;
+	Name CheckValue;
+	Int mColor;
+	OptionMenuItemEOA_RuneSelectedText Init(String Label, Name CheckValue, Int cr = -1)
+	{
+		Self.Label = Label;
+		Self.CheckValue = CheckValue;
+		Super.Init("", 'None', True);
+		mColor = OptionMenuSettings.mFontColor;
+		If ((cr & 0xffff0000) == 0x12340000)
+		{
+			mColor = cr & 0xffff;
+		}
+		Else If (cr > 0) 
+		{
+			mColor = OptionMenuSettings.mFontColorHeader;
+		}
+		Return Self;
+	}
+
+	Override Void Ticker()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player.Mo)
+		{
+			RuneCvar = RuneCVar ? RuneCVar : CVar.GetCVar(CheckValue, Player);
+			String Mastered, NewLabel;
+			//If ((CVar.GetCVar(CheckValue, Player).GetString() == "Vacuum" && Player.Mo.CountInv("VacuumII")) ||	(CVar.GetCVar(CheckValue, Player).GetString() == "Dazed And Confused" && Player.Mo.CountInv("DazedAndConfusedII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Ammo Boost" && Player.Mo.CountInv("AmmoBoostII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Equipment Power" && Player.Mo.CountInv("EquipmentPowerII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Savagery" && Player.Mo.CountInv("SavageryII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Seek And Destroy" && Player.Mo.CountInv("SeekAndDestroyII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "In-Flight Mobility" && Player.Mo.CountInv("InFlightMobilityII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Armored Offensive" && Player.Mo.CountInv("ArmoredOffensiveII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Blood Fueled" && Player.Mo.CountInv("BloodFueledII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Intimacy Is Best" && Player.Mo.CountInv("IntimacyIsBestII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Rich Get Richer" && Player.Mo.CountInv("RichGetRicherII")) || (CVar.GetCVar(CheckValue, Player).GetString() == "Saving Throw" && Player.Mo.CountInv("SavingThrowII")))
+			Switch (RuneCVar.GetInt())
+			{
+			Case RUNE_VACUUM:
+				Mastered = Player.Mo.CountInv("VacuumII") ? "II" : "I";
+				NewLabel = String.Format("Vacuum %s", Mastered);
+				Break;
+			Case RUNE_DAZEDANDCONFUSED:
+				Mastered = Player.Mo.CountInv("DazedAndConfusedII") ? "II" : "I";
+				NewLabel = String.Format("Dazed And Confused %s", Mastered);
+				Break;
+			Case RUNE_AMMOBOOST:
+				Mastered = Player.Mo.CountInv("AmmoBoostII") ? "II" : "I";
+				NewLabel = String.Format("Ammo Boost %s", Mastered);
+				Break;
+			Case RUNE_EQUIPMENTPOWER:
+				Mastered = Player.Mo.CountInv("EquipmentPowerII") ? "II" : "I";
+				NewLabel = String.Format("Equipment Power %s", Mastered);
+				Break;
+			Case RUNE_SAVAGERY:
+				Mastered = Player.Mo.CountInv("SavageryII") ? "II" : "I";
+				NewLabel = String.Format("Savagery %s", Mastered);
+				Break;
+			Case RUNE_SEEKANDDESTROY:
+				Mastered = Player.Mo.CountInv("SeekAndDestroyII") ? "II" : "I";
+				NewLabel = String.Format("Seek And Destroy %s", Mastered);
+				Break;
+			Case RUNE_INFLIGHTMOBILITY:
+				Mastered = Player.Mo.CountInv("InFlightMobilityII") ? "II" : "I";
+				NewLabel = String.Format("In-Flight Mobility %s", Mastered);
+				Break;
+			Case RUNE_ARMOREDOFFENSIVE:
+				Mastered = Player.Mo.CountInv("ArmoredOffensiveII") ? "II" : "I";
+				NewLabel = String.Format("Armored Offensive %s", Mastered);
+				Break;
+			Case RUNE_BLOODFUELED:
+				Mastered = Player.Mo.CountInv("BloodFueledII") ? "II" : "I";
+				NewLabel = String.Format("Blood Fueled %s", Mastered);
+				Break;
+			Case RUNE_INTIMACYISBEST:
+				Mastered = Player.Mo.CountInv("IntimacyIsBestII") ? "II" : "I";
+				NewLabel = String.Format("Intimacy Is Best %s", Mastered);
+				Break;
+			Case RUNE_RICHGETRICHER:
+				Mastered = Player.Mo.CountInv("RichGetRicherII") ? "II" : "I";
+				NewLabel = String.Format("Rich Get Richer %s", Mastered);
+				Break;
+			Case RUNE_SAVINGTHROW:
+				Mastered = Player.Mo.CountInv("SavingThrowII") ? "II" : "I";
+				NewLabel = String.Format("Saving Throw %s", Mastered);
+				Break;
+			Default:
+				Mastered = "";
+				NewLabel = "<none>";
+				Break;
+			}
+			mLabel = String.Format(Label, NewLabel);
+			/*If ((CheckCVar.GetInt() == RUNE_VACUUM && Player.Mo.CountInv("VacuumII")) ||
+			(CheckCVar.GetInt() == RUNE_DAZEDANDCONFUSED && Player.Mo.CountInv("DazedAndConfusedII")) ||
+			(CheckCVar.GetInt() == RUNE_AMMOBOOST && Player.Mo.CountInv("AmmoBoostII")) ||
+			(CheckCVar.GetInt() == RUNE_EQUIPMENTPOWER && Player.Mo.CountInv("EquipmentPowerII")) ||
+			(CheckCVar.GetInt() == RUNE_SAVAGERY && Player.Mo.CountInv("SavageryII")) ||
+			(CheckCVar.GetInt() == RUNE_SEEKANDDESTROY && Player.Mo.CountInv("SeekAndDestroyII")) ||
+			(CheckCVar.GetInt() == RUNE_INFLIGHTMOBILITY && Player.Mo.CountInv("InFlightMobilityII")) ||
+			(CheckCVar.GetInt() == RUNE_ARMOREDOFFENSIVE && Player.Mo.CountInv("ArmoredOffensiveII")) ||
+			(CheckCVar.GetInt() == RUNE_BLOODFUELED && Player.Mo.CountInv("BloodFueledII")) ||
+			(CheckCVar.GetInt() == RUNE_INTIMACYISBEST && Player.Mo.CountInv("IntimacyIsBestII")) ||
+			(CheckCVar.GetInt() == RUNE_RICHGETRICHER && Player.Mo.CountInv("RichGetRicherII")) ||
+			(CheckCVar.GetInt() == RUNE_SAVINGTHROW && Player.Mo.CountInv("SavingThrowII")))
+			{
+				Mastered = "II";
+			}
+			Else If (!CheckCVar)
+			{
+				Mastered = "";
+			}
+			String NewLabel = String.Format(Label, CheckCVar.GetInt());
+			mLabel = String.Format("%s %s", NewLabel, Mastered);
+			*/
+		}
+	}
+	
+	Override Int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
+	{
+		DrawLabel(indent, y, mColor);
+		Return -1;
+	}
+
+	Override Bool Selectable()
+	{
+		Return False;
+	}
+}
+
+Class OptionMenuItemEOA_RuneSelectionMenu : OptionMenuItemSubmenu
+{
+	Int mParam;
+	Int Rune;
+	String Label;
+	String RuneCVarName;
+	CVar RS1, RS2, RS3;
+	OptionMenuItemEOA_RuneSelectionMenu Init(String Label, Int Rune, String CVar, Name Command, Int Param = 0, Bool Centered = False)
+	{
+		Super.Init(Label, Command, Centered);
+		mParam = param;
+		Self.Rune = Rune;
+		Self.RuneCVarName = CVar;
+		Self.Label = Label;
+		Return Self;
+	}
+	
+	Override Bool Selectable()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		RS1 = CVar.GetCVar("RuneSlot1", Player);
+		RS2 = CVar.GetCVar("RuneSlot2", Player);
+		RS3 = CVar.GetCVar("RuneSlot3", Player);
+		Class<Inventory> InvName;
+		Switch (Rune)
+		{
+		Case RUNE_VACUUM:
+			InvName = "Vacuum";
+			Break;
+		Case RUNE_DAZEDANDCONFUSED:
+			InvName = "DazedAndConfused";
+			Break;
+		Case RUNE_AMMOBOOST:
+			InvName = "AmmoBoost";
+			Break;
+		Case RUNE_EQUIPMENTPOWER:
+			InvName = "EquipmentPower";
+			Break;
+		Case RUNE_SAVAGERY:
+			InvName = "Savagery";
+			Break;
+		Case RUNE_SEEKANDDESTROY:
+			InvName = "SeekAndDestroy";
+			Break;
+		Case RUNE_INFLIGHTMOBILITY:
+			InvName = "InFlightMobility";
+			Break;
+		Case RUNE_ARMOREDOFFENSIVE:
+			InvName = "ArmoredOffensive";
+			Break;
+		Case RUNE_BLOODFUELED:
+			InvName = "BloodFueled";
+			Break;
+		Case RUNE_INTIMACYISBEST:
+			InvName = "IntimacyIsBest";
+			Break;
+		Case RUNE_RICHGETRICHER:
+			InvName = "RichGetRicher";
+			Break;
+		Case RUNE_SAVINGTHROW:
+			InvName = "SavingThrow";
+			Break;
+		}
+		Return (Player && Player.Mo && ((Player.Mo.CountInv(InvName) && !(RS1.GetInt() == Rune || RS2.GetInt() == Rune || RS3.GetInt() == Rune)) || !Rune));
+	}
+
+	Override Int Draw(OptionMenuDescriptor Desc, Int y, Int Indent, Bool Selected)
+	{
+		Int X = DrawLabel(Indent, Y, Selected ? OptionMenuSettings.mFontColorSelection : OptionMenuSettings.mFontColorMore, !Self.Selectable());
+		If (mCentered)
+		{
+			Return X - 16 * CleanXfac_1;
+		}
+		Return Indent;
+	}
+
+	Override Bool Activate()
+	{
+		If (!Self.Selectable())
+		{
+			Menu.MenuSound("Menu/Error");
+			Return False;
+		}
+		Else
+		{
+			PlayerInfo Player = Players[ConsolePlayer];
+			Name RuneName;
+			Switch (Rune)
+			{
+			Case RUNE_VACUUM:
+				RuneName = "Vacuum";
+				Break;
+			Case RUNE_DAZEDANDCONFUSED:
+				RuneName = "DazedAndConfused";
+				Break;
+			Case RUNE_AMMOBOOST:
+				RuneName = "AmmoBoost";
+				Break;
+			Case RUNE_EQUIPMENTPOWER:
+				RuneName = "EquipmentPower";
+				Break;
+			Case RUNE_SAVAGERY:
+				RuneName = "Savagery";
+				Break;
+			Case RUNE_SEEKANDDESTROY:
+				RuneName = "SeekAndDestroy";
+				Break;
+			Case RUNE_INFLIGHTMOBILITY:
+				RuneName = "InFlightMobility";
+				Break;
+			Case RUNE_ARMOREDOFFENSIVE:
+				RuneName = "ArmoredOffensive";
+				Break;
+			Case RUNE_BLOODFUELED:
+				RuneName = "BloodFueled";
+				Break;
+			Case RUNE_INTIMACYISBEST:
+				RuneName = "IntimacyIsBest";
+				Break;
+			Case RUNE_RICHGETRICHER:
+				RuneName = "RichGetRicher";
+				Break;
+			Case RUNE_SAVINGTHROW:
+				RuneName = "SavingThrow";
+				Break;
+			Default:
+				RuneName = "Clear";
+				Break;
+			}
+			If (!Rune)
+			{
+				CVar.GetCVar(RuneCVarName, Player).SetInt(Rune);
+				String GiveItem = String.Format("GiveItem:%s", RuneName);
+				EventHandler.SendNetworkEvent(GiveItem);
+			}
+			Else
+			{
+				CVar.GetCVar(RuneCVarName, Player).SetInt(Rune);
+				String GiveItem = String.Format("GiveItem:%sSelected", RuneName);
+				EventHandler.SendNetworkEvent(GiveItem);
+			}
+			Menu.MenuSound("Menu/Choose");
+			Menu.GetCurrentMenu().MenuEvent(Menu.MKEY_Back, True);
+			Return False;
+		}
+	}
+}
+
+Class OptionMenuItemEOA_RuneDescriptionText : OptionMenuItem
+{
+	CVar RuneCVar;
+	String Label;
+	Int mColor;
+	OptionMenuItemEOA_RuneDescriptionText Init(String Label, int cr = -1)
+	{
+		Self.Label = Label;
+		Super.Init("", 'None', True);
+		mColor = OptionMenuSettings.mFontColor;
+		If ((cr & 0xffff0000) == 0x12340000)
+		{
+			mColor = cr & 0xffff;
+		}
+		Else If (cr > 0) 
+		{
+			mColor = OptionMenuSettings.mFontColorHeader;
+		}
+		Return Self;
+	}
+
+	Override Void Ticker()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player.Mo)
+		{
+			RuneCvar = RuneCVar ? RuneCVar : CVar.GetCVar(Label, Player);
+			Switch (RuneCVar.GetInt())
+			{
+			Case RUNE_VACUUM:
+				mLabel = "Increases pickup radius for dropped items.";
+				Break;
+			Case RUNE_DAZEDANDCONFUSED:
+				mLabel = "Increases enemy stagger state duration.";
+				Break;
+			Case RUNE_AMMOBOOST:
+				mLabel = "Increases the value of standard ammo pickups yielded by\nenemies and items.";
+				Break;
+			Case RUNE_EQUIPMENTPOWER:
+				mLabel = "Increases the effectiveness of equipment.";
+				Break;
+			Case RUNE_SAVAGERY:
+				mLabel = "Perform Glory Kills faster.";
+				Break;
+			Case RUNE_SEEKANDDESTROY:
+				mLabel = "Launch into a Glory Kill from much further away.";
+				Break;
+			Case RUNE_INFLIGHTMOBILITY:
+				mLabel = "Provides a significant increase in control over in-air\nmovement after a double jump.";
+				Break;
+			Case RUNE_ARMOREDOFFENSIVE:
+				mLabel = "Enemies drop armor upon being Glory Killed.";
+				Break;
+			Case RUNE_BLOODFUELED:
+				mLabel = "Gain a significant boost in speed for a short time after\nperforming a Glory Kill.";
+				Break;
+			Case RUNE_INTIMACYISBEST:
+				mLabel = "While staggered, enemies gain a high damage resistance,\nbecoming more Glory Kill-friendly.";
+				Break;
+			Case RUNE_RICHGETRICHER:
+				mLabel = "Your standard weapons do not consume ammo while you have\n100 or more armor.";
+				Break;
+			Case RUNE_SAVINGTHROW:
+				mLabel = "Get one chance to survive a death blow and recover health.\nThis resets on death.";
+				Break;
+			Default:
+				mLabel = "";
+				Break;
+			}
+		}
+	}
+	
+	Override Int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
+	{
+		DrawLabel(indent, y, mColor);
+		Return -1;
+	}
+
+	Override Bool Selectable()
+	{
+		Return False;
+	}
+}
+
+Class OptionMenuItemEOA_RuneChallengeText : OptionMenuItem
+{
+	CVar RuneCVar;
+	String Label;
+	Int mColor;
+	OptionMenuItemEOA_RuneChallengeText Init(String Label, int cr = -1)
+	{
+		Self.Label = Label;
+		Super.Init("", 'None', True);
+		mColor = OptionMenuSettings.mFontColor;
+		If ((cr & 0xffff0000) == 0x12340000)
+		{
+			mColor = cr & 0xffff;
+		}
+		Else If (cr > 0) 
+		{
+			mColor = OptionMenuSettings.mFontColorHeader;
+		}
+		Return Self;
+	}
+
+	Override Void Ticker()
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player.Mo)
+		{
+			RuneCVar = RuneCVar ? RuneCVar : CVar.GetCVar(Label, Player);
+			Switch (RuneCVar.GetInt())
+			{
+			Case RUNE_VACUUM:
+				mLabel = Player.Mo.CountInv("VacuumII") ? "Further increases pickup radius for dropped items." : String.Format("Absorb 300 dropped items. %d/300", Player.Mo.CountInv("VacuumChallengeCounter"));
+				Break;
+			Case RUNE_DAZEDANDCONFUSED:
+				mLabel = Player.Mo.CountInv("DazedAndConfusedII") ? "Further increases enemy stagger state duration." : String.Format("Perform 25 \"Death From Above\" Glory Kills. %d/25", Player.Mo.CountInv("DazedAndConfusedChallengeCounter"));
+				Break;
+			Case RUNE_AMMOBOOST:
+				mLabel = Player.Mo.CountInv("AmmoBoostII") ? "BFG ammo has a chance to drop from enemies." : String.Format("Pick up 500 ammo items. %d/500", Player.Mo.CountInv("AmmoBoostChallengeCounter"));
+				Break;
+			Case RUNE_EQUIPMENTPOWER:
+				mLabel = Player.Mo.CountInv("EquipmentPowerII") ? "Further increases the effectiveness of equipment." : String.Format("Use equipment 30 times. %d/30", Player.Mo.CountInv("EquipmentPowerChallengeCounter"));
+				Break;
+			Case RUNE_SAVAGERY:
+				mLabel = Player.Mo.CountInv("SavageryII") ? "Perform Glory Kills even faster." : String.Format("Perform 25 unique Glory Kills on enemies. %d/25", Player.Mo.CountInv("SavageryChallengeCounter"));
+				Break;
+			Case RUNE_SEEKANDDESTROY:
+				mLabel = Player.Mo.CountInv("SeekAndDestroyII") ? "Increases the distance \"Seek And Destroy\" can be initiated." : String.Format("Perform 75 Glory Kills. %d/75", Player.Mo.CountInv("SeekAndDestroyChallengeCounter"));
+				Break;
+			Case RUNE_INFLIGHTMOBILITY:
+				mLabel = Player.Mo.CountInv("InFlightMobilityII") ? "Applies air control to a single jump." : String.Format("Kill 30 enemies while midair. %d/30", Player.Mo.CountInv("InFlightMobilityChallengeCounter"));
+				Break;
+			Case RUNE_ARMOREDOFFENSIVE:
+				mLabel = Player.Mo.CountInv("ArmoredOffensiveII") ? "Enemies drop more armor upon being Glory Killed." : String.Format("Earn 2500 points of armor. %d/2500", Player.Mo.CountInv("ArmoredOffensiveChallengeCounter"));
+				Break;
+			Case RUNE_BLOODFUELED:
+				mLabel = Player.Mo.CountInv("BloodFueledII") ? "Extends the speed boost's duration." : String.Format("Kill 50 monsters while \"Blood Fueled\" is active. %d/50", Player.Mo.CountInv("BloodFueledChallengeCounter"));
+				Break;
+			Case RUNE_INTIMACYISBEST:
+				mLabel = Player.Mo.CountInv("IntimacyIsBestII") ? "Enemies stagger off of less damage." : String.Format("Stagger enemies 100 times. %d/100", Player.Mo.CountInv("IntimacyIsBestChallengeCounter"));
+				Break;
+			Case RUNE_RICHGETRICHER:
+				mLabel = Player.Mo.CountInv("RichGetRicherII") ? "\"Rich Get Richer\" is applied at 75 or more armor." : String.Format("Fill your armor capacity to its maximum 12 times. %d/12", Player.Mo.CountInv("RichGetRicherChallengeCounter"));
+				Break;
+			Case RUNE_SAVINGTHROW:
+				mLabel = Player.Mo.CountInv("SavingThrowII") ? "Get an additional saving throw per life." : String.Format("Kill 10 monsters while \"Saving Throw\" is active. %d/10", Player.Mo.CountInv("SavingThrowChallengeCounter"));
+				Break;
+			Default:
+				mLabel = "";
+				Break;
+			}
+		}
+	}
+	
+	Override Int Draw(OptionMenuDescriptor desc, int y, int indent, bool selected)
+	{
+		DrawLabel(indent, y, mColor);
+		Return -1;
+	}
+
+	Override Bool Selectable()
+	{
+		Return False;
+	}
+}

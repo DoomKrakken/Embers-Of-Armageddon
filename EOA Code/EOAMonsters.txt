@@ -1,0 +1,69 @@
+Ooh, now we have damage values for the monsters to scale!  Taken from "http://www.burningconcept.com/DOOM/doom-bestiary.html".
+
+We'll compare the value as seen on the site to 8/5 of the vanilla monster's health value (which is the value to be used in Doom, if it has a counterpart... others will have estimations).
+
+=== Bruiser Baron ===
+Health: 3500
+EOA Health: 1400 
+
+=== Caco ===
+Health: 2000
+EOA Health: 800
+
+=== Cyber-Mancubus ===
+Health: 3500
+EOA Health: 1400
+
+=== Bruiser Knight ===
+Health: 1800
+EOA Health: 720
+
+=== Hell Razer ===
+Health: 600
+EOA Health: 240
+
+=== Imp ===
+Health: 150
+EOA Health: 60
+
+=== Lost Soul ===
+Health: 75
+EOA Health: 30 (Lost Souls are much weaker than they used to be).
+
+=== Mancubus ===
+Health: 2500
+EOA Health: 1000
+
+=== Pinky ===
+Health: 1000
+Armor: 2000
+EOA Health: 400
+EOA Armor: 800
+
+=== Engineer ===
+Health: 150
+EOA Health: 60
+
+=== Security ===
+Health: 500
+EOA Health: 200
+
+=== Soldier ===
+Health: 400
+EOA Health: 160
+
+=== Revenant ===
+Health: 1600
+EOA Health: 640
+
+=== Spectre ===
+Health: 2000
+EOA Health: (see Pinky)
+
+=== Summoner ===
+Health: 1400
+EOA Health: 540
+
+=== Fodder ===
+Health: 150
+EOA Health: 60

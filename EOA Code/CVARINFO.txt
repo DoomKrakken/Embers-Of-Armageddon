@@ -1,0 +1,71 @@
+//Option Menu CVars...
+Server Float EOA_ItemSparsity = 2;
+Server Int EOA_PointSparsity = 1;
+Server Bool EOA_KillAmount = False;
+User Bool EOA_TrueSpeed = True;
+Server Bool EOA_DynLights = True;
+User Bool EOA_APRRecoil = True;
+Server Bool EOA_DamFloors = False;
+User Bool EOA_ViewZ = False;
+Server Bool EOA_NoHitscan = True;
+User Bool EOA_JumpStart = True;
+Server Bool EOA_ToasterMode = False;
+User Bool EOA_CSGStart = False;
+Server Bool EOA_WeakPoints = True;
+Server Bool EOA_CSGSpawn = True;
+Server Bool EOA_SSGSpawn = True;
+Server Bool EOA_HARSpawn = True;
+Server Bool EOA_PLRSpawn = True;
+Server Bool EOA_CSWSpawn = True;
+Server Bool EOA_MinLightLevel = True;
+Server Bool EOA_GKHighlights = True;
+User Bool EOA_Reticles = True;
+
+//Upgrade Point Costs...
+User NoArchive Int ChargedEnergyShotCost = 1;
+User NoArchive Int ChargedBurstCost = 1;
+User NoArchive Int ExplosiveShotCost = 1;
+User NoArchive Int SSGImprovementsCost = 3;
+User NoArchive Int MicroMissilesCost = 1;
+User NoArchive Int TacticalScopeCost = 1;
+User NoArchive Int LockOnBurstCost = 3;
+User NoArchive Int RemoteDetonationCost = 3;
+User NoArchive Int HeatBlastCost = 1;
+User NoArchive Int StunBombCost = 1;
+User NoArchive Int PrecisionBoltCost = 3;
+User NoArchive Int SiegeModeCost = 3;
+User NoArchive Int GatlingRotatorCost = 3;
+User NoArchive Int MobileTurretCost = 3;
+
+//Praetor Suit Upgrade Costs...
+User NoArchive Int EnvironmentalResistanceCost = 1;
+User NoArchive Int AreaScanningTechnologyCost = 1;
+User NoArchive Int EquipmentSystemCost = 2;
+User NoArchive Int PowerupEffectivenessCost = 1;
+User NoArchive Int DexterityCost = 2;
+
+//Items
+User NoArchive Int ArgentCellMax = 4;
+User NoArchive Int WeaponUpgradePoints = 0;
+User NoArchive Int PraetorTokens = 0;
+
+//Runes
+User NoArchive Bool VacuumSelected = False;
+User NoArchive Bool DazedAndConfusedSelected = False; 
+User NoArchive Bool AmmoBoostSelected = False;
+User NoArchive Bool EquipmentPowerSelected = False;
+User NoArchive Bool SavagerySelected = False;
+User NoArchive Bool SeekAndDestroySelected = False;
+User NoArchive Bool InFlightMobilitySelected = False;
+User NoArchive Bool ArmoredOffensiveSelected = False;
+User NoArchive Bool BloodFueledSelected = False;
+User NoArchive Bool IntimacyIsBestSelected = False; 
+User NoArchive Bool RichGetRicherSelected = False;
+User NoArchive Bool SavingThrowSelected = False;
+
+User NoArchive Int RuneSlot1 = 0; //"<none>";
+User NoArchive Int RuneSlot2 = 0; //"<none>";
+User NoArchive Int RuneSlot3 = 0; //"<none>";
+
+User NoArchive Int SavingThrows = -1;
+User NoArchive Int NullCVar = 1;

@@ -1,0 +1,187 @@
+Class EOA_Essentials : Thinker
+{
+	Actor Owner;
+	Array<EOA_WeakPoint> WeakPoints;
+	Int StaggerThreshold, BossHealthMilestone, FuelReq;
+	Bool Staggered, Stunned;
+	//Index 0 reserved for the head for this standard.  You can add more and change their positions with a custom-defined monster that detects the item in its inventory.
+	//This default configuration should give you a (somewhat) good example as to how you can define your own weakpoints.  Again, you can't do it here, but you can in your monster... or if you so wanted, create a completely new item that'd also generate weakpoints.
+	Override Void PostBeginPlay()
+	{
+		If (!Owner || !Owner.bISMONSTER)
+		{
+			Destroy();
+			Return;
+		}
+		StaggerThreshold = Owner.GetSpawnHealth() * 0.3 * (1 + (Owner.GetSpawnHealth() <= 50)) / (1 + (Owner.GetSpawnHealth() >= 500)) / (1 + (Owner.GetSpawnHealth() >= 1000)) / (1 + Owner.bBOSS);
+		If (Owner.bISMONSTER && !(Owner.bBOSS && Owner.GetSpawnHealth() >= 3000) && !Owner.bDORMANT)
+		{
+			If (Owner.GetSpawnHealth() >= 1000)
+			{
+				FuelReq = 5;
+			}
+			Else If (Owner.GetSpawnHealth() < 1000 && Owner.GetSpawnHealth() >= 300)
+			{
+				FuelReq = 3;
+			}
+			Else If (Owner.GetSpawnHealth() < 300)
+			{
+				FuelReq = 1;
+			}
+		}
+		EOA_WeakPoint WP = EOA_WeakPoint(Actor.Spawn("EOA_WeakPoint"));
+		WP.Owner = Owner;
+		WP.Label = "Head";
+		WP.A_SetSize(Owner.Default.Radius / 1.75, Owner.Default.Height / 5.5);
+		WP.SetDefaultRelPos((0, 0, Owner.Default.Height - Owner.Default.Height / 5.5));
+		WP.SetRelPos(WP.GetDefaultRelPos());
+		WeakPoints.Push(WP);
+		Super.PostBeginPlay();
+	}
+	Override Void Tick()
+	{
+		If (Owner && Owner.bISMONSTER && !Owner.bKILLED)
+		{
+			Owner.ProjectilePassHeight = EOA_WeakPoints ? Owner.Default.Height - Owner.Default.Height / 5.5 : Owner.Default.ProjectilePassHeight;
+			//[DoomKrakken]: Reset this value each tic...
+			If (Owner.bBOSS && Owner.Default.Health >= 3000)
+			{
+				If (Owner.Health < (2 - BossHealthMilestone) * Owner.Default.Health / 3)
+				{
+					BossHealthMilestone++;
+					Owner.A_DropItem("TempMediPack", -1);
+					Owner.A_DropItem("TempMediPack", -1);
+					Owner.A_DropItem("TempMediPack", -1);
+					Owner.A_DropItem("TempMediPack", -1);
+					Owner.A_DropItem("MegaTempBulletAmmo", -1);
+					Owner.A_DropItem("MegaTempShellAmmo", -1);
+					Owner.A_DropItem("MegaTempRocketAmmo", -1);
+					Owner.A_DropItem("MegaTempCellAmmo", -1);
+				}
+			}
+			If (Owner.Health <= 15) //In case the monster hasn't been staggered and has less health than the damage of your actual melee attack.
+			{
+				Owner.A_GiveInventory("PowerMeleeProtection");				
+			}
+		}
+		Else
+		{
+			Destroy();
+		}
+	}
+}
+
+Class EOA_WeakPoint : Actor
+{
+	Actor Owner;
+	Class<Actor> OwnerBloodType;
+	String Label;
+	Vector3 RelPos;
+	Vector3 DefaultRelPos;
+	Default
+	{
+		BloodType "EOA_WeakPointBlood";
+		+INVULNERABLE
+		+NOGRAVITY
+	}
+	Override Void Tick()
+	{
+		bNOINTERACTION = !EOA_WeakPoints;
+		If (EOA_WeakPoints)
+		{
+			If (Owner && !Owner.CountInv("GloryKillCounter"))
+			{
+				If (!Owner.bKILLED)
+				{
+					bNOBLOOD = Owner.bNOBLOOD;
+					bSOLID = Owner.bSOLID;
+					bSHOOTABLE = Owner.bSHOOTABLE;
+					CopyBloodColor(Owner);
+					OwnerBloodType = Owner.GetBloodType(0);
+					If (Pos != Owner.Pos + RelPos)
+					{
+						SetOrigin(Owner.Pos + RelPos, True);
+					}
+					If (Angle != Owner.Angle)
+					{
+						A_SetAngle(Owner.Angle);
+					}
+					Return;
+				}
+			}
+			Destroy();
+			Return;
+		}
+		Else
+		{
+			If (!Owner || Owner.bKILLED)
+			{
+				Destroy();
+				Return;
+			}
+			bNOBLOOD = bSOLID = bSHOOTABLE = False;
+		}
+	}
+	Override Int DamageMobj(Actor Inflictor, Actor Source, Int Damage, Name MOD, Int Flags, Double Angle)
+	{
+		Int OwnerDamage = Damage * OwnerDamageFactor();
+		If (Inflictor && ((Inflictor == Self)) || (Source && (Source == Owner)) || ((Flags & DMG_EXPLOSION) && Label == "Head"))
+		{
+			If (Inflictor.GetClassName() == "HARMicroMissile" || (!CheckIfCloser(Inflictor, Radius, True) && !CheckIfCloser(Inflictor, Height)))
+			{
+				OwnerDamage = 0;
+			}
+		}
+		If (Owner && Label == "Head")
+		{
+			Flags &= ~DMG_EXPLOSION;
+			Owner.RadiusDamageFactor = 0;
+			Owner.DamageMobj(Inflictor, Source, OwnerDamage, MOD, Flags, Angle);
+			Owner.RadiusDamageFactor = Owner.Default.RadiusDamageFactor;
+		}
+		Return Super.DamageMobj(Inflictor, Source, Damage, MOD, Flags, Angle);
+	}
+	Override Bool CanCollideWith(Actor Other, Bool Passive)
+	{
+		If (Owner && Passive)
+		{
+			If ((Other.Target && Other.Target == Owner) || Owner == Other || (Other.bNOTELEPORT && Other.bISMONSTER && !Other.bMISSILE)) //[DoomKrakken]: Last check here is primarily for the Pain Elemental's attack, as this hitbox would otherwise interfere with that.
+			{
+				Return False;
+			}
+		}
+		Return Super.CanCollideWith(Other, Passive);
+	}
+	Virtual Double OwnerDamageFactor()
+	{
+		Return 1.0;
+	}
+	Vector3 GetRelPos()
+	{
+		Return RelPos;
+	}
+	Void SetRelPos(Vector3 Vec = (0, 0, 0))
+	{
+		RelPos = Vec;
+	}
+	Void ResetRelPos()
+	{
+		RelPos = GetDefaultRelPos();
+	}
+	Vector3 GetDefaultRelPos()
+	{
+		Return DefaultRelPos;
+	}
+	Void SetDefaultRelPos(Vector3 Vec = (0, 0, 0))
+	{
+		DefaultRelPos = Vec;
+	}
+}
+
+Class EOA_WeakPointBlood : Actor
+{
+	Default
+	{
+		+PUFFGETSOWNER
+	}
+}

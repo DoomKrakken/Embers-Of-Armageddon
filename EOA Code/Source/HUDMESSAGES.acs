@@ -1,0 +1,209 @@
+#library "HUDMESSAGES"
+#include "zcommon.acs"
+
+Script "MapDownloadMessage" (void)
+{
+	SetFont("MAPDLDED");
+	HudMessage(s:"A";HUDMSG_TYPEON|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, 0, 0, 1.5, 0.84, 3.0, 0.005, 1.0);
+}
+
+Script "SecretHUDCounter" (void)
+{
+	int TotalSecrets = GetLevelInfo(LEVELINFO_TOTAL_SECRETS);
+	int SecretsFound = GetLevelInfo(LEVELINFO_FOUND_SECRETS);
+	int SecretCheckpoint = TotalSecrets / 8;
+	
+	SetFont("SCRETHUD");
+	switch(TotalSecrets)
+	{
+	case 1:
+		If (SecretsFound == 1) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		break;
+			
+	case 2:
+		If (SecretsFound == 2) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound == 1) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else
+		{ HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	break;
+	
+	case 3:
+		If (SecretsFound == 3)
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound == 2) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 0.75, 0.005, 0.40);
+		  LocalAmbientSound("misc/secret",127);
+		  Delay(40);
+		  HudMessage(s:"e";HUDMSG_FADEINOUT|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.40, 1.0); } 
+		Else If (SecretsFound == 1) 
+		{ HudMessage(s:"d";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else
+		{ HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	break;
+	
+	case 4:
+		If (SecretsFound == 4) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound == 3) 
+		{ HudMessage(s:"b";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 2) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 1) 
+		{ HudMessage(s:"b";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }   
+		Else
+		{ HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	break;
+	
+	case 5:
+		If (SecretsFound == 5) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound == 4) 
+		{ HudMessage(s:"i";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 3) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 0.75, 0.005, 0.40);
+		  LocalAmbientSound("misc/secret",127);
+		  Delay(40);
+		  HudMessage(s:"h";HUDMSG_FADEINOUT|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.40, 1.0); } 
+		Else If (SecretsFound == 2) 
+		{ HudMessage(s:"g";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 1) 
+		{ HudMessage(s:"f";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }   
+		Else
+		{ HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	break;
+	
+	case 6:
+		If (SecretsFound == 6) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound == 5) 
+		{ HudMessage(s:"d";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 4) 
+		{ HudMessage(s:"e";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 3) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 2) 
+		{ HudMessage(s:"d";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 1) 
+		{ HudMessage(s:"e";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }   
+		Else
+		{ HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	break;
+	
+	case 7:
+		If (SecretsFound == 7) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound == 6) 
+		{ HudMessage(s:"o";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 5) 
+		{ HudMessage(s:"n";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 4) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 0.75, 0.005, 0.40);
+		  LocalAmbientSound("misc/secret",127);
+		  Delay(40);
+		  HudMessage(s:"m";HUDMSG_FADEINOUT|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.40, 1.0); } 
+		Else If (SecretsFound == 3) 
+		{ HudMessage(s:"l";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 2) 
+		{ HudMessage(s:"k";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 1) 
+		{ HudMessage(s:"j";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }   
+		Else
+		{ HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	break;
+	
+	case 8:
+		If (SecretsFound == 8) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound == 7) 
+		{ HudMessage(s:"c";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 6) 
+		{ HudMessage(s:"b";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }    
+		Else If (SecretsFound == 5) 
+		{ HudMessage(s:"a";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 4) 
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }  
+		Else If (SecretsFound == 3) 
+		{ HudMessage(s:"c";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 2) 
+		{ HudMessage(s:"b";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); } 
+		Else If (SecretsFound == 1) 
+		{ HudMessage(s:"a";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }   
+		Else
+		{ HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	break;
+	
+	Default:
+		If (SecretsFound >= TotalSecrets)
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound >= SecretCheckpoint * 7)
+		{ HudMessage(s:"c";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound >= SecretCheckpoint * 6)
+		{ HudMessage(s:"b";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound >= SecretCheckpoint * 5)
+		{ HudMessage(s:"a";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound >= SecretCheckpoint * 4)
+		{ HudMessage(s:"Y";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound >= SecretCheckpoint * 3)
+		{ HudMessage(s:"c";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound >= SecretCheckpoint * 2)
+		{ HudMessage(s:"b";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else If (SecretsFound >= SecretCheckpoint * 1)
+		{ HudMessage(s:"a";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+		Else 
+		{
+		  HudMessage(s:"X";HUDMSG_TYPEON|HUDMSG_ALPHA|HUDMSG_NOTWITHFULLMAP|HUDMSG_ADDBLEND, -900, CR_UNTRANSLATED, 1.5,0.80, 3.0, 0.005, 1.0);
+		  LocalAmbientSound("misc/secret",127); }
+	Break;
+	}
+}	

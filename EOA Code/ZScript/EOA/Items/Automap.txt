@@ -1,0 +1,131 @@
+Class EOA_Allmap : Allmap
+{
+	Mixin EOA_MapMarkerUser;
+	Default
+	{
+		EOA_Allmap.MarkerType "EOA_AllmapMarker";
+		Inventory.PickupSound "";
+		Inventory.PickupMessage "Automap Downloaded";
+		+BRIGHT
+		+COUNTITEM
+	}
+	Override Bool TryPickup(In Out Actor Toucher)
+	{
+		Level.Allmap = True;
+		Let Challenges = EOA_ChallengeArchive.Get();
+		If (Challenges && Challenges.BirdsEyeView.Active)
+		{
+			Challenges.BirdsEyeView.Amount++;
+		}
+		If (Marker)
+		{
+			Marker.ItemClaimed = True;
+		}
+		Toucher.A_GiveInventory("AreaScanningTechnology");
+		Toucher.A_StartSound("Allmap/Pickup", 0);
+		GoAwayAndDie();
+		Return True;
+	}
+	States
+	{
+	Spawn:
+		AMAP ABCDCB 6;
+		Loop;
+	}
+}
+
+Class EOA_AutomapStation : Actor
+{
+	Bool MapDownloaded;
+	Bool MapInactive;
+	Mixin EOA_MapMarkerUser;
+	Default
+	{
+		EOA_AutomapStation.MarkerType "EOA_AllmapMarker";
+		Radius 10;
+		Height 32;
+		XScale 0.75;
+		YScale 0.6;
+		+DONTBLAST
+		+DONTGIB
+		+DONTTHRUST
+		+RELATIVETOFLOOR
+	}
+	Override Bool Used(Actor User)
+	{
+		A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player && Player.Mo && Player.Mo == User && !User.FindInventory("EOA_InteractWeapon", True) && Distance3D(User) <= Player.Mo.UseRange && Distance2D(User) >= Radius && Self.Pos.Z - User.Pos.Z + User.Height >= Radius && !MapDownloaded)
+		{
+			MapDownloaded = True;
+			Level.Allmap = True;
+			Player.Mo.A_GiveInventory("EOA_AllmapWeapon", 1);
+			Player.Mo.A_GiveInventory("AreaScanningTechnology");
+			Let MapHand = EOA_InteractWeapon(User.FindInventory("EOA_AllmapWeapon"));
+			If (MapHand)
+			{
+				MapHand.ReselectWeapon = Player.ReadyWeapon.GetClass();
+				MapHand.Giver = Self;
+				Player.PendingWeapon = MapHand;
+				Player.ReadyWeapon = Null;
+			}
+			If (Marker)
+			{
+				Marker.ItemClaimed = True;
+			}
+			Let Challenges = EOA_ChallengeArchive.Get();
+			If (Challenges && Challenges.BirdsEyeView.Active)
+			{
+				Challenges.BirdsEyeView.Amount++;
+			}
+			Return True;
+		}
+		Return False;
+	}
+	States
+	{
+	Spawn:
+		AMAP E 1 Bright NoDelay A_JumpIf(MapInactive, "MapDownloaded");
+		Wait;
+	MapDownloaded:
+		AMAP F -1 Bright;
+		Wait;
+	}
+}
+
+Class EOA_AllmapWeapon : EOA_InteractWeapon
+{
+	Default
+	{
+		EOA_InteractWeapon.ZoomFactor 1.5;
+	}
+	Override Void DoEffect()
+	{
+		PlayerInfo Player = Owner.Player;
+		If (Giver && Player && Player.Mo && Player.Mo == Owner)
+		{
+			Owner.A_Face(Giver, Max_Pitch: 90, Pitch_Offset: 10 * sin(Pitch), Flags: FAF_TOP);
+		}
+		Super.DoEffect();
+	}
+	States
+	{
+	Ready:
+		TNT1 A 0 EOA_SpawnNoiseMaker("Allmap/Pickup");
+		FDLH ABCDEFGH 1 Bright;
+		FDLH I 25 Bright;
+		FDLH HGFEDCBA 1 Bright;
+		TNT1 A 0
+		{
+			ACS_NamedExecuteAlways("MapDownloadMessage");
+			Let MapStation = EOA_AutomapStation(Invoker.Giver);
+			If (MapStation)
+			{
+				MapStation.MapInactive = True;
+			}
+		}
+		Goto Deselect;
+	}
+}
+
+Class EOA_AllmapReplacer : EOA_AutomapStation {}

@@ -1,0 +1,164 @@
+/*//[DoomKrakken]: Minimally edited so that an infinity symbol can show up when PowerInfiniteAmmo is active.  Infinity symbols from Reelism.  Used as placeholders.
+
+Height 32;
+MonoSpaceFonts True, "0";
+
+StatusBar Fullscreen, FullscreenOffsets //ZDoom HUD
+{
+    //Health
+    DrawImage "MEDIA0", 20, -2, CenterBottom;
+    DrawNumber 3, HUDFONT_DOOM, Untranslated, Health, DrawShadow, 82, -20;
+
+    //Armor
+    DrawImage ArmorIcon, 20, -24, CenterBottom;
+    DrawNumber 3, HUDFONT_DOOM, Untranslated, Armor, DrawShadow, WhenNotZero, 82, -39;
+
+    //Ammo
+    DrawImage AmmoIcon1, -14, -4, CenterBottom;
+    //DrawNumber 3, HUDFONT_DOOM, Untranslated, Ammo1, DrawShadow, -25, -20;
+	/*IfCVarInt SV_InfiniteAmmo, 1
+	{
+		DrawImage "INFINIT1", -35, -2, CenterBottom;
+	}
+	Else
+	{*/
+		/*InInventory PowerRichGetRicherActive //PowerInfiniteAmmo
+		{
+			DrawImage "INFINIT1", -35, -2, CenterBottom;
+		}
+		Else
+		{
+			IsSelected EOA_Pistol
+			{
+				DrawImage "INFINIT1", -35, -2, CenterBottom;
+				DrawImage AmmoIcon2, -14, -22, CenterBottom;
+				DrawNumber 3, HUDFONT_DOOM, Untranslated, Ammo2, DrawShadow, -25, -38;
+			}
+			Else
+			{
+				DrawNumber 3, HUDFONT_DOOM, Untranslated, Ammo1, DrawShadow, -25, -20;
+			}
+		}
+	//}
+    UsesAmmo
+    {
+        //Secondary ammo and Inventory
+        UsesSecondaryAmmo
+        {
+			IsSelected Not EOA_Pistol
+			{
+				DrawImage AmmoIcon2, -14, -22, CenterBottom;
+				DrawNumber 3, HUDFONT_DOOM, Untranslated, Ammo2, DrawShadow, -25, -38;
+			}
+            InventoryBarNotVisible
+            {
+                DrawSelectedInventory CenterBottom, DrawShadow, AlwaysShowCounter, HUDFONT_DOOM, -14, -39, -26, -56, Untranslated;
+            }
+        }
+        //No secondary ammo
+        UsesSecondaryAmmo Not
+        {
+            InventoryBarNotVisible
+            {
+                DrawSelectedInventory CenterBottom, DrawShadow, AlwaysShowCounter, HUDFONT_DOOM, -14, -21, -26, -38, Untranslated;
+            }
+        }
+    }
+    
+    // No ammo but Inventory
+    UsesAmmo Not
+    {
+        InventoryBarNotVisible
+        {
+            DrawSelectedInventory CenterBottom, DrawShadow, AlwaysShowCounter, HUDFONT_DOOM, -14, -3, -26, -20, Untranslated;
+        }
+    }
+
+    GameMode Deathmatch
+    {
+        DrawNumber 2, HUDFONT_DOOM, Untranslated, Frags, DrawShadow, -3, 1;
+    }
+    GameMode Singleplayer, Cooperative, Teamgame
+    {
+        DrawKeyBar 6, Vertical, ReverseRows, Auto, -10, 2, 0, 3, Auto;
+    }
+}
+
+StatusBar Normal // Standard Doom Status bar
+{
+    DrawImage "STBAR", 0, 168;
+    DrawImage "STTPRCNT", 90, 171;
+    DrawImage "STTPRCNT", 221, 171;
+    //DrawNumber 3, HUDFONT_DOOM, Untranslated, Ammo1, 44, 171;
+	/*IfCVarInt SV_InfiniteAmmo, 1
+	{
+		DrawImage "INFINIT2", 17, 172;
+	} 
+	Else 
+	{*/
+		/*InInventory PowerRichGetRicherActive //PowerInfiniteAmmo
+		{
+			DrawImage "INFINIT2", 17, 172;
+		}
+		Else
+		{
+			IsSelected EOA_Pistol
+			{
+				DrawImage "INFINIT2", 17, 172;
+			}
+			Else
+			{
+				DrawNumber 3, HUDFONT_DOOM, Untranslated, Ammo1, 44, 171;
+			}
+		}
+	//}
+    DrawNumber 3, HUDFONT_DOOM, Untranslated, Health, 90, 171;
+    DrawNumber 3, HUDFONT_DOOM, Untranslated, Armor, 221, 171;
+
+    //Keys
+    DrawSwitchableImage KeySlot 2 && 5, "NullImage", "STKEYS0", "STKEYS3", "STKEYS6", 239, 171;
+    DrawSwitchableImage KeySlot 3 && 6, "NullImage", "STKEYS1", "STKEYS4", "STKEYS7", 239, 181;
+    DrawSwitchableImage KeySlot 1 && 4, "NullImage", "STKEYS2", "STKEYS5", "STKEYS8", 239, 191;
+
+    DrawNumber 3, INDEXFONT, Gold, Ammo Clip, 288, 173;
+    DrawNumber 3, INDEXFONT, Gold, Ammo Shell, 288, 179;
+    DrawNumber 3, INDEXFONT, Gold, Ammo RocketAmmo, 288, 185;
+    DrawNumber 3, INDEXFONT, Gold, Ammo Cell, 288, 191;
+
+    DrawNumber 3, INDEXFONT, Gold, AmmoCapacity Clip, 314, 173;
+    DrawNumber 3, INDEXFONT, Gold, AmmoCapacity Shell, 314, 179;
+    DrawNumber 3, INDEXFONT, Gold, AmmoCapacity RocketAmmo, 314, 185;
+    DrawNumber 3, INDEXFONT, Gold, AmmoCapacity Cell, 314, 191;
+    GameMode Deathmatch, Teamgame
+    {
+        DrawNumber 2, HUDFONT_DOOM, Untranslated, Frags, 138, 171;
+    }
+    GameMode Cooperative, Singleplayer
+    {
+        DrawImage "STARMS", 104, 168;
+        DrawSwitchableImage WeaponSlot 2, "STGNUM2", "STYSNUM2", 111, 172; 
+        DrawSwitchableImage WeaponSlot 3, "STGNUM3", "STYSNUM3", 123, 172;
+        DrawSwitchableImage WeaponSlot 4, "STGNUM4", "STYSNUM4", 135, 172;
+        DrawSwitchableImage WeaponSlot 5, "STGNUM5", "STYSNUM5", 111, 182;
+        DrawSwitchableImage WeaponSlot 6, "STGNUM6", "STYSNUM6", 123, 182;
+        DrawSwitchableImage WeaponSlot 7, "STGNUM7", "STYSNUM7", 135, 182;
+    }
+    GameMode Cooperative, Deathmatch, Teamgame
+    {
+        DrawImage Translatable "STFBANY", 144, 169;
+    }
+    DrawSelectedInventory AlternateOnEmpty, INDEXFONT, 143, 168
+    {
+        DrawMugShot 5, 143, 168;
+    }
+}
+
+StatusBar Inventory // Standard bar overlay (ZDoom Addition)
+{
+    DrawInventoryBar Doom, 7, INDEXFONT, 50, 170;
+}
+
+StatusBar Inventoryfullscreen // ZDoom HUD overlay.
+{
+    DrawInventoryBar Doom, Translucent, 7, INDEXFONT, 50, 170;
+}

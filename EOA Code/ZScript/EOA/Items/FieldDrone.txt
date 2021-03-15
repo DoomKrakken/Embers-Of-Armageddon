@@ -1,0 +1,456 @@
+//Field Drone
+Class EOA_FieldDrone : Actor //[DoomKrakken]: Sprites taken from D4T.
+{
+	Mixin EOA_MapMarkerUser;
+	Bool DroneUsed;
+	Bool DroneBeingUsed;
+	Bool Punched;
+	Int AmbSoundTimer;
+	Default
+	{
+		Radius 20;
+		Height 20;
+		Scale 0.4;
+		FloatBobStrength 0.3;
+		EOA_FieldDrone.MarkerType "EOA_FieldDroneMarker";
+		+FLOATBOB
+		+NOBLOOD
+		+NOGRAVITY
+		+RELATIVETOFLOOR
+		+NODAMAGE
+		+DONTTHRUST
+		+DONTBLAST
+		+DONTGIB
+		+ROLLSPRITE
+		+ROLLCENTER
+	}
+	Override Void BeginPlay()
+	{
+		A_Warp(AAPTR_DEFAULT, ZOfs: 25, Flags: WARPF_NOCHECKPOSITION); //This was smart. :D
+		Super.BeginPlay();
+	}
+	Override Void Tick()
+	{
+		If (AmbSoundTimer >= 350)
+		{
+			If (!DroneUsed)
+			{
+				A_StartSound("FieldDrone/Hover/L1", 3);
+				A_StartSound("FieldDrone/Hover/L2", 4);
+			}
+			Else
+			{
+				A_StartSound("FieldDrone/Empty/L1", 3);
+				A_StartSound("FieldDrone/Empty/L2", 4);
+			}
+			AmbSoundTimer = 0;
+		}
+		AmbSoundTimer++;
+		Super.Tick();
+	}
+	Override Bool Used(Actor User) //Thanks again, phantombeta! :D
+	{
+		A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player && Player.Mo && Player.Mo == User && Distance3D(User) <= Player.Mo.UseRange && Distance2D(User) >= Radius && Self.Pos.Z - User.Pos.Z + User.Height >= Radius && !User.FindInventory("EOA_InteractWeapon", True) && !(User.CountInv("ChargedBurst") && User.CountInv("ExplosiveShot") && User.CountInv("MicroMissiles") && User.CountInv("TacticalScope") && User.CountInv("LockOnBurst") && User.CountInv("RemoteDetonation") && User.CountInv("HeatBlast") && User.CountInv("StunBomb") && User.CountInv("PrecisionBolt") && User.CountInv("SiegeMode") && User.CountInv("GatlingRotator") && User.CountInv("MobileTurret")))
+		{
+			DoomSlayer DroneUser = DoomSlayer(User);
+			If (!DroneUsed || !DroneBeingUsed)
+			{
+				DroneBeingUsed = True;
+				If (Player == User.Player) //Only open the menu for the right Player.
+				{
+					Menu.SetMenu("FieldDroneMenu");
+				}
+				DroneUser.LastDroneSelected = Self;
+				Return True;
+			}
+		}
+		Return False;
+	}
+	States
+	{
+	Spawn:
+		FDRN A 1 Bright NoDelay A_JumpIf(DroneUsed, "InUse");
+		Wait;
+	InUse:
+		TNT1 A 0
+		{
+			If (Marker)
+			{
+				Marker.ItemClaimed = True;
+			}
+			bFLOATBOB = False;
+			A_StartSound("FieldDrone/Talk");
+		}
+		FDRN A 1 Bright A_JumpIf(Punched, "Punched");
+		Wait;
+	Punched:
+		TNT1 A 0 {bFLOATBOB = True;}
+		FDRN BBBBBBBBBB 1 A_SetRoll(Roll + 36, SPF_INTERPOLATE);
+	Used:
+		FDRN CB 10 Bright;
+		Loop;
+	}
+}
+
+Class EOA_FieldDroneWeapon : EOA_InteractWeapon
+{
+	EOA_FieldDrone FieldDrone;
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("Mod/Grab");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void DoEffect()
+	{
+		PlayerInfo Player = Owner.Player;
+		If (Giver && Player && Player.Mo && Player.Mo == Owner)
+		{
+			Owner.A_Face(Giver, Max_Pitch: 90, Pitch_Offset: -10 * sin(Pitch), Flags: FAF_BOTTOM);
+		}
+		Super.DoEffect();
+	}
+	States
+	{
+	Ready:
+		FDLH ABCDEFGHI 1;
+		FDLH J 30
+		{
+			EOA_SpawnNoiseMaker("Mod/Grab");
+			A_GunFlash("PunchDrone", GFF_NOEXTCHANGE);
+		}
+		TNT1 A 20;
+		Goto Deselect;
+	PunchDrone:
+		FDRH ABCDEFG 1; //CCBBAA 1; //A_OverlayOffset(OverlayID(), -20, -6, WOF_ADD);
+		FDRH HHIIJJKKLL 1;
+		FDRH M 10;
+		//TNT1 A 0 
+		FDRH NP 1 EOA_SetGKRecoilOffset(-7, 5, 5);
+		TNT1 A 0
+		{
+			If (Invoker.FieldDrone)
+			{
+				Invoker.FieldDrone.AmbSoundTimer = 0;
+				Invoker.FieldDrone.A_StartSound("AmmoCrate/Hit", 7);
+				Invoker.FieldDrone.Punched = True;
+			}
+		}
+		FDRH RSTUVWX 1 EOA_SetGKRecoilOffset(2, -2);
+		TNT1 A 2 EOA_SetGKRecoilOffset(4);
+		Stop;
+	}
+}
+
+//Charged Burst
+Class ChargedBurstPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("ChargedBurst");
+			A_SelectWeapon("EOA_CombatShotgun");
+			If (A_SelectWeapon("EOA_CombatShotgun") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("ChargedBurstSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("ChargedBurstSelected");
+				A_TakeInventory("ExplosiveShotSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class ChargedBurstSwitch : EOA_Token{}
+
+//Explosive Shot
+Class ExplosiveShotPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("ExplosiveShot");
+			A_SelectWeapon("EOA_CombatShotgun");
+			If (A_SelectWeapon("EOA_CombatShotgun") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("ExplosiveShotSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("ExplosiveShotSelected");
+				A_TakeInventory("ChargedBurstSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class ExplosiveShotSwitch : EOA_Token{}
+
+//Micro Missiles
+Class MicroMissilesPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("MicroMissiles");
+			A_SelectWeapon("EOA_HeavyAssaultRifle");
+			If (A_SelectWeapon("EOA_HeavyAssaultRifle") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("MicroMissilesSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("MicroMissilesSelected");
+				A_TakeInventory("TacticalScopeSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class MicroMissilesSwitch : EOA_Token{}
+
+//Tactical Scope
+Class TacticalScopePackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("TacticalScope");
+			A_SelectWeapon("EOA_HeavyAssaultRifle");
+			If (A_SelectWeapon("EOA_HeavyAssaultRifle") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("TacticalScopeSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("TacticalScopeSelected");
+				A_TakeInventory("MicroMissilesSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class TacticalScopeSwitch : EOA_Token{}
+
+//Lock-On Burst
+Class LockOnBurstPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("LockOnBurst");
+			A_SelectWeapon("EOA_RocketLauncher");
+			If (A_SelectWeapon("EOA_RocketLauncher") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("LockOnBurstSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("LockOnBurstSelected");
+				A_TakeInventory("RemoteDetonationSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class LockOnBurstSwitch : EOA_Token{}
+
+//Remote Detonation
+Class RemoteDetonationPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("RemoteDetonation");
+			A_SelectWeapon("EOA_RocketLauncher");
+			If (A_SelectWeapon("EOA_RocketLauncher") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("RemoteDetonationSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("RemoteDetonationSelected");
+				A_TakeInventory("LockOnBurstSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class RemoteDetonationSwitch : EOA_Token{}
+
+//Heat Blast
+Class HeatBlastPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("HeatBlast");
+			A_SelectWeapon("EOA_PlasmaRifle");
+			If (A_SelectWeapon("EOA_PlasmaRifle") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("HeatBlastSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("HeatBlastSelected");
+				A_TakeInventory("StunBombSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class HeatBlastSwitch : EOA_Token{}
+
+//Stun Bomb
+Class StunBombPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("StunBomb");
+			A_SelectWeapon("EOA_PlasmaRifle");
+			If (A_SelectWeapon("EOA_PlasmaRifle") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("StunBombSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("StunBombSelected");
+				A_TakeInventory("HeatBlastSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class StunBombSwitch : EOA_Token{}
+
+//Precision Bolt
+Class PrecisionBoltPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("PrecisionBolt");
+			A_SelectWeapon("EOA_GaussCannon");
+			If (A_SelectWeapon("EOA_GaussCannon") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("PrecisionBoltSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("PrecisionBoltSelected");
+				A_TakeInventory("SiegeModeSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class PrecisionBoltSwitch : EOA_Token{}
+
+//Siege Mode
+Class SiegeModePackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("SiegeMode");
+			A_SelectWeapon("EOA_GaussCannon");
+			If (A_SelectWeapon("EOA_GaussCannon") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("SiegeModeSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("SiegeModeSelected");
+				A_TakeInventory("PrecisionBoltSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class SiegeModeSwitch : EOA_Token{}
+
+//Gatling Rotator
+Class GatlingRotatorPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("GatlingRotator");
+			A_SelectWeapon("EOA_Chaingun");
+			If (A_SelectWeapon("EOA_Chaingun") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("GatlingRotatorSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("GatlingRotatorSelected");
+				A_TakeInventory("MobileTurretSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class GatlingRotatorSwitch : EOA_Token{}
+
+//Mobile Turret
+Class MobileTurretPackage : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("MobileTurret");
+			A_SelectWeapon("EOA_Chaingun");
+			If (A_SelectWeapon("EOA_Chaingun") && !GetCVar("NeverSwitchOnPickup") && !CountInv("PowerBerserk"))
+			{
+				A_GiveInventory("MobileTurretSwitch");
+			}
+			Else
+			{
+				A_GiveInventory("MobileTurretSelected");
+				A_TakeInventory("GatlingRotatorSelected");
+			}
+		}
+		Stop;
+	}
+}
+
+Class MobileTurretSwitch : EOA_Token{}

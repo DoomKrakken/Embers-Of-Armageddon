@@ -1,0 +1,2013 @@
+AddOptionMenu "OptionsMenu"
+{
+	StaticText ""
+	Submenu "EOA Settings", "EOA_SettingsMenu"
+}
+
+//Main Menu (modified further by Strongbelly).
+ListMenu "MainMenu"
+{
+	Selector "N_BOXSEL",-4,0
+	IfGame(Doom, Chex)
+	{
+		StaticPatch 94, 2, "M_DOOM"
+		Position 97, 72
+		IfOption(ReadThis)
+		{
+			Position 97, 64
+		}
+	}
+	IfGame(Doom, Strife, Chex)
+	{
+		PatchItem "P_NEWGAM", "n", "PlayerClassMenu"
+		IfOption(SwapMenu)
+		{
+			PatchItem "P_LOADG", "l", "LoadGameMenu"
+			PatchItem "P_SAVEG", "s", "SaveGameMenu"
+			PatchItem "P_EOASET", "e", "EOA_SettingsMenu"
+			PatchItem "P_OPTION","o", "OptionsMenu"
+		}
+		Else
+		{
+			PatchItem "P_EOASET", "e", "EOA_SettingsMenu"
+			PatchItem "P_OPTION","o", "OptionsMenu"
+			PatchItem "P_LOADG", "l", "LoadGameMenu"
+			PatchItem "P_SAVEG", "s", "SaveGameMenu"
+		}
+		IfOption(ReadThis)
+		{
+			PatchItem "P_RDTHIS", "r", "ReadThisMenu"
+		}
+		PatchItem "P_QUITG", "q", "QuitMenu"
+	}
+}
+
+//Custom menu stuff from Strongbelly...
+ListMenu "SkillMenu"
+{
+	Selector "N_BOXSEL",-4,0
+	StaticPatch 88, 50, "M_SKILL"
+	Position 90, 72
+}
+
+ListMenu "EpisodeMenu"
+{
+	Selector "N_BOXSEL",-4,0
+	StaticPatch 88, 50, "P_EPISOD"
+	Position 90, 72
+}
+
+//EOA Option Menu...
+OptionMenu "EOA_SettingsMenu"
+{
+	Title "EOA Settings"
+	StaticText ""
+	StaticText ""
+	Option "Item Sparsity", "EOA_ItemSparsity", "ItemSparsity"
+	StaticText "Adjust item spawn rate according to personal preferences.", 1
+	StaticText ""
+	StaticText "Useful for spreading out items across different-sized mapsets."
+	StaticText "This affects how often upgrade items spawn and/or are given."
+	StaticText "Praetor Tokens, Field Drones, Argent Cells, and Rune Trial Stones."
+	StaticText ""
+	StaticText ""
+	StaticText "The amount of maps shown in the option is an estimate for"
+	StaticText "how many maps you'd need to play in order to obtain"
+	StaticText "***most*** of these upgrade items."
+	StaticText ""
+	StaticText "Comes in 5 flavors:"
+	StaticText "Super-Concentrated (5 maps)"
+	StaticText "Condensed (10 maps)"
+	StaticText "DOOM (15 maps, closely emulating DOOM (2016)'s  progression...)"
+	StaticText "Longplay (20 maps)"
+	StaticText "Megawad (25+ maps, Default)"
+	StaticText ""
+	StaticText ""
+	Option "Kill-Based Upgrades", "EOA_KillAmount", "OnOff"
+	StaticText "If enabled, you'll gain upgrade points for every", 1
+	StaticText "20 monsters you've killed.", 1
+	StaticText "This is done instead of killing 20% of the monsters to"
+	StaticText "gain a point."
+	StaticText "The amount of monsters to kill will be affected"
+	StaticText "by the option below."
+	StaticText ""
+	StaticText ""
+	Option "Point Sparsity", "EOA_PointSparsity", "PointSparsity"
+	StaticText "Adjust upgrade point yield rate according to personal preferences.", 1
+	StaticText ""
+	StaticText "By default, you gain 5 total points from killing all"
+	StaticText "monsters in a map, and 2 total points for finding all"
+	StaticText "secrets in a map."
+	StaticText ""
+	StaticText "There are two other options, for adjusting the yield."
+	StaticText ""
+	StaticText "\"Maximal\" yields twice the points."
+	StaticText ""
+	StaticText "\"Minimal\" yields half the points."
+	StaticText ""
+	StaticText ""
+	Option "Doom Slayer's True Speed", "EOA_TrueSpeed", "OnOff"
+	StaticText "Adjust player speed rate according to personal preferences.", 1
+	StaticText ""
+	StaticText "By default, the player runs at 75% the original player's"
+	StaticText "speed, as seen in DOOM.  You can disable this to restore"
+	StaticText "the player's speed to the original speed as seen in Doom."
+	StaticText ""
+	StaticText ""
+	Option "Custom Dynamic Lights", "EOA_DynLights", "OnOff"
+	StaticText "Enable/Disable custom dynamic lights.", 1
+	StaticText ""
+	StaticText "By default, weapons and certain projectiles spawn specially-"
+	StaticText "designed dynamic lights.  You can disable them if necessary,"
+	StaticText "to improve performance."
+	StaticText ""
+	StaticText ""
+	Option "Combat Recoil", "EOA_APRRecoil", "OnOff"
+	StaticText "Enable/Disable angle/pitch/roll shifting.", 1
+	StaticText ""
+	StaticText "By default, weapons now have a bit of recoil (which will"
+	StaticText "automatically readjust itself.  You can disable it in case"
+	StaticText "things get too dizzying, for example."
+	StaticText ""
+	StaticText ""
+	Option "Rapid-damaging floors", "EOA_DamFloors", "OnOff"
+	StaticText "Enable/Disable DOOM-style rapid-damaging floors.", 1
+	StaticText ""
+	StaticText "Enabling this option will cause damaging floors to"
+	StaticText "damage you three times faster, though at 1/3 of their"
+	StaticText "damage, like in DOOM.  Changes to this option must"
+	StaticText "be applied before the level loads."
+	StaticText ""
+	StaticText ""
+	Option "Nullified View-Bobbing", "EOA_ViewZ", "OnOff"
+	StaticText "Enable/Disable view-bobbing.", 1
+	StaticText ""
+	StaticText "Enabling this option will disable player view-bobbing"
+	StaticText "without affecting weapon-bobbing, just like in DOOM."
+	StaticText "Disabled by default because it can look weird for those"
+	StaticText "who aren't used to playing without view-bobbing."
+	StaticText "Disclaimer: this is not related to the internal view-"
+	StaticText "bobbing GZDoom CVar."
+	StaticText ""
+	StaticText ""
+	Option "Nullified Hitscans", "EOA_NoHitscan", "OnOff"
+	StaticText "Enable/Disable enemy hitscan attacks.", 1
+	StaticText ""
+	StaticText "Enabling this option will cause standard hitscanning monsters"
+	StaticText "to fire plasma balls instead of hitscan attacks,"
+	StaticText "just like in DOOM."
+	StaticText ""
+	StaticText "Enabled by default."
+	StaticText ""
+	StaticText ""
+	Option "Minimum Light Level", "EOA_MinLightLevel", "OnOff"
+	StaticText "Affects minimum light level of all sectors.", 1
+	StaticText ""
+	StaticText "There are no light-amplification visors in EOA.  To compensate"
+	StaticText "for that, this option will raise the light levels of sectors"
+	StaticText "with a light level lower than 96 to 96."
+	StaticText "If you wish to disable this behavior, you must restart the map"
+	StaticText "in order for it to take full effect."
+	StaticText ""
+	StaticText "Enabled by default."
+	StaticText ""
+	StaticText ""
+	Option "Glory Kill Highlights", "EOA_GKHighlights", "OnOff"
+	StaticText "Enable/Disable stagger flashes.", 1
+	StaticText ""
+	StaticText "When a monster takes enough damage, it'll become \"staggered\"."
+	StaticText "It will freeze in place and begin flashing, indicating it is"
+	StaticText "staggered, and open for a Glory Kill.  Disabling this option"
+	StaticText "will not cause stagger flashes to appear at all."
+	StaticText ""
+	StaticText "Enabled by default."
+	StaticText ""
+	StaticText ""
+	Option "Custom Reticles", "EOA_Reticles", "OnOff"
+	StaticText "Enable/Disable weapon reticles.", 1
+	StaticText ""
+	StaticText "Weapons in EOA have custom reticles like those seen in"
+	StaticText "DOOM (2016).  Disabling this option will restore the engine's"
+	StaticText "default reticles."
+	StaticText ""
+	StaticText "Enabled by default."
+	StaticText ""
+	StaticText ""
+	Option "Weakpoints", "EOA_WeakPoints", "OnOff"
+	StaticText "Enable/Disable monster weakpoints.", 1
+	StaticText ""
+	StaticText "Monsters spawn additional hitboxes (a head hitbox, by default)"
+	StaticText "much like in DOOM (2016).  Disabling this option will"
+	StaticText "render all such hitboxes inert (headshots can still be scored"
+	StaticText "by hitting the top fraction of a monster's hitbox)."
+	StaticText ""
+	StaticText "Enabled by default."
+	StaticText ""
+	StaticText ""
+	
+	StaticText "Miscellaneous options...", 1
+	Option "Combat Shotgun Start", "EOA_CSGStart", "OnOff"
+	StaticText "Begin the game with a Combat Shotgun.", 1
+	StaticText ""
+	Option "Combat Shotgun Spawn", "EOA_CSGSpawn", "OnOff"
+	StaticText "Combat Shotgun occasionally replaces shell boxes.", 1
+	StaticText ""
+	Option "Super Shotgun Spawn", "EOA_SSGSpawn", "OnOff"
+	StaticText "Super Shotgun occasionally replaces Combat Shotguns", 1
+	StaticText ""
+	Option "Heavy Assault Rifle Spawn", "EOA_HARSpawn", "OnOff"
+	StaticText "Heavy Assault Rifle occasionally replaces bullet boxes.", 1
+	StaticText ""
+	Option "Plasma Rifle Spawn", "EOA_PLRSpawn", "OnOff"
+	StaticText "Plasma Rifle replaces every 3 Heavy Assault Rifles.", 1
+	StaticText ""
+	Option "Chainsaw Spawn", "EOA_CSWSpawn", "OnOff"
+	StaticText "Chainsaw spawns in place of every 5 Fuel Canisters.", 1
+	StaticText ""
+	Option "Double Jump Start", "EOA_JumpStart", "OnOff"
+	StaticText "Begin the game with a pair of thrust boots.", 1
+	StaticText ""
+	
+	StaticText ""
+	StaticText "============= Custom Controls ============="
+	StaticText ""
+	Control "Fire",	"+attack"
+	Control "Use Weapon Mod", "+altattack"
+	Control "Switch Weapon Mod", "+reload"
+	Control "Quick Melee/Glory Kill", "+zoom"
+	Control "Jump/Double Jump", "+jump"
+	Control "Use Equipment", "+UseEquipment"
+	Control "Cycle Equipment (Left)", "CycleLeft"
+	Control "Cycle Equipment (Right)", "CycleRight"
+	Control "Upgrade Menu", "EOA_Upgrades"
+	Control "Last Weapon Selected", "LastWeaponSelected"
+	StaticText ""
+	Control	"Pistol", "Slot 1"
+	Control	"Combat Shotgun", "Slot 2"
+	Control	"Super Shotgun", "Slot 3"
+	Control	"Heavy Assault Rifle", "Slot 4"
+	Control	"Rocket Launcher", "Slot 5"
+	Control	"Plasma Rifle", "Slot 6"
+	Control	"Gauss Cannon", "Slot 7"
+	Control	"Chaingun", "Slot 8"
+	Control	"BFG-9000", "Slot 9"
+	Control	"Chainsaw", "Slot 0"
+}
+
+OptionValue "ItemSparsity"
+{
+	0.25, "Super-Concentrated (5 maps)"
+	0.5, "Condensed (10 maps)"
+	1, "DOOM (15 maps)"
+	1.5, "Longplay (20 maps)"
+	2, "Megawad (25+ maps, Default)"
+}
+
+OptionValue "PointSparsity"
+{
+	-2, "Minimal (half)"
+	1, "Default"
+	2, "Maximal (double)"
+}
+
+//Argent Cell Menu
+OptionMenu "ArgentCellMenu"
+{
+	Class "UnquittableOptionMenu"
+	Title "WARNING"
+	StaticText "ENERGY OVERLOAD"
+	StaticText "ROUTE POWER TO SUBSYSTEM"
+	StaticText ""
+	EOA_PurchaseMenu "Health", "EOA_ArgentHealthBonus", "EOA_ArgentHealthBonusCounter", "None", "ArgentCellMax", 0, 1, 1, 1, 1
+	StaticText "Permanently increases maximum health capacity"
+	EOA_StaticText "Level: %d", "EOA_ArgentHealthBonusCounter"
+	StaticText ""
+	EOA_PurchaseMenu "Armor", "EOA_ArgentArmorBonus", "EOA_ArgentArmorBonusCounter", "None", "ArgentCellMax", 0, 1, 1, 1, 1
+	StaticText "Permanently increases maximum armor capacity"
+	EOA_StaticText "Level: %d", "EOA_ArgentArmorBonusCounter"
+	StaticText ""
+	EOA_PurchaseMenu "Ammo", "EOA_ArgentAmmoBonus", "EOA_ArgentAmmoBonusCounter", "None", "ArgentCellMax", 0, 1, 1, 1, 1
+	StaticText "Permanently increases maximum ammo capacity"
+	EOA_StaticText "Level: %d", "EOA_ArgentAmmoBonusCounter"
+}
+
+//Field Drone Main Menu
+OptionMenu "FieldDroneMenu"
+{
+	Class "FieldDroneOptionMenu"
+	Title "Select A Weapon..."
+	EOA_SubMenu "Combat Shotgun", "EOA_CombatShotgun", "CombatShotgunModMenu"
+	StaticText ""
+	EOA_SubMenu "Heavy Assault Rifle", "EOA_HeavyAssaultRifle", "HeavyAssaultRifleModMenu"
+	StaticText ""
+	EOA_SubMenu "Rocket Launcher", "EOA_RocketLauncher", "RocketLauncherModMenu"
+	StaticText ""
+	EOA_SubMenu "Plasma Rifle", "EOA_PlasmaRifle", "PlasmaRifleModMenu"
+	StaticText ""
+	EOA_SubMenu "Gauss Cannon", "EOA_GaussCannon", "GaussCannonModMenu"
+	StaticText ""
+	EOA_SubMenu "Chaingun", "EOA_Chaingun", "ChaingunModMenu"
+}
+
+//Field Drone Weapon Submenus
+OptionMenu "CombatShotgunModMenu"
+{
+	Title "Select A Mod..."
+	EOA_SubMenu "Charged Burst", "ChargedBurst", "ChargedBurstPurchaseMenu", 1, 0, 1, 1
+	StaticText "Hold the Weapon Mod button to charge up"
+	StaticText "a three round burst with tighter spread."
+	StaticText ""
+	EOA_SubMenu "Explosive Shot", "ExplosiveShot", "ExplosiveShotPurchaseMenu", 1, 0, 1, 1
+	StaticText "Hold the Weapon Mod button to charge up"
+	StaticText "an arcing explosive round."
+}
+
+OptionMenu "HeavyAssaultRifleModMenu"
+{
+	Title "Select A Mod..."
+	EOA_SubMenu "Micro Missiles", "MicroMissiles", "MicroMissilesPurchaseMenu", 1, 0, 1, 1
+	StaticText "Hold the Weapon Mod button to bring up"
+	StaticText "a rack of Micro Missiles."
+	StaticText ""
+	EOA_SubMenu "Tactical Scope", "TacticalScope", "TacticalScopePurchaseMenu", 1, 0, 1, 1
+	StaticText "Attaches a Tactical Scope that allows for zooming in"
+	StaticText "on targets with the Weapon Mod button."
+}
+
+OptionMenu "RocketLauncherModMenu"
+{
+	Title "Select A Mod..."
+	EOA_SubMenu "Lock-On Burst", "LockOnBurst", "LockOnBurstPurchaseMenu", 1, 0, 1, 1
+	StaticText "Press and hold the Weapon Mod button"
+	StaticText "to lock onto a target.  Once locked, firing will"
+	StaticText "quickly launch three rockets at the target."
+	StaticText ""
+	EOA_SubMenu "Remote Detonation", "RemoteDetonation", "RemoteDetonationPurchaseMenu", 1, 0, 1, 1
+	StaticText "Press the Weapon Mod button to detonate"
+	StaticText "any rockets in flight."
+}
+
+OptionMenu "PlasmaRifleModMenu"
+{
+	Title "Select A Mod..."
+	EOA_SubMenu "Heat Blast", "HeatBlast", "HeatBlastPurchaseMenu", 1, 0, 1, 1
+	StaticText "Firing the Plasma Rifle will build up excess heat that"
+	StaticText "can be released as a powerful blast by using the"
+	StaticText "Weapon Mod button."
+	StaticText ""
+	EOA_SubMenu "Stun Bomb", "StunBomb", "StunBombPurchaseMenu", 1, 0, 1, 1
+	StaticText "Pressing the Weapon Mod button launches an electrified"
+	StaticText "projectile that stuns enemies within its"
+	StaticText "detonation radius.  It must recharge after firing."
+}
+
+OptionMenu "GaussCannonModMenu"
+{
+	Title "Select A Mod..."
+	EOA_SubMenu "Precision Bolt", "PrecisionBolt", "PrecisionBoltPurchaseMenu", 1, 0, 1, 1
+	StaticText "Use the Weapon Mod button to zoom in and charge"
+	StaticText "a high damage shot."
+	StaticText ""
+	EOA_SubMenu "Siege Mode", "SiegeMode", "SiegeModePurchaseMenu", 1, 0, 1, 1
+	StaticText "Use the Weapon Mod button to charge up a powerful beam"
+	StaticText "that penetrates targets. Movement is disabled while"
+	StaticText "using Siege Mode."
+}
+
+OptionMenu "ChaingunModMenu"
+{
+	Title "Select A Mod..."
+	EOA_SubMenu "Gatling Rotator", "GatlingRotator", "GatlingRotatorPurchaseMenu", 1, 0, 1, 1
+	StaticText "The Weapon Mod button can spin up the Chaingun barrels"
+	StaticText "without firing."
+	StaticText ""
+	EOA_SubMenu "Mobile Turret", "MobileTurret", "MobileTurretPurchaseMenu", 1, 0, 1, 1
+	StaticText "Hold the Weapon Mod button to transform the weapon"
+	StaticText "barrels into a Mobile Turret. It will stall if it"
+	StaticText "overheats."
+}
+
+//Field Drone Mod Submenus
+OptionMenu "ChargedBurstPurchaseMenu"
+{
+	Title "Charged Burst"
+	StaticText "Hold the Weapon Mod button to charge up"
+	StaticText "a three round burst with tighter spread."
+	StaticText ""
+	StaticText "Purchase \"Charged Burst\"?"
+	EOA_PurchaseMenu "Purchase", "ChargedBurstPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "ExplosiveShotPurchaseMenu"
+{
+	Title "Explosive Shot"
+	StaticText "Hold the Weapon Mod button to charge up"
+	StaticText "an arcing explosive round."
+	StaticText ""
+	StaticText "Purchase \"Explosive Shot\"?"
+	EOA_PurchaseMenu "Purchase", "ExplosiveShotPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "MicroMissilesPurchaseMenu"
+{
+	Title "Micro Missiles"
+	StaticText "Hold the Weapon Mod button to bring up"
+	StaticText "a rack of Micro Missiles."
+	StaticText ""
+	StaticText "Purchase \"Micro Missiles\"?"
+	EOA_PurchaseMenu "Purchase", "MicroMissilesPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "TacticalScopePurchaseMenu"
+{
+	Title "Tactical Scope"
+	StaticText "Attaches a Tactical Scope that allows for zooming in"
+	StaticText "on targets with the Weapon Mod button."
+	StaticText ""
+	StaticText "Purchase \"Tactical Scope\"?"
+	EOA_PurchaseMenu "Purchase", "TacticalScopePackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "LockOnBurstPurchaseMenu"
+{
+	Title "Lock-On Burst"
+	StaticText "Press and hold the Weapon Mod button"
+	StaticText "to lock onto a target.  Once locked, firing will"
+	StaticText "quickly launch three rockets at the target."
+	StaticText ""
+	StaticText "Purchase \"Lock-On Burst\"?"
+	EOA_PurchaseMenu "Purchase", "LockOnBurstPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "RemoteDetonationPurchaseMenu"
+{
+	Title "Remote Detonation"
+	StaticText "Press the Weapon Mod button to detonate"
+	StaticText "any rockets in flight."
+	StaticText ""
+	StaticText "Purchase \"Remote Detonation\"?"
+	EOA_PurchaseMenu "Purchase", "RemoteDetonationPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "HeatBlastPurchaseMenu"
+{
+	Title "Heat Blast"
+	StaticText "Firing the Plasma Rifle will build up excess heat that"
+	StaticText "can be released as a powerful blast by using the"
+	StaticText "Weapon Mod button."
+	StaticText ""
+	StaticText "Purchase \"Heat Blast\"?"
+	EOA_PurchaseMenu "Purchase", "HeatBlastPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "StunBombPurchaseMenu"
+{
+	Title "Stun Bomb"
+	StaticText "Pressing the Weapon Mod button launches an electrified"
+	StaticText "projectile that stuns enemies within its"
+	StaticText "detonation radius.  It must recharge after firing."
+	StaticText ""
+	StaticText "Purchase \"Stun Bomb\"?"
+	EOA_PurchaseMenu "Purchase", "StunBombPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "PrecisionBoltPurchaseMenu"
+{
+	Title "Precision Bolt"
+	StaticText "Use the Weapon Mod button to zoom in and charge"
+	StaticText "a high damage shot."
+	StaticText ""
+	StaticText "Purchase \"Precision Bolt\"?"
+	EOA_PurchaseMenu "Purchase", "PrecisionBoltPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "SiegeModePurchaseMenu"
+{
+	Title "Siege Mode"
+	StaticText "Use the Weapon Mod button to charge up a powerful beam"
+	StaticText "that penetrates targets. Movement is disabled while"
+	StaticText "using Siege Mode."
+	StaticText ""
+	StaticText "Purchase \"Siege Mode\"?"
+	EOA_PurchaseMenu "Purchase", "SiegeModePackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "GatlingRotatorPurchaseMenu"
+{
+	Title "Gatling Rotator"
+	StaticText "The Weapon Mod button can spin up the Chaingun barrels"
+	StaticText "without firing."
+	StaticText ""
+	StaticText "Purchase \"Gatling Rotator\"?"
+	EOA_PurchaseMenu "Purchase", "GatlingRotatorPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "MobileTurretPurchaseMenu"
+{
+	Title "Mobile Turret"
+	StaticText "Hold the Weapon Mod button to transform the weapon"
+	StaticText "barrels into a Mobile Turret. It will stall if it"
+	StaticText "overheats."
+	StaticText ""
+	StaticText "Purchase \"Mobile Turret\"?"
+	EOA_PurchaseMenu "Purchase", "MobileTurretPackage", "None", "None", 0, 0, 1, 0, 1
+}
+
+OptionMenu "RunePurchaseMenu"
+{
+	Class "RuneTrialStoneOptionMenu"
+	Title "Select A Rune..."
+	EOA_PurchaseMenu "Vacuum", "Vacuum", "None", "None", 0, 0, 1, 0, 1, 0, 1
+	EOA_PurchaseMenu "Dazed And Confused", "DazedAndConfused", "None", "None", 0, 0, 1, 0, 1, 0, 1
+	EOA_PurchaseMenu "Ammo Boost", "AmmoBoost", "None", "None", 0, 0, 1, 0, 1, 0, 1, 2
+	EOA_PurchaseMenu "Equipment Power", "EquipmentPower", "None", "None", 0, 0, 1, 0, 1, 0, 1, 2
+	EOA_PurchaseMenu "Savagery", "Savagery", "None", "None", 0, 0, 1, 0, 1, 0, 1, 4
+	EOA_PurchaseMenu "Seek And Destroy", "SeekAndDestroy", "None", "None", 0, 0, 1, 0, 1, 0, 1, 4
+	EOA_PurchaseMenu "In-Flight Mobility", "InFlightMobility", "None", "None", 0, 0, 1, 0, 1, 0, 1, 6
+	EOA_PurchaseMenu "Armored Offensive", "ArmoredOffensive", "None", "None", 0, 0, 1, 0, 1, 0, 1, 6
+	EOA_PurchaseMenu "Blood Fueled", "BloodFueled", "None", "None", 0, 0, 1, 0, 1, 0, 1, 8
+	EOA_PurchaseMenu "Intimacy Is Best", "IntimacyIsBest", "None", "None", 0, 0, 1, 0, 1, 0, 1, 8
+	EOA_PurchaseMenu "Rich Get Richer", "RichGetRicher", "None", "None", 0, 0, 1, 0, 1, 0, 1, 10
+	EOA_PurchaseMenu "Saving Throw", "SavingThrow", "None", "None", 0, 0, 1, 0, 1, 0, 1, 10
+}
+
+//Upgrade Hub Menu
+ListMenu "UpgradeMenu"
+{
+	StaticPatch 68, 50, "BACKMENU"
+	StaticPatch 88, 70, "P_UPGRDS"
+	Position 122, 90
+	Selector "N_UPGSEL",-4,0
+	Font "BIGFONT", "Red", "Yellow"
+	PatchItem "P_UPGRD1", "w", "WeaponUpgradeMenu"
+	PatchItem "P_UPGRD2", "p", "PraetorSuitMenu"
+	PatchItem "P_UPGRD3", "r", "RuneMenu"
+	PatchItem "P_UPGRD4", "c", "ChallengeMenu"
+	Position 0, 0
+}
+/*ListMenu "UpgradeMenu"
+{
+	StaticText 88, 64, "Upgrades", Gold
+	Position 92, 87
+	Selector -, 0, 0
+	Font "BIGFONT", "Red", "Yellow"
+	TextItem "		Weapons", "w", "WeaponUpgradeMenu"
+	TextItem "		Praetor Suit", "p", "PraetorSuitMenu"
+	TextItem "		Runes", "r", "RuneMenu"
+	TextItem "		Challenges", "c", "ChallengeMenu"
+	Position 0, 0
+}*/
+
+//Weapon Upgrade Menu
+OptionMenu "WeaponUpgradeMenu"
+{
+	Title "Weapon Upgrades"
+	EOA_SubMenu "EMG Pistol", "EOA_Pistol", "EMGPistolMenu"
+	StaticText ""
+	EOA_SubMenu "Combat Shotgun", "EOA_CombatShotgun", "CombatShotgunMenu"
+	StaticText ""
+	EOA_SubMenu "Super Shotgun", "EOA_SuperShotgun", "SuperShotgunMenu"
+	StaticText ""
+	EOA_SubMenu "Heavy Assault Rifle", "EOA_HeavyAssaultRifle", "HeavyAssaultRifleMenu"
+	StaticText ""
+	EOA_SubMenu "Rocket Launcher", "EOA_RocketLauncher", "RocketLauncherMenu"
+	StaticText ""
+	EOA_SubMenu "Plasma Rifle", "EOA_PlasmaRifle", "PlasmaRifleMenu"
+	StaticText ""
+	EOA_SubMenu "Gauss Cannon", "EOA_GaussCannon", "GaussCannonMenu"
+	StaticText ""
+	EOA_SubMenu "Chaingun", "EOA_Chaingun", "ChaingunMenu"
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//EMG Pistol - Charged Energy Shot
+OptionMenu "EMGPistolMenu"
+{
+	Title "EMG Pistol - Charged Energy Shot"
+	StaticText "Hold the Weapon Mod button to power up"
+	StaticText "a Charged Energy Round."
+	StaticText ""
+	EOA_SubMenu "Charge Efficiency", "ChargeEfficiency", "ChargeEfficiencyMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Decreases the time it takes to" 
+	StaticText "power up a Charged Energy Shot."
+	StaticText ""
+	EOA_SubMenu "Quick Recovery", "QuickRecovery", "QuickRecoveryMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Decreases the recovery time for the Pistol"
+	StaticText "after using a Charged Energy Shot."
+	StaticText ""
+	EOA_SubMenu "Light Weight", "EMGLightWeight", "EMGLightWeightMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Move at full speed when using the Charged Energy Shot."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "IncreasedPower"
+	StaticText ""
+	StaticText ""
+	StaticText "Increased Power - Increases the maximum power"
+	StaticText "of the Charged Energy Shot,"
+	StaticText "resulting in higher damage potential."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "ChargeEfficiencyMenu"
+{
+	Title "Charge Efficiency"
+	StaticText "Decreases the time it takes to" 
+	StaticText "power up a Charged Energy Shot."
+	StaticText ""
+	StaticText "Purchase \"Charge Efficiency\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ChargeEfficiency", "WeaponUpgradePoint", "EMGPistolMenu", ChargedEnergyShotCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ChargedEnergyShotCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "QuickRecoveryMenu"
+{
+	Title "Quick Recovery"
+	StaticText "Decreases the recovery time for the Pistol"
+	StaticText "after using a Charged Energy Shot."
+	StaticText ""
+	StaticText "Purchase \"Quick Recovery\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "QuickRecovery", "WeaponUpgradePoint", "EMGPistolMenu", ChargedEnergyShotCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ChargedEnergyShotCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "EMGLightWeightMenu"
+{
+	Title "Light Weight"
+	StaticText "Move at full speed when using the Charged Energy Shot."
+	StaticText ""
+	StaticText "Purchase \"Light Weight\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "EMGLightWeight", "WeaponUpgradePoint", "EMGPistolMenu", ChargedEnergyShotCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ChargedEnergyShotCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Combat Shotgun
+OptionMenu "CombatShotgunMenu"
+{
+	Title "Combat Shotgun"
+	StaticText ""
+	EOA_SubMenu "Charged Burst", "ChargedBurst", "ChargedBurstMenu", 1, 0, 1
+	StaticText ""
+	EOA_SubMenu "Explosive Shot", "ExplosiveShot", "ExplosiveShotMenu", 1, 0, 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Combat Shotgun - Charged Burst
+OptionMenu "ChargedBurstMenu"
+{
+	Title "Combat Shotgun - Charged Burst"
+	StaticText "Hold the Weapon Mod button to charge up"
+	StaticText "a three round burst with tighter spread."
+	StaticText ""
+	EOA_SubMenu "Speedy Recovery", "CBSpeedyRecovery", "CBSpeedyRecoveryMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Reduces the recharge time between bursts." 
+	StaticText ""
+	EOA_SubMenu "Rapid Fire", "RapidFire", "RapidFireMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Increases the fire rate of the burst."
+	StaticText ""
+	EOA_SubMenu "Quick Load", "QuickLoad", "QuickLoadMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Reduces the loading time for the Charged Burst."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "PowerShot"
+	StaticText ""
+	StaticText ""
+	StaticText "Power Shot - Successfully hitting all three shots"
+	StaticText "from the Charged Burst will increase the damage"
+	StaticText "of the next burst.  This effect does not stack."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "ChargedBurstSelected", "ChargedBurstMenu", NullCVar, 0, 1
+}
+
+OptionMenu "CBSpeedyRecoveryMenu"
+{
+	Title "Speedy Recovery"
+	StaticText "Reduces the recharge time between bursts." 
+	StaticText ""
+	StaticText "Purchase \"Speedy Recovery\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "CBSpeedyRecovery", "WeaponUpgradePoint", "ChargedBurstMenu", ChargedBurstCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ChargedBurstCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "RapidFireMenu"
+{
+	Title "Rapid Fire"
+	StaticText "Increases the fire rate of the burst."
+	StaticText ""
+	StaticText "Purchase \"Rapid Fire\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "RapidFire", "WeaponUpgradePoint", "ChargedBurstMenu", ChargedBurstCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ChargedBurstCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "QuickLoadMenu"
+{
+	Title "Quick Load"
+	StaticText "Reduces the loading time for the Charged Burst."
+	StaticText ""
+	StaticText "Purchase \"Quick Load\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "QuickLoad", "WeaponUpgradePoint", "ChargedBurstMenu", ChargedBurstCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ChargedBurstCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Combat Shotgun - Explosive Shot
+OptionMenu "ExplosiveShotMenu"
+{
+	Title "Combat Shotgun - Explosive Shot"
+	StaticText "Hold the Weapon Mod button to charge up"
+	StaticText "an arcing explosive round."
+	StaticText ""
+	EOA_SubMenu "Speedy Recovery", "ESSpeedyRecovery", "ESSpeedyRecoveryMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Reduces the recharge time between explosive shots." 
+	StaticText ""
+	EOA_SubMenu "Bigger Boom", "BiggerBoom", "BiggerBoomMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Increases the size of the explosion."
+	StaticText ""
+	EOA_SubMenu "Instant Load", "InstantLoad", "InstantLoadMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Removes the loading time for an explosive shot."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "ClusterStrike"
+	StaticText ""
+	StaticText ""
+	StaticText "Cluster Strike - Getting a direct hit"
+	StaticText "with an Explosive Shot will spawn cluster bombs"
+	StaticText "that deal additional damage."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "ExplosiveShotSelected", "ExplosiveShotMenu", NullCVar, 0, 1
+}
+
+OptionMenu "ESSpeedyRecoveryMenu"
+{
+	Title "Speedy Recovery"
+	StaticText "Reduces the recharge time between explosive shots." 
+	StaticText ""
+	StaticText "Purchase \"Speedy Recovery\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ESSpeedyRecovery", "WeaponUpgradePoint", "ExplosiveShotMenu", ExplosiveShotCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ExplosiveShotCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "BiggerBoomMenu"
+{
+	Title "Bigger Boom"
+	StaticText "Increases the size of the explosion."
+	StaticText ""
+	StaticText "Purchase \"Bigger Boom\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "BiggerBoom", "WeaponUpgradePoint", "ExplosiveShotMenu", ExplosiveShotCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ExplosiveShotCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "InstantLoadMenu"
+{
+	Title "Instant Load"
+	StaticText "Removes the loading time for an explosive shot."
+	StaticText ""
+	StaticText "Purchase \"Instant Load\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "InstantLoad", "WeaponUpgradePoint", "ExplosiveShotMenu", ExplosiveShotCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "ExplosiveShotCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Super Shotgun - Improvements
+OptionMenu "SuperShotgunMenu"
+{
+	Title "Super Shotgun - Improvements"
+	StaticText ""
+	EOA_SubMenu "Uranium Coating", "SSGUraniumCoating", "SSGUraniumCoatingMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Shots pierce through targets."
+	StaticText ""
+	EOA_SubMenu "Faster Reload", "FasterReload", "FasterReloadMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Decreases the time to reload the next shot."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "DoubleTrouble"
+	StaticText ""
+	StaticText ""
+	StaticText "Double Trouble - Fire twice with the"
+	StaticText "Super Shotgun before having to reload."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "SSGUraniumCoatingMenu"
+{
+	Title "Uranium Coating"
+	StaticText "Shots pierce through targets."
+	StaticText ""
+	StaticText "Purchase \"Uranium Coating\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "SSGUraniumCoating", "WeaponUpgradePoint", "SuperShotgunMenu", SSGImprovementsCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "SSGImprovementsCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "FasterReloadMenu"
+{
+	Title "Faster Reload"
+	StaticText "Decreases the time to reload the next shot."
+	StaticText ""
+	StaticText "Purchase \"Faster Reload\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "FasterReload", "WeaponUpgradePoint", "SuperShotgunMenu", SSGImprovementsCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "SSGImprovementsCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Heavy Assault Rifle
+OptionMenu "HeavyAssaultRifleMenu"
+{
+	Title "Heavy Assault Rifle"
+	StaticText ""
+	EOA_SubMenu "Micro Missiles", "MicroMissiles", "MicroMissilesMenu", 1, 0, 1
+	StaticText ""
+	EOA_SubMenu "Tactical Scope", "TacticalScope", "TacticalScopeMenu", 1, 0, 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Heavy Assault Rifle - Micro Missiles
+OptionMenu "MicroMissilesMenu"
+{
+	Title "Heavy Assault Rifle - Micro Missiles"
+	StaticText "Hold the Weapon Mod button to bring up"
+	StaticText "a rack of Micro Missiles."
+	StaticText ""
+	EOA_SubMenu "Ammo Efficient", "AmmoEfficient", "AmmoEfficientMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Reduces the ammo cost of Micro Missiles." 
+	StaticText ""
+	EOA_SubMenu "Advanced Loader", "AdvancedLoader", "AdvancedLoaderMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Greatly improves reload time for Micro Missiles."
+	StaticText ""
+	EOA_SubMenu "Quick Launcher", "QuickLauncher", "QuickLauncherMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Instantly activate the Micro Missiles rack when it is"
+	StaticText "ready to fire."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "BottomlessMissiles"
+	StaticText ""
+	StaticText ""
+	StaticText "Bottomless Missiles - Micro Missiles can be fired"
+	StaticText "indefinitely without requiring a reload."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "MicroMissilesSelected", "MicroMissilesMenu", NullCVar, 0, 1
+}
+
+OptionMenu "AmmoEfficientMenu"
+{
+	Title "Ammo Efficient"
+	StaticText "Reduces the ammo cost of Micro Missiles." 
+	StaticText ""
+	StaticText "Purchase \"Ammo Efficient\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "AmmoEfficient", "WeaponUpgradePoint", "MicroMissilesMenu", MicroMissilesCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "MicroMissilesCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "AdvancedLoaderMenu"
+{
+	Title "Advanced Loader"
+	StaticText "Greatly improves reload time for Micro Missiles."
+	StaticText ""
+	StaticText "Purchase \"Advanced Loader\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "AdvancedLoader", "WeaponUpgradePoint", "MicroMissilesMenu", MicroMissilesCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "MicroMissilesCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "QuickLauncherMenu"
+{
+	Title "Quick Launcher"
+	StaticText "Instantly activate the Micro Missiles rack when it is"
+	StaticText "ready to fire."
+	StaticText ""
+	StaticText "Purchase \"Quick Launcher\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "QuickLauncher", "WeaponUpgradePoint", "MicroMissilesMenu", MicroMissilesCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "MicroMissilesCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Heavy Assault Rifle - Tactical Scope
+OptionMenu "TacticalScopeMenu"
+{
+	Title "Heavy Assault Rifle - Tactical Scope"
+	StaticText "Attaches a Tactical Scope that allows for zooming in"
+	StaticText "on targets with the Weapon Mod button."
+	StaticText ""
+	EOA_SubMenu "Uranium Coating", "HARUraniumCoating", "HARUraniumCoatingMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Bullets fired while zoomed will penetrate"
+	StaticText "through targets." 
+	StaticText ""
+	EOA_SubMenu "Skull Cracker", "SkullCracker", "SkullCrackerMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Bullets fired while zoomed will deal"
+	StaticText "additional headshot damage."
+	StaticText ""
+	EOA_SubMenu "Light Weight", "HARLightWeight", "HARLightWeightMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Move faster when zoomed in with the Tactical Scope."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "DevastatorRounds"
+	StaticText ""
+	StaticText ""
+	StaticText "Devastator Rounds - Ammunition fired while zoomed"
+	StaticText "uses experimental, heavy damage rounds."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "TacticalScopeSelected", "TacticalScopeMenu", NullCVar, 0, 1
+}
+
+OptionMenu "HARUraniumCoatingMenu"
+{
+	Title "Uranium Coating"
+	StaticText "Bullets fired while zoomed will penetrate"
+	StaticText "through targets." 
+	StaticText ""
+	StaticText "Purchase \"Uranium Coating\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "HARUraniumCoating", "WeaponUpgradePoint", "TacticalScopeMenu", TacticalScopeCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "TacticalScopeCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "SkullCrackerMenu"
+{
+	Title "Skull Cracker"
+	StaticText "Bullets fired while zoomed will deal"
+	StaticText "additional headshot damage."
+	StaticText ""
+	StaticText "Purchase \"Skull Cracker\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "SkullCracker", "WeaponUpgradePoint", "TacticalScopeMenu", TacticalScopeCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "TacticalScopeCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "HARLightWeightMenu"
+{
+	Title "Light Weight"
+	StaticText "Move faster when zoomed in with the Tactical Scope."
+	StaticText ""
+	StaticText "Purchase \"Light Weight\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "HARLightWeight", "WeaponUpgradePoint", "TacticalScopeMenu", TacticalScopeCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "TacticalScopeCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Rocket Launcher
+OptionMenu "RocketLauncherMenu"
+{
+	Title "Rocket Launcher"
+	StaticText ""
+	EOA_SubMenu "Lock-On Burst", "LockOnBurst", "LockOnBurstMenu", 1, 0, 1
+	StaticText ""
+	EOA_SubMenu "Remote Detonation", "RemoteDetonation", "RemoteDetonationMenu", 1, 0, 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Rocket Launcher - Lock-On Burst
+OptionMenu "LockOnBurstMenu"
+{
+	Title "Rocket Launcher - Lock-On Burst"
+	StaticText "Press and hold the Weapon Mod button"
+	StaticText "to lock onto a target.  Once locked, firing will"
+	StaticText "quickly launch three rockets at the target."
+	StaticText ""
+	EOA_SubMenu "Quick Lock", "QuickLock", "QuickLockMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Lock onto enemies much faster." 
+	StaticText ""
+	EOA_SubMenu "Faster Recovery", "FasterRecovery", "FasterRecoveryMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "The time before another lock can be acquired"
+	StaticText "is reduced."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "MultiTargeting"
+	StaticText ""
+	StaticText ""
+	StaticText "Multi-Targeting - Holding the Weapon Mod button to lock"
+ 	StaticText "now supports up to three targets.  Rockets will be"
+	StaticText "divided amongst estabilished locks."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "LockOnBurstSelected", "LockOnBurstMenu", NullCVar, 0, 1
+}
+
+OptionMenu "QuickLockMenu"
+{
+	Title "Quick Lock"
+	StaticText "Lock onto enemies much faster." 
+	StaticText ""
+	StaticText "Purchase \"Quick Lock\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "QuickLock", "WeaponUpgradePoint", "LockOnBurstMenu", LockOnBurstCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "LockOnBurstCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "FasterRecoveryMenu"
+{
+	Title "Faster Recovery"
+	StaticText "The time before another lock can be acquired"
+	StaticText "is reduced."
+	StaticText ""
+	StaticText "Purchase \"Faster Recovery\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "FasterRecovery", "WeaponUpgradePoint", "LockOnBurst", LockOnBurstCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "LockOnBurstCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Rocket Launcher - Remote Detonation
+OptionMenu "RemoteDetonationMenu"
+{
+	Title "Rocket Launcher - Remote Detonation"
+	StaticText "Press the Weapon Mod button to detonate"
+	StaticText "any rockets in flight."
+	StaticText ""
+	EOA_SubMenu "Improved Warhead", "ImprovedWarhead", "ImprovedWarheadMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Using the Remote Detonation will generate"
+	StaticText "a larger rocket explosion."
+	StaticText ""
+	EOA_SubMenu "Jagged Shrapnel", "JaggedShrapnel", "JaggedShrapnelMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Enemies that are hit by a Remote Detonation"
+	StaticText "will be pierced with additional shrapnel and"
+	StaticText "continue to take damage for a short time."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "ExternalPayload"
+	StaticText ""
+	StaticText ""
+	StaticText "External Payload - Explosives are now mounted"
+	StaticText "around the rocket, allowing a Remote Detonation"
+	StaticText "to occur without destroying the projectile."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "RemoteDetonationSelected", "RemoteDetonationMenu", NullCVar, 0, 1
+}
+
+OptionMenu "ImprovedWarheadMenu"
+{
+	Title "Improved Warhead"
+	StaticText "Using the Remote Detonation will generate"
+	StaticText "a larger rocket explosion."
+	StaticText ""
+	StaticText "Purchase \"Improved Warhead\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ImprovedWarhead", "WeaponUpgradePoint", "RemoteDetonationMenu", RemoteDetonationCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "RemoteDetonationCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "JaggedShrapnelMenu"
+{
+	Title "Jagged Shrapnel"
+	StaticText "Enemies that are hit by a Remote Detonation"
+	StaticText "will be pierced with additional shrapnel and"
+	StaticText "continue to take damage for a short time."
+	StaticText ""
+	StaticText "Purchase \"Jagged Shrapnel\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "JaggedShrapnel", "WeaponUpgradePoint", "RemoteDetonationMenu", RemoteDetonationCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "RemoteDetonationCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Plasma Rifle
+OptionMenu "PlasmaRifleMenu"
+{
+	Title "Plasma Rifle"
+	StaticText ""
+	EOA_SubMenu "Heat Blast", "HeatBlast", "HeatBlastMenu", 1, 0, 1
+	StaticText ""
+	EOA_SubMenu "Stun Bomb", "StunBomb", "StunBombMenu", 1, 0, 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Plasma Rifle - Heat Blast
+OptionMenu "HeatBlastMenu"
+{
+	Title "Plasma Rifle - Heat Blast"
+	StaticText "Firing the Plasma Rifle will build up excess heat that"
+	StaticText "can be released as a powerful blast by using the"
+	StaticText "Weapon Mod button."
+	StaticText ""
+	EOA_SubMenu "Super Heated Rounds", "SuperHeatedRounds", "SuperHeatedRoundsMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Shots from the Plasma Rifle now build heat much faster." 
+	StaticText ""
+	EOA_SubMenu "Improved Venting", "ImprovedVenting", "ImprovedVentingMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Significantly reduces the weapon's recovery from a"
+	StaticText "Heat Blast."
+	StaticText ""
+	EOA_SubMenu "Expanded Threshold", "ExpandedThreshold", "ExpandedThresholdMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Increases the amount of heat that can be contained,"
+	StaticText "resulting in more potential damage."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "HeatedCore"
+	StaticText ""
+	StaticText ""
+	StaticText "Heated Core - Generate heat passively"
+	StaticText "without needing to spend ammo."
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "HeatBlastSelected", "HeatBlastMenu", NullCVar, 0, 1
+}
+
+OptionMenu "SuperHeatedRoundsMenu"
+{
+	Title "Super Heated Rounds"
+	StaticText "Shots from the Plasma Rifle now build heat much faster." 
+	StaticText ""
+	StaticText "Purchase \"Super Heated Rounds\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "SuperHeatedRounds", "WeaponUpgradePoint", "HeatBlastMenu", HeatBlastCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "HeatBlastCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "ImprovedVentingMenu"
+{
+	Title "Improved Venting"
+	StaticText "Significantly reduces the weapon's recovery from a"
+	StaticText "Heat Blast."
+	StaticText ""
+	StaticText "Purchase \"Improved Venting\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ImprovedVenting", "WeaponUpgradePoint", "HeatBlastMenu", HeatBlastCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "HeatBlastCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "ExpandedThresholdMenu"
+{
+	Title "Expanded Threshold"
+	StaticText "Increases the amount of heat that can be contained,"
+	StaticText "resulting in more potential damage."
+	StaticText ""
+	StaticText "Purchase \"Expanded Threshold\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ExpandedThreshold", "WeaponUpgradePoint", "HeatBlastMenu", HeatBlastCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "HeatBlastCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Plasma Rifle - Stun Bomb
+OptionMenu "StunBombMenu"
+{
+	Title "Plasma Rifle - Stun Bomb"
+	StaticText "Pressing the Weapon Mod button launches an electrified"
+	StaticText "projectile that stuns enemies within its"
+	StaticText "detonation radius.  It must recharge after firing."
+	StaticText ""
+	EOA_SubMenu "Quick Recharge", "QuickRecharge", "QuickRechargeMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Stun Bomb recharges much faster."
+	StaticText ""
+	EOA_SubMenu "Big Shock", "BigShock", "BigShockMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Increases the size of the Stun Bomb detonation."
+	StaticText ""
+	EOA_SubMenu "Longer Stun", "LongerStun", "LongerStunMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Enemies hit by the Stun Bomb will stay stunned"
+	StaticText "for a longer duration."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "ChainStun"
+	StaticText ""
+	StaticText ""
+	StaticText "Chain Stun - Enemies killed while stunned will"
+	StaticText "release a secondary stun detonation that affects"
+	StaticText "nearby enemies."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "StunBombSelected", "StunBombMenu", NullCVar, 0, 1
+}
+
+OptionMenu "QuickRechargeMenu"
+{
+	Title "Quick Recharge"
+	StaticText "Stun Bomb recharges much faster."
+	StaticText ""
+	StaticText "Purchase \"Quick Recharge\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "QuickRecharge", "WeaponUpgradePoint", "StunBombMenu", StunBombCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "StunBombCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "BigShockMenu"
+{
+	Title "Big Shock"
+	StaticText "Increases the size of the Stun Bomb detonation."
+	StaticText ""
+	StaticText "Purchase \"Big Shock\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "BigShock", "WeaponUpgradePoint", "StunBombMenu", StunBombCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "StunBombCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "LongerStunMenu"
+{
+	Title "Longer Stun"
+	StaticText "Enemies hit by the Stun Bomb will stay stunned"
+	StaticText "for a longer duration."
+	StaticText ""
+	StaticText "Purchase \"Longer Stun\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "LongerStun", "WeaponUpgradePoint", "StunBombMenu", StunBombCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "StunBombCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Gauss Cannon
+OptionMenu "GaussCannonMenu"
+{
+	Title "Gauss Cannon"
+	StaticText ""
+	EOA_SubMenu "Precision Bolt", "PrecisionBolt", "PrecisionBoltMenu", 1, 0, 1
+	StaticText ""
+	EOA_SubMenu "Siege Mode", "SiegeMode", "SiegeModeMenu", 1, 0, 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Gauss Cannon - Precision Bolt
+OptionMenu "PrecisionBoltMenu"
+{
+	Title "Gauss Cannon - Precision Bolt"
+	StaticText "Use the Weapon Mod button to zoom in and charge"
+	StaticText "a high damage shot."
+	StaticText ""
+	EOA_SubMenu "Energy Efficient", "EnergyEfficient", "EnergyEfficientMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Reduced time to max charge and reduced time between"
+	StaticText "shots." 
+	StaticText ""
+	EOA_SubMenu "Light Weight", "GCNLightWeight", "GCNLightWeightMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Move at full speed when zoomed in."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "VolatileDischarge"
+	StaticText ""
+	StaticText ""
+	StaticText "Volatile Discharge - Enemies killed by the Precision Bolt" 
+	StaticText "will explode, dealing damage to nearby enemies."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "PrecisionBoltSelected", "PrecisionBoltMenu", NullCVar, 0, 1
+}
+
+OptionMenu "EnergyEfficientMenu"
+{
+	Title "Energy Efficient"
+	StaticText "Reduced time to max charge and reduced time between"
+	StaticText "shots." 
+	StaticText ""
+	StaticText "Purchase \"Energy Efficient\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "EnergyEfficient", "WeaponUpgradePoint", "PrecisionBoltMenu", PrecisionBoltCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "PrecisionBoltCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "GCNLightWeightMenu"
+{
+	Title "Light Weight"
+	StaticText "Move at full speed when zoomed in."
+	StaticText ""
+	StaticText "Purchase \"Light Weight\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "GCNLightWeight", "WeaponUpgradePoint", "PrecisionBoltMenu", PrecisionBoltCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "PrecisionBoltCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Gauss Cannon - Siege Mode
+OptionMenu "SiegeModeMenu"
+{
+	Title "Gauss Cannon - Siege Mode"
+	StaticText "Use the Weapon Mod button to charge up a powerful beam"
+	StaticText "that penetrates targets. Movement is disabled while"
+	StaticText "using Siege Mode."
+	StaticText ""
+	EOA_SubMenu "Outer Beam", "OuterBeam", "OuterBeamMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "The beam now has a devastating area of effect around it."
+	StaticText ""
+	EOA_SubMenu "Reduced Charge Time", "ReducedChargeTime", "ReducedChargeTimeMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Beam charge time is reduced."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "MobileSiege"
+	StaticText ""
+	StaticText ""
+	StaticText "Mobile Siege - Allows movement while using Siege Mode."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "SiegeModeSelected", "SiegeModeMenu", NullCVar, 0, 1
+}
+
+OptionMenu "OuterBeamMenu"
+{
+	Title "Outer Beam"
+	StaticText "The beam now has a devastating area of effect around it."
+	StaticText ""
+	StaticText "Purchase \"Outer Beam\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "OuterBeam", "WeaponUpgradePoint", "SiegeModeMenu", SiegeModeCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "SiegeModeCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "ReducedChargeTimeMenu"
+{
+	Title "Reduced Charge Time"
+	StaticText "Beam charge time is reduced."
+	StaticText ""
+	StaticText "Purchase \"Reduced Charge Time\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ReducedChargeTime", "WeaponUpgradePoint", "SiegeModeMenu", SiegeModeCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "SiegeModeCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Chaingun
+OptionMenu "ChaingunMenu"
+{
+	Title "Chaingun"
+	StaticText ""
+	EOA_SubMenu "Gatling Rotator", "GatlingRotator", "GatlingRotatorMenu", 1, 0, 1
+	StaticText ""
+	EOA_SubMenu "Mobile Turret", "MobileTurret", "MobileTurretMenu", 1, 0, 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Chaingun - Gatling Rotator
+OptionMenu "GatlingRotatorMenu"
+{
+	Title "Chaingun - Gatling Rotator"
+	StaticText "The Weapon Mod button can spin up the Chaingun barrels"
+	StaticText "without firing."
+	StaticText ""
+	EOA_SubMenu "Improved Torque", "ImprovedTorque", "ImprovedTorqueMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Significantly increases the spin up speed of the"
+	StaticText "Gatling Rotator." 
+	StaticText ""
+	EOA_SubMenu "Uranium Coating", "GRUraniumCoating", "GRUraniumCoatingMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Bullets penetrate through targets."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "IncendiaryRounds"
+	StaticText ""
+	StaticText ""
+	StaticText "Incendiary Rounds -  Bullets deal more damage when the"
+	StaticText "Chaingun reaches its maximum rate of fire."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "GatlingRotatorSelected", "GatlingRotatorMenu", NullCVar, 0, 1
+}
+
+OptionMenu "ImprovedTorqueMenu"
+{
+	Title "Improved Torque"
+	StaticText "Significantly increases the spin up speed of the"
+	StaticText "Gatling Rotator." 
+	StaticText ""
+	StaticText "Purchase \"Improved Torque\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ImprovedTorque", "WeaponUpgradePoint", "GatlingRotatorMenu", GatlingRotatorCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "GatlingRotatorCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "GRUraniumCoatingMenu"
+{
+	Title "Uranium Coating"
+	StaticText "Bullets penetrate through targets."
+	StaticText ""
+	StaticText "Purchase \"Uranium Coating\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "GRUraniumCoating", "WeaponUpgradePoint", "GatlingRotatorMenu", GatlingRotatorCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "GatlingRotatorCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Chaingun - Mobile Turret
+OptionMenu "MobileTurretMenu"
+{
+	Title "Chaingun - Mobile Turret"
+	StaticText "Hold the Weapon Mod button to transform the weapon"
+	StaticText "barrels into a Mobile Turret. It will stall if it"
+	StaticText "overheats."
+	StaticText ""
+	EOA_SubMenu "Rapid Deployment", "RapidDeployment", "RapidDeploymentMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Drastically decrease the transformation time for the"
+	StaticText "Mobile Turret."
+	StaticText ""
+	EOA_SubMenu "Uranium Coating", "MTUraniumCoating", "MTUraniumCoatingMenu", 1, 0, 1, 1, "Menu/Purchase"
+	StaticText "Bullets penetrate through targets."
+	StaticText ""
+	StaticText ""
+	EOA_MasteryText "UltimateCooling"
+	StaticText ""
+	StaticText ""
+	StaticText "Ultimate Cooling - The Mobile Turret mode will no longer"
+	StaticText "stall."
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+	StaticText ""
+	StaticText ""
+	EOA_PurchaseMenu "Unequip Mod", "", "MobileTurretSelected", "MobileTurretMenu", NullCVar, 0, 1
+}
+
+OptionMenu "RapidDeploymentMenu"
+{
+	Title "Rapid Deployment"
+	StaticText "Drastically decrease the transformation time for the"
+	StaticText "Mobile Turret."
+	StaticText ""
+	StaticText "Purchase \"Rapid Deployment\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "RapidDeployment", "WeaponUpgradePoint", "MobileTurretMenu", MobileTurretCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "MobileTurretCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+OptionMenu "MTUraniumCoatingMenu"
+{
+	Title "Uranium Coating"
+	StaticText "Bullets penetrate through targets."
+	StaticText ""
+	StaticText "Purchase \"Uranium Coating\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "MTUraniumCoating", "WeaponUpgradePoint", "MobileTurretMenu", MobileTurretCost, 0, 1
+	StaticText ""
+	EOA_StaticText "Cost: %d", "MobileTurretCost", 1
+	StaticText ""
+	EOA_StaticText "Available Points: %d", "WeaponUpgradePoint"
+}
+
+//Praetor Suit Upgrade Menu
+OptionMenu "PraetorSuitMenu"
+{
+	Title "Praetor Suit"
+	EOA_SubMenu "Environmental Resistance", "EnvironmentalResistance", "EnvironmentalResistanceMenu", 1, 0, 1
+	StaticText "These upgrades improve resistance to environment"
+	StaticText "and explosive damage."
+	StaticText ""
+	EOA_SubMenu "Area-Scanning Technology", "AreaScanningTechnology", "AreaScanningTechnologyMenu", 1, 0, 1
+	StaticText "These upgrades improve the capabilities of"
+	StaticText "Navigation Systems."
+	StaticText ""
+	EOA_SubMenu "Equipment System", "EquipmentSystem", "EquipmentSystemMenu", 1, 0, 1
+	StaticText "These upgrades improve Equipment capacity and"
+	StaticText "recharge time."
+	StaticText ""
+	EOA_SubMenu "Powerup Effectiveness", "PowerupEffectiveness", "PowerupEffectivenessMenu", 1, 0, 1
+	StaticText "These upgrades improve the effects of powerups."
+	StaticText ""
+	EOA_SubMenu "Dexterity", "Dexterity", "DexterityMenu", 1, 0, 1
+	StaticText "These upgrades affect the speed of certain actions."
+	StaticText ""
+	StaticText ""
+	StaticText "=== Argent Cell Routing ==="
+	EOA_StaticText "Health: %d", "EOA_ArgentHealthBonusCounter"
+	EOA_StaticText "Armor: %d", "EOA_ArgentArmorBonusCounter"
+	EOA_StaticText "Ammo: %d", "EOA_ArgentAmmoBonusCounter"
+}
+
+//Environmental Resistance
+OptionMenu "EnvironmentalResistanceMenu"
+{
+	Title "Environmental Resistance"
+	EOA_PraetorSubMenu "Hazard Protection", "EnvironmentalResistance", "HazardProtection", "HazardProtectionPurchaseMenu"
+	StaticText "Decrease explosive barrel and environment damage taken."
+	StaticText ""
+	EOA_PraetorSubMenu "Self-Preservation", "HazardProtection", "SelfPreservation", "SelfPreservationPurchaseMenu"
+	StaticText "Decrease weapon self-damage."
+	StaticText ""
+	EOA_PraetorSubMenu "Barrels 'O Fun", "SelfPreservation", "BarrelsOFun","BarrelsOFunPurchaseMenu"
+	StaticText "Immune to explosive barrel damage."
+	StaticText ""
+	StaticText ""
+	StaticText "=== Argent Cell Routing ==="
+	EOA_StaticText "Health: %d", "EOA_ArgentHealthBonusCounter"
+	EOA_StaticText "Armor: %d", "EOA_ArgentArmorBonusCounter"
+	EOA_StaticText "Ammo: %d", "EOA_ArgentAmmoBonusCounter"
+}
+
+OptionMenu "HazardProtectionPurchaseMenu"
+{
+	Title "Hazard Protection"
+	StaticText "Decrease explosive barrel and environment damage taken."
+	StaticText ""
+	StaticText "Purchase \"Hazard Protection\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "HazardProtection", "PraetorToken", "EnvironmentalResistanceMenu", EnvironmentalResistanceCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "EnvironmentalResistanceCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "SelfPreservationPurchaseMenu"
+{
+	Title "Self-Preservation"
+	StaticText "Decrease weapon self-damage."
+	StaticText ""
+	StaticText "Purchase \"Self-Preservation\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "SelfPreservation", "PraetorToken", "EnvironmentalResistanceMenu", EnvironmentalResistanceCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "EnvironmentalResistanceCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "BarrelsOFunPurchaseMenu"
+{
+	Title "Barrels O' Fun"
+	StaticText "Immune to explosive barrel damage."
+	StaticText ""
+	StaticText "Purchase \"Barrels O' Fun\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "BarrelsOFun", "PraetorToken", "EnvironmentalResistanceMenu", EnvironmentalResistanceCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "EnvironmentalResistanceCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+//Area-Scanning Technology
+OptionMenu "AreaScanningTechnologyMenu"
+{
+	Title "Area-Scanning Technology"
+	EOA_PraetorSubMenu "Item Awareness", "AreaScanningTechnology", "ItemAwareness", "ItemAwarenessPurchaseMenu"
+	StaticText "The AutoMap reveals Exploration items" 
+	StaticText "in a wider radius around your position."
+	StaticText ""
+	EOA_PraetorSubMenu "Secret Finder", "ItemAwareness", "SecretFinder", "SecretFinderPurchaseMenu"
+	StaticText "The compass will pulse when near secret areas."
+	StaticText ""
+	EOA_PraetorSubMenu "Full View", "SecretFinder", "FullView","FullViewPurchaseMenu"
+	StaticText "Exploration items appear in the AutoMap automatically."
+	StaticText ""
+	StaticText ""
+	StaticText "=== Argent Cell Routing ==="
+	EOA_StaticText "Health: %d", "EOA_ArgentHealthBonusCounter"
+	EOA_StaticText "Armor: %d", "EOA_ArgentArmorBonusCounter"
+	EOA_StaticText "Ammo: %d", "EOA_ArgentAmmoBonusCounter"
+}
+
+OptionMenu "ItemAwarenessPurchaseMenu"
+{
+	Title "Item Awareness"
+	StaticText "The AutoMap reveals Exploration items" 
+	StaticText "in a wider radius around your position."
+	StaticText ""
+	StaticText "Purchase \"Item Awareness\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "ItemAwareness", "PraetorToken", "AreaScanningTechnologyMenu", AreaScanningTechnologyCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "AreaScanningTechnologyCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "SecretFinderPurchaseMenu"
+{
+	Title "Secret Finder"
+	StaticText "The compass will pulse when near secret areas."
+	StaticText ""
+	StaticText "Purchase \"Secret Finder\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "SecretFinder", "PraetorToken", "AreaScanningTechnologyMenu", AreaScanningTechnologyCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "AreaScanningTechnologyCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "FullViewPurchaseMenu"
+{
+	Title "Full View"
+	StaticText "Exploration items appear in the AutoMap automatically."
+	StaticText ""
+	StaticText "Purchase \"Full View\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "FullView", "PraetorToken", "AreaScanningTechnologyMenu", AreaScanningTechnologyCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "AreaScanningTechnologyCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+//Equipment System
+OptionMenu "EquipmentSystemMenu"
+{
+	Title "Equipment System"
+	EOA_PraetorSubMenu "Quick Charge", "EquipmentSystem", "QuickCharge", "QuickChargePurchaseMenu"
+	StaticText "Decrease the recharge duration for equipment."
+	StaticText ""
+	EOA_PraetorSubMenu "Stock Up", "QuickCharge", "StockUp", "StockUpPurchaseMenu"
+	StaticText "Increase total number of equipment charges."
+	StaticText ""
+	EOA_PraetorSubMenu "Rapid Charge", "StockUp", "RapidCharge","RapidChargePurchaseMenu"
+	StaticText "Further decrease recharge duration of equipment."
+	StaticText ""
+	StaticText ""
+	StaticText "=== Argent Cell Routing ==="
+	EOA_StaticText "Health: %d", "EOA_ArgentHealthBonusCounter"
+	EOA_StaticText "Armor: %d", "EOA_ArgentArmorBonusCounter"
+	EOA_StaticText "Ammo: %d", "EOA_ArgentAmmoBonusCounter"
+}
+
+OptionMenu "QuickChargePurchaseMenu"
+{
+	Title "Quick Charge"
+	StaticText "Decrease the recharge duration for equipment."
+	StaticText ""
+	StaticText "Purchase \"Quick Charge\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "QuickCharge", "PraetorToken", "EquipmentSystemMenu", EquipmentSystemCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "EquipmentSystemCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "StockUpPurchaseMenu"
+{
+	Title "Stock Up"
+	StaticText "Increase total number of equipment charges."
+	StaticText ""
+	StaticText "Purchase \"Stock Up\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "StockUp", "PraetorToken", "EquipmentSystemMenu", EquipmentSystemCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "EquipmentSystemCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "RapidChargePurchaseMenu"
+{
+	Title "Rapid Charge"
+	StaticText "Further decrease recharge duration of equipment."
+	StaticText ""
+	StaticText "Purchase \"Rapid Charge\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "RapidCharge", "PraetorToken", "EquipmentSystemMenu", EquipmentSystemCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "EquipmentSystemCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+//Powerup Effectiveness
+OptionMenu "PowerupEffectivenessMenu"
+{
+	Title "Powerup Effectiveness"
+	EOA_PraetorSubMenu "Power Surge", "PowerupEffectiveness", "PowerSurge", "PowerSurgePurchaseMenu"
+	StaticText "When a powerup wears off, a damaging blast wave"
+	StaticText "is released."
+	StaticText ""
+	EOA_PraetorSubMenu "Healing Power", "PowerSurge", "HealingPower","HealingPowerPurchaseMenu"
+	StaticText "Upon activating a powerup, health will be filled"
+	StaticText "to maximum capacity."
+	StaticText ""
+	EOA_PraetorSubMenu "Power Extender", "HealingPower", "PowerExtender","PowerExtenderPurchaseMenu"
+	StaticText "Increases the length of time that a powerup"
+	StaticText "will remain active."
+	StaticText ""
+	StaticText ""
+	StaticText "=== Argent Cell Routing ==="
+	EOA_StaticText "Health: %d", "EOA_ArgentHealthBonusCounter"
+	EOA_StaticText "Armor: %d", "EOA_ArgentArmorBonusCounter"
+	EOA_StaticText "Ammo: %d", "EOA_ArgentAmmoBonusCounter"
+}
+
+OptionMenu "PowerSurgePurchaseMenu"
+{
+	Title "Power Surge"
+	StaticText "When a powerup wears off, a damaging blast wave"
+	StaticText "is released."
+	StaticText ""
+	StaticText "Purchase \"Power Surge\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "PowerSurge", "PraetorToken", "PowerupEffectivenessMenu", PowerupEffectivenessCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "PowerupEffectivenessCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "HealingPowerPurchaseMenu"
+{
+	Title "Healing Power"
+	StaticText "Upon activating a powerup, health will be filled"
+	StaticText "to maximum capacity."
+	StaticText ""
+	StaticText "Purchase \"Healing Power\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "HealingPower", "PraetorToken", "PowerupEffectivenessMenu", PowerupEffectivenessCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "PowerupEffectivenessCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "PowerExtenderPurchaseMenu"
+{
+	Title "Power Extender"
+	StaticText "Increases the length of time that a powerup"
+	StaticText "will remain active."
+	StaticText ""
+	StaticText "Purchase \"Power Extender\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "PowerExtender", "PraetorToken", "PowerupEffectivenessMenu", PowerupEffectivenessCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "PowerupEffectivenessCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+//Dexterity
+OptionMenu "DexterityMenu"
+{
+	Title "Dexterity"
+	EOA_PraetorSubMenu "Adept", "Dexterity", "Adept", "AdeptPurchaseMenu"
+	StaticText "Switch weapons faster."
+	StaticText ""
+	EOA_PraetorSubMenu "Quick Hands", "Adept", "QuickHands","QuickHandsPurchaseMenu"
+	StaticText "Grab ledges faster."
+	StaticText ""
+	EOA_PraetorSubMenu "Hot Swap", "QuickHands", "HotSwap","HotSwapPurchaseMenu"
+	StaticText "Swap weapon mods faster."
+	StaticText ""
+	StaticText ""
+	StaticText "=== Argent Cell Routing ==="
+	EOA_StaticText "Health: %d", "EOA_ArgentHealthBonusCounter"
+	EOA_StaticText "Armor: %d", "EOA_ArgentArmorBonusCounter"
+	EOA_StaticText "Ammo: %d", "EOA_ArgentAmmoBonusCounter"
+}
+
+OptionMenu "AdeptPurchaseMenu"
+{
+	Title "Adept"
+	StaticText "Switch weapons faster."
+	StaticText ""
+	StaticText "Purchase \"Adept\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "Adept", "PraetorToken", "DexterityMenu", DexterityCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "DexterityCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "QuickHandsPurchaseMenu"
+{
+	Title "Quick Hands"
+	StaticText "Grab ledges faster."
+	StaticText ""
+	StaticText "Purchase \"Quick Hands\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "QuickHands", "PraetorToken", "DexterityMenu", DexterityCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "DexterityCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+OptionMenu "HotSwapPurchaseMenu"
+{
+	Title "Hot Swap"
+	StaticText "Swap weapon mods faster."
+	StaticText ""
+	StaticText "Purchase \"Hot Swap\"?"
+	StaticText ""
+	EOA_PurchaseMenu "Purchase", "HotSwap", "PraetorToken", "DexterityMenu", DexterityCost, 0, 1, 0
+	StaticText ""
+	EOA_StaticText "Cost: %d", "DexterityCost", 1
+	StaticText ""
+	EOA_StaticText "Available Tokens: %d", "PraetorToken"
+}
+
+//Runes
+OptionMenu "RuneMenu"
+{
+	Title "Runes"
+	EOA_RuneSelectedText "Slot 1 : %s", "RuneSlot1"
+	EOA_RuneMenu "Select Rune...", "RuneSlot1", 1
+	EOA_RuneDescriptionText "RuneSlot1"
+	StaticText ""
+	StaticText ""
+	EOA_RuneChallengeText "RuneSlot1"
+	StaticText ""
+	StaticText ""
+	EOA_RuneSelectedText "Slot 2 : %s", "RuneSlot2"
+	EOA_RuneMenu "Select Rune...", "RuneSlot2", 4
+	EOA_RuneDescriptionText "RuneSlot2"
+	StaticText ""
+	StaticText ""
+	EOA_RuneChallengeText "RuneSlot2"
+	StaticText ""
+	StaticText ""
+	EOA_RuneSelectedText "Slot 3 : %s", "RuneSlot3"
+	EOA_RuneMenu "Select Rune...", "RuneSlot3", 7
+	EOA_RuneDescriptionText "RuneSlot3"
+	StaticText ""
+	StaticText ""
+	EOA_RuneChallengeText "RuneSlot3"
+	StaticText ""
+	StaticText ""
+}
+
+OptionMenu "RuneSlot1"
+{
+	Title "Select A Rune..."
+	EOA_RuneSelectionMenu "Vacuum", 1, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Dazed And Confused", 2, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Ammo Boost", 4, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Equipment Power", 8, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Savagery", 16, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Seek And Destroy", 32, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "In-Flight Mobility", 64, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Armored Offensive", 128, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Blood Fueled", 256, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Intimacy Is Best", 512, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Rich Get Richer", 1024, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Saving Throw", 2048, "RuneSlot1", "RuneMenu"
+	EOA_RuneSelectionMenu "Clear Rune", 0, "RuneSlot1", "RuneMenu"
+}
+
+OptionMenu "RuneSlot2"
+{
+	Title "Select A Rune..."
+	EOA_RuneSelectionMenu "Vacuum", 1, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Dazed And Confused", 2, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Ammo Boost", 4, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Equipment Power", 8, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Savagery", 16, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Seek And Destroy", 32, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "In-Flight Mobility", 64, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Armored Offensive", 128, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Blood Fueled", 256, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Intimacy Is Best", 512, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Rich Get Richer", 1024, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Saving Throw", 2048, "RuneSlot2", "RuneMenu"
+	EOA_RuneSelectionMenu "Clear Rune", 0, "RuneSlot2", "RuneMenu"
+}
+
+OptionMenu "RuneSlot3"
+{
+	Title "Select A Rune..."
+	EOA_RuneSelectionMenu "Vacuum", 1, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Dazed And Confused", 2, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Ammo Boost", 4, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Equipment Power", 8, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Savagery", 16, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Seek And Destroy", 32, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "In-Flight Mobility", 64, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Armored Offensive", 128, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Blood Fueled", 256, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Intimacy Is Best", 512, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Rich Get Richer", 1024, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Saving Throw", 2048, "RuneSlot3", "RuneMenu"
+	EOA_RuneSelectionMenu "Clear Rune", 0, "RuneSlot3", "RuneMenu"
+}
+
+//Challenges
+OptionMenu "ChallengeMenu"
+{
+	Title "Challenges"
+	EOA_ChallengeText "Name", 1
+	EOA_ChallengeText "Description", 1
+	EOA_ChallengeText "Amount", 1
+	StaticText ""
+	StaticText ""
+	StaticText ""
+	StaticText ""
+	EOA_ChallengeText "Name", 2
+	EOA_ChallengeText "Description", 2
+	EOA_ChallengeText "Amount", 2
+	StaticText ""
+	StaticText ""
+	StaticText ""
+	StaticText ""
+	EOA_ChallengeText "Name", 3
+	EOA_ChallengeText "Description", 3
+	EOA_ChallengeText "Amount", 3
+}

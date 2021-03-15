@@ -1,0 +1,154 @@
+#include "GLDEFS.Brightmaps.txt"
+
+//Haste
+PointLight HasteGlow
+{
+	Color 1.0 1.0 0.1
+	Size 64
+}
+
+/*
+Object HasteFX
+{
+	Frame TNT1A {Light HasteGlow}
+}
+
+Object EOA_Haste
+{
+	Frame HSTE {Light HasteGlow}
+}
+*/
+
+//Berserk
+PointLight BerserkGlow
+{
+	Color 0.5 0.25 0.0
+    Size 64
+}
+
+Object EOA_Berserk
+{
+	Frame BSRK {Light BerserkGlow}
+}
+
+//Quad Damage
+PointLight QuadDamageGlow
+{
+	Color 0.25 0.0 0.5
+	Size 64
+}
+
+/*
+Object QuadDamageFX
+{
+	Frame TNT1A {Light QuadDamageGlow}
+}
+
+Object EOA_QuadDamage
+{
+	Frame QDMG {Light QuadDamageGlow}
+}
+*/
+
+PointLight InvulnerabilityGlow
+{
+    Color 0.0 1.0 0.0
+    Size 64
+}
+
+
+//Plasma Stuff
+PointLight StunLight
+{
+	Color 0.1 0.8 1.0
+	Size 64
+}
+
+/*PointLight PlasmaBall
+{
+	Color 0.1 0.33 1
+	Size 32
+}
+
+Object EOA_PlasmaBall
+{
+	Frame PSB1 {Light PlasmaBall}
+	Frame PSB2 {Light PlasmaBall}
+}*/
+
+PointLight StunBomb
+{
+	Color 0 0.66 1
+	Size 50
+}
+
+Object StunBombProjectile
+{
+	Frame STBM {Light StunBomb}
+}
+
+PointLight ArgentGlow
+{
+	Color 1.0 0.0625 0.0
+    Size 64
+}
+
+//Generic Explosion effects...
+PulseLight ExplosionLight
+{
+	Color 1 0.5 0
+	Size 128
+	SecondarySize 0
+	Interval 0.5
+}
+
+PointLight MuzzleFlash
+{
+	Color 1 0.5 0
+	Size 64
+}
+
+//Rune Trial Stone
+PointLight RuneGlow
+{
+	Color 0.6 0.9 0.6
+	Size 14
+	offset 0 5 0
+	attenuate 1
+}
+
+Object EOA_RuneTrialStone
+{
+	Frame RTST {Light RuneGlow}
+	Frame RNDD {Light RuneGlow}
+}
+//Unused Prototypes
+PulseLight GreenExplosionLight
+{
+	Color 0.66 1 0.5
+	Size 128
+	SecondarySize 0
+	Interval 0.5
+}
+
+PointLight GreenMuzzleFlash
+{
+	Color 0.66 1 0.5
+	Size 64
+}
+
+PulseLight BlueExplosionLight
+{
+	Color 0 0.5 1
+	Size 128
+	SecondarySize 0
+	Interval 0.5
+}
+
+PulseLight BlueMuzzleFlash
+{
+	Color 0 0.5 1
+	Size 64
+	SecondarySize 0
+	Interval 0.25
+}

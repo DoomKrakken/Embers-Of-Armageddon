@@ -1,0 +1,403 @@
+Model EMGTracer
+{ 
+	Path "Models"
+	Skin 0 "tracerpistol.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+}
+
+Model EMGChargeTracer
+{ 
+	Path "Models"
+	Skin 0 "tracerpistol.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+}
+
+Model CombatShotgunTracer
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model ChargedBurstTracer1
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model ChargedBurstTracer2
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model ChargedBurstTracer3
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model SuperShotgunTracer
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model HARTracer
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model HARDevastatorTracer
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model HARPuffSpark
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	PITCHFROMMOMENTUM
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model HARDevastatorPuffSpark
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	PITCHFROMMOMENTUM
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model ChaingunSlug
+{ 
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model ChaingunIncendiarySlug
+{
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+	Skin 0 "tracerquad.png"
+	FrameIndex TRAC B 0 0
+}
+
+Model ChaingunPuffSpark
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	PITCHFROMMOMENTUM
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model ChaingunUraniumPuffSpark
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	PITCHFROMMOMENTUM
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model ChaingunIncendiaryPuffSpark
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	PITCHFROMMOMENTUM
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model RedPlasmaPuffSpark
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	PITCHFROMMOMENTUM
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model GaussCannonProjectile
+{ 
+	Path "Models"
+	Skin 0 "tracerpistol.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+}
+
+Model PrecisionBoltProjectile
+{ 
+	Path "Models"
+	Skin 0 "tracerpistol.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+}
+
+Model SiegeModeProjectile
+{ 
+	Path "Models"
+	Skin 0 "tracerpistol.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 2.0 2.0
+	PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0
+
+	FrameIndex TRAC A 0 0
+}
+
+Model GaussCannonImpactSpark
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	PITCHFROMMOMENTUM
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model SiegeWeaveTrailFX
+{
+	Path "Models"
+	Model 0 "tracer.md3"
+	Skin 0 "Spark.png"
+	//PITCHFROMMOMENTUM
+	USEACTORPITCH
+	Scale 0.25 2 2
+	FrameIndex NULL A 0 0
+}
+
+Model HARSmoke
+{ 
+	Path "Models"
+	Skin 0 "HARSmoke.png"
+	Model 0 "tracer.md3"
+	Scale 1.0 1.0 1.0
+	/*PITCHFROMMOMENTUM 
+	ROTATING
+	Rotation-Speed 25
+	Rotation-Vector 1 0 0*/
+
+	FrameIndex HSMK A 0 0
+}
+
+Model LightningBeamTrailBase
+{
+	Path "Models"
+	Model 0 "Tracer.md3"
+	Scale 1.9 10 10
+	//USEACTORPITCH
+	PITCHFROMMOMENTUM
+
+	Skin 0 "BEAMY1.png"
+	FrameIndex TFOG F 0 0
+	Skin 0 "BEAMY2.png"
+	FrameIndex TFOG G 0 0
+	Skin 0 "BEAMY3.png"
+	FrameIndex TFOG H 0 0
+}
+
+Model BFGLightningTracerFX
+{
+	Path "Models"
+	Model 0 "Tracer.md3"
+	Scale 1.9 15 15
+	//USEACTORPITCH
+	PITCHFROMMOMENTUM
+	Skin 0 "BEAMY1.png"
+	FrameIndex TFOG F 0 0
+	Skin 0 "BEAMY2.png"
+	FrameIndex TFOG G 0 0
+	Skin 0 "BEAMY3.png"
+	FrameIndex TFOG H 0 0
+}
+
+Model StunBombLightningTracerFX
+{
+	Path "Models"
+	Model 0 "Tracer.md3"
+	Scale 1.9 6 6
+	//USEACTORPITCH
+	PITCHFROMMOMENTUM
+	Skin 0 "BEAMY1"
+	FrameIndex TFOG F 0 0
+	Skin 0 "BEAMY2"
+	FrameIndex TFOG G 0 0
+	Skin 0 "BEAMY3"
+	FrameIndex TFOG H 0 0
+}
+
+Model BFGExplosionFX
+{
+	Path "Models"
+	Skin 0 "tracer.png"
+	Model 0 "tracer.md3"
+	PITCHFROMMOMENTUM
+	Scale 2 12 12
+	FrameIndex NULL A 0 0
+}
+
+Model SiphonSphere
+{
+	Path "Models"
+	Skin 0 "BoltBlue2.png"
+	Model 0 "Sphere.md3"
+	INHERITACTORPITCH
+	FrameIndex NULL A 0 0
+}
+
+Model ExplosionTrail
+{
+	Path "Models"
+	Skin 0 "EXPTRAIL.png"
+	Model 0 "tracer.md3"
+	Scale 0.25 1.5 1.5
+	PITCHFROMMOMENTUM
+	FrameIndex NULL A 0 0
+}
+
+Model ExplosionTrail2
+{
+	Path "Models"
+	Skin 0 "EXPTRAIL.png"
+	Model 0 "tracer.md3"
+	Scale 0.25 1.5 1.5
+	PITCHFROMMOMENTUM
+	FrameIndex NULL A 0 0
+}
+
+Model BigExplosionTrail
+{
+	Path "Models"
+	Skin 0 "EXPTRAIL.png"
+	Model 0 "tracer.md3"
+	Scale 0.25 1.5 1.5
+	PITCHFROMMOMENTUM
+	FrameIndex NULL A 0 0
+}

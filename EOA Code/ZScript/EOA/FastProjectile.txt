@@ -1,0 +1,1041 @@
+//[DoomKrakken]: Written originally by phantombeta, modified further by me.
+
+//Line Tracer
+Class EOA_Projectile_Trace : LineTracer
+{
+	EOA_Projectile SourceActor;
+	Array<F3DFloor> FFloorsToIgnore;
+	Array<Line> ActiveLinesToIgnore;
+	Array<Actor> ActorsToIgnore;
+	Array<Actor> ActorsRipped;
+
+	ETraceStatus HandleActor()
+	{
+		If (SourceActor.bTHRUACTORS)
+		{
+			Return TRACE_SKIP;
+		}
+
+		Let Mo = Results.HitActor;
+
+		If (ActorsToIgnore.Find(Mo) != ActorsToIgnore.Size()) // Skip If the actor should be ignored
+		{
+			Return TRACE_SKIP;
+		}
+		If (ActorsRipped.Find(Mo) != ActorsRipped.Size()) // Skip If the actor was already ripped through
+		{
+			Return TRACE_SKIP;
+		}
+		If (Mo == SourceActor || (SourceActor.bMISSILE && !SourceActor.bHITOWNER && Mo == SourceActor.Target))
+		{
+			Return TRACE_SKIP;
+		}
+		If (!(Mo.bSOLID || Mo.bSPECIAL || Mo.bSHOOTABLE || Mo.bTOUCHY))
+		{
+			Return TRACE_SKIP;
+		}
+		If (Mo.bTHRUACTORS)
+		{
+			Return TRACE_SKIP;
+		}
+		If (Mo.ProjectilePassHeight && Mo.ProjectilePassHeight < Results.HitPos.Z - Mo.Pos.Z)
+		{
+			Return TRACE_SKIP;
+		}
+		Return TRACE_STOP;
+	}
+
+	ETraceStatus HandleWall()
+	{
+		If (Results.Tier == TIER_Upper || Results.Tier == TIER_Lower)
+		{
+			Return TRACE_STOP;
+		}
+
+		Let hl = Results.HitLine;
+
+		If (ActiveLinesToIgnore.Find(hl) == ActiveLinesToIgnore.Size() && (((hl.Activation & SPAC_MCross) && SourceActor.bACTIVATEMCROSS) || ((hl.Activation & SPAC_PCross) && SourceActor.bACTIVATEPCROSS)))
+		{
+			ActiveLinesToIgnore.Push(hl);
+			Return TRACE_STOP;
+		}
+
+		If (Results.FFloor && FFloorsToIgnore.Find(Results.FFloor) == FFloorsToIgnore.Size())
+		{
+			FFloorsToIgnore.Push(Results.FFloor);
+			Return TRACE_STOP;
+		}
+
+		If (Results.Tier == TIER_Middle && !hl.BackSector)
+		{
+			Return TRACE_STOP;
+		}
+		
+		If (SourceActor.bMISSILE && (hl.Flags & (Line.ML_BlockProjectile | Line.ML_BlockEverything)))
+		{
+			Return TRACE_STOP;
+		}
+
+		If (SourceActor.bMISSILE && Results.Tier == TIER_Middle && (hl.Flags & Line.ML_Blocking) && (hl.Flags & Line.ML_TwoSided))
+		{
+			Return TRACE_SKIP;
+		}
+
+		If ((hl.Flags & Line.ML_Blocking) || (hl.Flags & Line.ML_BlockEverything) || (SourceActor.bISMONSTER && (hl.Flags & Line.ML_BlockMonsters)))
+		{
+			Return TRACE_STOP;
+		}
+		Return TRACE_SKIP;
+	}
+
+	Override ETraceStatus TraceCallback()
+	{
+		ETraceStatus Status = TRACE_SKIP;
+		Switch(Results.HitType)
+		{
+			Case TRACE_HITACTOR:
+				Status = HandleActor();
+			Break;
+
+			Case TRACE_HITFLOOR:
+			Case TRACE_HITCEILING:
+				Status = TRACE_STOP;
+			Break;
+
+			Case TRACE_HITWALL:
+				Status = HandleWall();
+			Break;
+		}
+		Return Status;
+	}
+}
+
+//Projectile
+Class EOA_Projectile : FastProjectile
+{
+	Enum EMovementMode
+	{
+		Normal         = 0, /// The projectile uses the normal movement code.
+		FastProjectile    , /// The projectile is a FastProjectile.
+		OldFastProj       , /// The projectile is a FastProjectile and uses GZDoom's code.
+	};
+	/// Determines how to detect collisions. Only used For EMovementMode.FastProjectile.
+	Enum EFPCollisionMode
+	{
+		ColMode_Center      = 1     , /// Check the center For collision
+		ColMode_Corners     = 1 << 1, /// Check the corners For collision
+		ColMode_EdgeCenters = 1 << 2, /// Check the center of the edges For collision.
+	};
+	/// Determines how to effects are placed. Only used For EMovementMode.FastProjectile.
+	Enum EEffectsStepMode
+	{
+		EFXStepMode_FastProj = 0, /// Emulates GZDoom's FastProjectile trails.
+		EFXStepMode_Accurate    , /// Calculates effects placement accurately.
+		EFXStepMode_MapUnit     , /// Places effects every /Interval/ map units.
+	};
+
+	Int MoveMode;
+	Int fpCollisionMode;
+	Bool InterpFastProj;
+	Int EffectsStepsMode;
+	Double EffectStepInterval;
+	Double EffectStepMul;
+	Double BonusDMGFactor;
+
+	Bool HitSky;
+	
+	Double TrueSpeed;
+	Class<Actor> PuffType;
+	Int PointBlankDamage;
+	Int PBDamageFalloffDistStart;
+	Int PBDamageFalloffDistEnd;
+	Int MaxDamage;
+	Int DamageFalloffDistStart;
+	Int DamageFalloffDistEnd;
+	Int EquipmentPowerLevel;
+	
+	Line L;
+	Actor Targ;
+
+	Array<Actor> AlreadyRipped;
+	Int i;
+	Int j;
+	Int OffsetAngle;
+	Int WeaveAngle;
+	Bool FullSpeed;
+	Bool Headshot;
+	Transient EOA_Projectile_Trace tr;
+
+	/// Which movement code to use.
+	Property MovementMode: MoveMode;
+	/// How to detect collisions. Only used by EMovementMode.FastProjectile.
+	Property FastProjCollision: fpCollisionMode;
+	/// Changes how many times StepEffects is called. Only used by EMovementMode.FastProjectile.
+	Property EffectStepMul: EffectStepMul;
+	/// Changes how effects are placed. Only used by EMovementMode.FastProjectile.
+	Property EffectsStepsMode: EffectsStepsMode;
+	/// Changes the Interval For effects placement. Uses the Radius as the Interval If negative. Defaults to -1. Only used by EMovementMode.FastProjectile.
+	Property EffectStepInterval: EffectStepInterval;
+	/// Whether to interpolate the projectile's movement. Only used by EMovementMode.FastProjectile.
+	Property InterpMove: InterpFastProj;
+	//[DoomKrakken]: The TRUE speed of the projectile to accelerate to after spawning.
+	Property TrueSpeed: TrueSpeed;
+	Property PuffType: PuffType;
+	
+	//[DoomKrakken]: Damage modifiers for Shotgun salvos.
+	Property PointBlankDamage: PointBlankDamage;
+	Property PBDamageFalloffDistStart: PBDamageFalloffDistStart;
+	Property PBDamageFalloffDistEnd: PBDamageFalloffDistEnd;
+	Property MaxDamage: MaxDamage;
+	Property DamageFalloffDistStart: DamageFalloffDistStart;
+	Property DamageFalloffDistEnd: DamageFalloffDistEnd;
+
+	Default
+	{
+		EOA_Projectile.MovementMode Normal;
+		EOA_Projectile.FastProjCollision ColMode_EdgeCenters;
+		EOA_Projectile.InterpMove True;
+
+		EOA_Projectile.EffectStepMul 0.125;
+		EOA_Projectile.EffectsStepsMode EFXStepMode_Accurate; //EFXStepMode_FastProj;
+		EOA_Projectile.EffectStepInterval -1;
+
+		Projectile;
+		
+		Speed 1;
+		EOA_Projectile.TrueSpeed 60;
+		MissileType "";
+		MissileHeight 8;
+		+FORCERADIUSDMG
+		+HITTRACER
+	}
+	States
+	{
+	Death.Sky:
+		TNT1 A 1 A_StopAllSounds();
+		Stop;
+	}
+	Override Void PostBeginPlay()
+	{
+		If (Target)
+		{
+			Pitch = Target.Pitch;
+		}
+		If (MoveMode == FastProjectile && !(InStateSequence(CurState, ResolveState("Death")) || InStateSequence(CurState, ResolveState("XDeath")) || InStateSequence(CurState, ResolveState("Crash")))) //Thank you again, phantombeta! :D
+		{
+			//[DoomKrakken]: We want this to be sped up to 70 units, so that we can see the projectile exiting the muzzle.  It'll be 35 if it's a Siege Mode projectile or the like, so that other damage shenanigans can occur properly. :D
+			If (!(Vel.Length() ~== 0))
+			{
+				Vel = Vel.Unit() * 70;
+			}
+		}
+		If (InStateSequence(CurState, ResolveState("Death")) || InStateSequence(CurState, ResolveState("XDeath")) || InStateSequence(CurState, ResolveState("Crash")))
+		{
+			If (PuffType)
+			{
+				Actor ProjPuff = Spawn(PuffType, Pos);
+				If (ProjPuff)
+				{
+					ProjPuff.Vel.Z = 0;
+					ProjPuff.Target = Target;
+					ProjPuff.Pitch = Pitch;
+					ProjPuff.Angle = Angle;
+				}
+			}
+		}
+		Super.PostBeginPlay();
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		//[DoomKrakken]: Note to others - here, in DoSpecialDamage, "Target" refers to the victim actor, and not the projectile's target.  If you wish to retrieve the target (shooter) of the projectile, use "Self.Target".
+		If (!Default.bNOEXTREMEDEATH)
+		{
+			bNOEXTREMEDEATH = False;
+		}
+		If (Headshot)
+		{
+			//[DoomKrakken]: Headshot hitboxes will not be damaged by explosions unless the source missile hit them directly.
+			If (Tracer != Target)
+			{
+				Return Damage;
+			}
+			Damage *= 3 * (1 + (Target.Default.Health <= 50)) - (Target.Default.Health >= 300) - 0.5 * (Target.Default.Health >= 1000);
+		}
+		Return Damage;
+	}
+	Override Int SpecialMissileHit(Actor Victim)
+	{
+		//[DoomKrakken]: Thank you, Xaser! :D
+		If (Target Is "EOA_HologramProjection" && Victim == Target.Master)
+		{
+			SetDamage(0);
+			Return -1;
+		}
+		If (Victim != Target && (Victim.bISMONSTER || Victim.Player) && Victim.bSHOOTABLE)
+		{
+			If (!Victim.bNOBLOOD && !(Victim.bREFLECTIVE && bDONTREFLECT) && !Victim.bINVULNERABLE && !Victim.bDORMANT && !bBLOODLESSIMPACT)
+			{
+				Class<Actor> BloodCls = Victim.GetBloodType(0);
+				If (BloodCls)
+				{
+					Actor BloodyPuff = Spawn(BloodCls, Pos, NO_REPLACE);
+					If (BloodyPuff)
+					{
+						BloodyPuff.A_StartSound("Projectile/HitFlesh");
+						If (GameInfo.GameType == GAME_HERETIC)
+						{
+							BloodyPuff.bNOGRAVITY = True;
+						}
+						If (!BloodyPuff.bDONTTRANSLATE)
+						{
+							BloodyPuff.Translation = Victim.BloodTranslation;
+						}
+					}
+				}
+			}
+			Else
+			{
+				Actor NewPuff = Spawn("BulletPuff", Pos, NO_REPLACE);
+				If (NewPuff)
+				{
+					NewPuff.A_StartSound("Projectile/HitWall");
+					NewPuff.Destroy();
+				}
+			}
+		}
+		If (Victim Is "EOA_WeakPoint" || (!EOA_WeakPoints && Victim != Target && Victim.bISMONSTER && Pos.Z <= Victim.Pos.Z + Victim.Height && Pos.Z >= Victim.Pos.Z + Victim.Height - Victim.Height / 5.5 && Victim.bSHOOTABLE))
+		{
+			Let WeakPoint = EOA_WeakPoint(Victim);
+			If (!EOA_WeakPoints || (WeakPoint && WeakPoint.Owner && WeakPoint.Label == "Head"))
+			{
+				bHITTRACER = False;
+				Headshot = True;
+				Tracer = WeakPoint ? WeakPoint.Owner : Victim;
+				For (Int i = 1; i <= 5; i++)
+				{
+					If (Victim.bNOBLOOD)
+					{
+						A_SpawnItemEx("BulletPuff", 0, 0, 0, frandom(-3, 3), frandom(-3, 3), frandom(-3, 3));
+					}
+					Else
+					{
+						Class<Actor> BloodCls = (WeakPoint && WeakPoint.OwnerBloodType) ? WeakPoint.OwnerBloodType : Victim.GetBloodType(0);
+						If (BloodCls)
+						{
+							Actor BloodyPuff = Spawn(BloodCls, Pos, NO_REPLACE);
+							If (BloodyPuff)
+							{
+								BloodyPuff.Vel.X = frandom(-3, 3);
+								BloodyPuff.Vel.Y = frandom(-3, 3);
+								BloodyPuff.Vel.Z = frandom(-3, 3);
+								If (GameInfo.GameType == GAME_HERETIC)
+								{
+									BloodyPuff.bNOGRAVITY = True;
+								}
+								If (!BloodyPuff.bDONTTRANSLATE)
+								{
+									BloodyPuff.Translation = Victim.BloodTranslation;
+								}
+							}
+						}
+						//A_SpawnItemEx("Blood", 0, 0, 0, frandom(-3, 3), frandom(-3, 3), frandom(-3, 3));
+						/*If (Tracer.bKILLED)
+						{
+							Tracer.A_StartSound("Death/Headshot");
+						}*/
+					}
+				}
+			}
+			If (Victim.bKILLED && bRIPPER)
+			{
+				Return 1; //[DoomKrakken]: Because for whatever retarded reason, if the monster is dead, it won't pass through even if it has RIPPER.  But it will pass through if it's not dead.  For the love of all things holy, do not... I repeat, DO NOT, under any circumstances, move this return statement outside of the "If (bKILLED)" block.  If you do, it'll always pass through the actor, and not deal its own damage.  This is here only so that ripper projectiles continue to rip through the monster once it's killed.
+			}
+		}
+		Return -1;
+	}
+	
+	//[DoomKrakken]: A version of A_Explode that won't thrust players so much. :D
+	Int EOA_Explode(Int Damage = -1, Int Distance = -1, Int Flags = XF_HURTSOURCE, Bool Alert = False, Int FullDamageDistance = 0, Double PlayerDamageFactor = 1.0)
+	{
+		If (Damage < 0)	// get parameters from metadata
+		{
+			Damage = ExplosionDamage;
+			Distance = ExplosionRadius;
+			Flags = !DontHurtShooter;
+			Alert = False;
+		}
+		If (Distance <= 0)
+		{
+			Distance = Damage;
+		}
+
+		If (!(Flags & XF_EXPLICITDAMAGETYPE) && DamageType == 'None')
+		{
+			DamageType = Self.DamageType;
+		}
+
+		Int PFlags = 0;
+		If (Flags & XF_HURTSOURCE && Target && Target.Player && CheckSight(Target, SF_IGNOREVISIBILITY|SF_IGNOREWATERBOUNDARY))
+		{
+			Int Thrust = Damage * 0.125 / Target.Mass; //[DoomKrakken]: Calculate thrust with limited self-thrust.
+			Target.Thrust(Thrust, AngleTo(Target)); //[DoomKrakken]: Apply thrust.
+			Target.Vel.Z += (Target.Pos.Z + Target.Height / 2 - Self.Pos.Z) * Thrust * 0.5; //[DoomKrakken]: Calculate and apply Z-thrust.
+			Target.DamageMobj(Self, Target, GetRadiusDamage(Target, Damage * PlayerDamageFactor, Distance, FullDamageDistance), DamageType, DMG_EXPLOSION); //[DoomKrakken]: Calculate damage, taking lessened damage into account.
+			//PFlags |= RADF_HURTSOURCE; //[DoomKrakken]: No need for this, since we already damaged the player up there.
+		}
+		If (Flags & XF_NOTMISSILE)
+		{
+			PFlags |= RADF_SOURCEISSPOT;
+		}
+		Int Count = RadiusAttack(Target, Damage, Distance, DamageType, PFlags, FullDamageDistance); //[DoomKrakken]: Damage everyone else.
+		If (!(Flags & XF_NOSPLASH))
+		{
+			CheckSplash(Distance);
+		}
+		If (Alert && Target != NULL && Target.Player != NULL)
+		{
+			SoundAlert(Target);
+		}
+		Return Count;
+	}
+	Action Void EOA_SpawnCustomDynamicLight(Name LightID, Int Type = DynamicLight.PointLight, Vector3 RGB = (0, 0, 0), Int Radius1 = 0, Int Radius2 = 0, Int Flags = 0, Int Duration = 8, Vector3 Ofs = (0, 0, 0), Double Param = 0, Double SpotI = 10, Double SpotO = 25, Double SpotP = 0)
+	{
+		EOA_ActorExtensions.SpawnCustomDynamicLight(Self, LightID, Type, RGB, Radius1, Radius2, Flags, Duration, Ofs, Param, SpotI, SpotO, SpotP);
+	}
+	Override Bool CanCollideWith(Actor Other, Bool Passive)
+	{
+		If (!Passive && Other != Target && Other.bSHOOTABLE)
+		{
+			If (bRIPPER)
+			{
+				If (AlreadyRipped.Find(Other) == AlreadyRipped.Size()) //[DoomKrakken]: If it's the last one in the array (a.k.a. it hadn't been damaged or ripped through before by this projectile), then it'll damage the monster and add it to the array, making sure it doesn't get damaged twice. ;)
+				{
+					If (Other Is "EOA_WeakPoint")
+					{
+						Let WP = EOA_WeakPoint(Other);
+						If (WP && WP.Owner)
+						{
+							If (AlreadyRipped.Find(WP.Owner) != AlreadyRipped.Size())
+							{
+								AlreadyRipped.Push(Other);
+								Return False;
+							}
+							AlreadyRipped.Push(WP.Owner);
+						}
+					}
+					AlreadyRipped.Push(Other);
+					If (PuffType)
+					{
+						Actor ProjPuff = Spawn(PuffType, Pos);
+						If (ProjPuff)
+						{
+							ProjPuff.Vel.Z = 0;
+							ProjPuff.Target = Target;
+							ProjPuff.Pitch = Pitch;
+							ProjPuff.Angle = Angle;
+						}
+					}
+				}
+				Else //Oops, it was found in the array...
+				{
+					Return False;
+				}
+			}
+			If (Headshot /*CountInv("HeadShot")*/)
+			{
+				//RestoreDamage(); //If it's a ripper, and damage was set to 0 from the headshot, restore the damage.
+				Headshot = False;
+				//A_TakeInventory("HeadShot");
+			}
+			Return True;
+		}
+		Return False;
+	}
+
+	Override Void Tick()
+	{
+		Switch(MoveMode)
+		{
+		Case Normal:
+			Actor.Tick();
+			Break;
+
+		Case FastProjectile:
+			If (GetAge() == 1 && !(InStateSequence(CurState, ResolveState("Death")) || InStateSequence(CurState, ResolveState("XDeath")) || InStateSequence(CurState, ResolveState("Crash")))) //This occurs only once, after the first tic has passed.  This way, we can see the projectile "exiting" the muzzle.
+			{
+				Vel = Vel.Unit() * TrueSpeed;
+			}
+			NewFastProjTick();
+			Break;
+
+		Case OldFastProj:
+			Super.Tick();
+			Break;
+		}
+	}
+	
+	Static Const Double FPColOffs [] =
+	{ // Y and Z, not X and Y.
+		// Edge centers
+		 0, 1.0,
+		 1, 0.5,
+		 0, 0.0,
+		-1, 0.5,
+		// Corners
+		 1, 1,
+		 1, 0,
+		-1, 0,
+		-1, 1,
+		// Center
+		0, 0.5
+	};
+	Virtual Void NewFastProjTick()
+	{
+		If (!Self)
+		{
+			Return;
+		}
+		ClearInterpolation();
+		If (!bNoTimeFreeze && IsFrozen())
+		{
+			Return;
+		}
+		HandleMovement();
+
+		// Return If the actor got removed
+		If (!Self)
+		{
+			Return;
+		}
+		// Freed itself
+		If (!CheckNoDelay())
+		{
+			Return;
+		}
+		// Advance the state
+		If (Tics != -1)
+		{
+			If (Tics > 0)
+				Tics--;
+
+			While (!Tics)
+			{
+				If (!Self || !CurState || !SetState(CurState.NextState)) // Actor was removed
+				{
+					Return;
+				}
+			}
+		}
+	}
+
+	Virtual Void EOA_ExplodeMissile(Line L, Actor Targ, Bool OnSky)
+	{
+		Self.L = L;
+		Self.Targ = Targ;
+		HitSky = OnSky;
+		If (OnSky && !bSKYEXPLODE)
+		{
+			Destroy();
+			Return;
+		}
+		If (PuffType)
+		{
+			//[DoomKrakken]: Thank you, phantombeta!
+			Let Norm = (0, 0, 0);
+			If (L && !Targ && !(L.Delta ~== (0, 0))) //[DoomKrakken]: To prevent NANs (thank you, Zombie).
+			{
+				Norm = (L.Delta.Y, -L.Delta.X, 0).Unit();
+				If (EOA_ActorExtensions.PointOnLineSidePrecise(Pos.X, Pos.Y, L) == 1)
+				{
+					Norm = -Norm;
+				}
+			}
+			Actor ProjPuff = Spawn(PuffType, Pos + Norm * max(2, GetDefaultByType(PuffType).Radius * 2));
+			If (ProjPuff)
+			{
+				ProjPuff.Vel.Z = 0;
+				ProjPuff.Target = Target;
+				ProjPuff.Pitch = Pitch;
+				ProjPuff.Angle = Angle;
+			}
+		}
+		ExplodeMissile(L, Targ, OnSky);
+	}
+
+	//Trails
+	Virtual Actor StepEffects(Vector3 InitialPos, Vector3 StepDiff, Vector3 RealVel)
+	{
+		Class<Actor> Trail = MissileName;
+
+		If (!Trail)
+		{
+			Return Null;
+		}
+
+		Vector3 FinalPos = Level.Vec3Offset(InitialPos, StepDiff);
+
+		Double RealFloorZ = GetZAt(FinalPos.X, FinalPos.Y, Flags: GZF_ABSOLUTEPOS | GZF_ABSOLUTEANG);
+
+		FinalPos.Z -= 8;
+		If (FinalPos.Z < RealFloorZ)
+		{
+			FinalPos.Z = RealFloorZ;
+		}
+		// Do not clip this offset to the floor.
+		FinalPos.Z += MissileHeight;
+
+		Actor act = Spawn(Trail, FinalPos, ALLOW_REPLACE);
+
+		If (!act)
+		{
+			Return Null;
+		}
+
+		If (bGETOWNER && Target != Null)
+		{
+			act.Target = Target;
+		}
+		Else
+		{
+			act.Target = Self;
+		}
+
+		act.Angle = Angle;
+		act.Pitch = Pitch;
+
+		Return act;
+	}
+
+	Void SpawnEffects(Vector3 InitialPos, Double Dist, Vector3 StepSize)
+	{
+		Double Interval = Radius;
+		If (EffectStepInterval >= 0)
+		{
+			Interval = EffectStepInterval;
+		}
+
+		If (EffectStepMul < 0 || Interval <= 0 || Dist <= 0)
+		{
+			Return;
+		}
+
+		Vector3 DirVec = StepSize.Unit();
+
+		If (EffectsStepsMode == EFXStepMode_MapUnit)
+		{
+			Vector3 Frac = DirVec * Interval;
+			Int Count = Int((Dist / Interval));
+			Vector3 InitialDist = (DirVec * Dist) - (Count * Frac);
+
+			For (Int i = 0; i < Count; i++)
+			{
+				Vector3 CurDist = InitialDist + (Frac * i);
+				Double Diff = abs(CurDist.Length());
+
+				If (Diff > Dist)
+					Break;
+
+				StepEffects(InitialPos, CurDist, StepSize);
+			}
+		}
+		Else
+		{
+			If (StepSize.X != StepSize.X || StepSize.Y != StepSize.Y || StepSize.XY.Length() <= 0)
+			{
+				Return;
+			}
+
+			Double Count;
+			If (EffectsStepsMode == EFXStepMode_FastProj)
+			{
+				Count = 8;
+				While (abs(StepSize.X) > Interval * Count || abs(StepSize.Y) > Interval * Count)
+				{
+					If (Count == Double.Infinity || Count == -Double.Infinity)
+					{
+						/*If (EOA_DebugMode)
+						{
+							Console.Printf("EOA_Projectile.SpawnEffects: Count overflowed");
+						}*/
+						Return;
+					}
+					Count += Count;
+				}
+			}
+			Else
+			{
+				Count = StepSize.Length() / Interval;
+			}
+
+			Vector3 Frac = StepSize / Count;
+
+			Int SpawnCount = Int(Count * EffectStepMul);
+			For (Int i = 0; i < Count; i++)
+			{
+				Double Diff = abs((Frac * i).Length());
+
+				If (Diff >= Dist)
+				{
+					Break;
+				}
+
+				If (--SpawnCount <= 0)
+				{
+					SpawnCount = Int(Count * EffectStepMul);
+					StepEffects(InitialPos, Frac * i, StepSize);
+				}
+			}
+		}
+	}
+	
+	//Movement
+	Void HandleMovement()
+	{
+		Let OldPos = Pos;
+		Let OldVel = Vel;
+
+		If (Vel ~== (0, 0, 0) && Pos.Z ~== FloorZ)
+			Return;
+
+		If (!tr)
+		{
+			tr = New('EOA_Projectile_Trace'); tr.SourceActor = Self;
+		}
+
+		tr.ActorsToIgnore.Clear();
+		tr.ActorsRipped.Clear();
+
+		If (bMISSILE && Vel.X == 0 && Vel.Y == 0 && !IsZeroDamage())
+			Vel.X = MinVel;
+
+		Let VelUnit = Vel.Unit();
+		Double VelAngle = VectorAngle(VelUnit.X, VelUnit.Y);
+		Double s = sin(VelAngle);
+		Double c = cos(VelAngle);
+
+		Double MaxDist = abs(Vel.Length());
+		Int ColFlags = (fpCollisionMode & (ColMode_Center | ColMode_Corners | ColMode_EdgeCenters));
+		Int iMax = FPColOffs.Size() / 2;
+
+		Bool CollisionHandled = False;
+		For (Int i = 0; i < iMax; i++)
+		{
+			Int LoopBreaker = 0;
+
+			If (ColFlags == 0 || bNOINTERACTION || bNOCLIP)
+			{
+				Break;
+			}
+
+			If ((i >= 0 && i <= 3) && !(ColFlags & ColMode_EdgeCenters))
+			{
+				Continue;
+			}
+			Else If ((i >= 4 && i <= 7) && !(ColFlags & ColMode_Corners))
+			{
+				Continue;
+			}
+			Else If ((i == 8) && !(ColFlags & ColMode_Center))
+			{
+				Continue;
+			}
+
+			tr.FFloorsToIgnore.Clear();
+			tr.ActiveLinesToIgnore.Clear();
+			tr.ActorsToIgnore.Clear();
+
+			Double xOffs = Radius * FPColOffs [i * 2];
+			Double traceHeight = Height * FPColOffs [i * 2 + 1];
+			Vector3 TraceOffs = (s * xOffs, c * xOffs, traceHeight);
+
+			Let TraceStartPos = Level.Vec3Offset(Pos, TraceOffs);
+			Let TraceCurPos = TraceStartPos;
+			Let TraceEndpoint = Level.Vec3Offset(TraceCurPos, Vel);
+
+			Int HandleColRet = 0;
+			Do
+			{
+				Double TraceMaxDist = Level.Vec3Diff(TraceCurPos, TraceEndpoint).Length();
+				tr.Results.FFloor = Null;
+
+				If (tr.Trace(TraceCurPos, curSector, VelUnit, TraceMaxDist, 0))
+				{
+					If (!Self)
+					{
+						Return;
+					}
+
+					HandleColRet = HandleCollision(OldPos, OldVel, TraceStartPos);
+					TraceCurPos = tr.Results.HitPos;
+					If (HandleColRet == 1)
+					{
+						If (!Self)
+						{
+							Return;
+						}
+						tr.ActorsToIgnore.Clear();
+						CollisionHandled = True;
+						Break;
+					}
+				}
+				Else
+				{
+					HandleColRet = 0;
+					tr.ActorsToIgnore.Clear();
+				}
+
+				LoopBreaker++;
+				If (LoopBreaker >= 4096)
+				{ // Uh oh.
+					Console.PrintF("\cgEOA error: Broke an infinite loop in EOA_Projectile.");
+					Destroy();
+					Return;
+				}
+			}
+			While (tr.ActorsToIgnore.Size() > 0 || HandleColRet == -1);
+			If (CollisionHandled)
+			{
+				Break;
+			}
+			Else
+			{
+				SetOrigin(OldPos, False);
+			}
+		}
+
+		If (!CollisionHandled)
+		{
+			SetOrigin(Level.Vec3Offset(Pos, Vel), InterpFastProj);
+		}
+		SpawnEffects(OldPos, Level.Vec3Diff(Pos, OldPos).Length(), OldVel);
+
+		If (!CollisionHandled && bMISSILE)
+		{
+			Bool FloorHit = Pos.Z <= FloorZ;
+			Bool CeilingHit = (Pos.Z + Height) > CeilingZ;
+
+			Bool DidHitSky = CheckSkyHit(Pos, Null);
+
+			If ((FloorHit || CeilingHit) && !bNOINTERACTION && !bNOCLIP)
+			{
+				SetZ(FloorHit ? GetZAt() : CeilingZ - Height);
+				If (FloorHit)
+				{
+					HitFloor();
+					BlockingFloor = CurSector;
+				}
+				Else
+				{
+					BlockingCeiling = CurSector;
+				}
+				A_Stop();
+				EOA_ExplodeMissile(Null, Null, DidHitSky);
+			}
+		}
+		Vel.Z -= GetGravity();
+		UpdateWaterLevel();
+		CheckPortalTransition();
+	}
+	
+	//Collision
+	Bool CheckSkyLine(Vector3 CurPos, Line l)
+	{
+		If (!l)
+		{
+			Return False;
+		}
+
+		If (l.BackSector && l.BackSector.GetTexture(Sector.Ceiling) == SkyFlatNum)
+		{
+			Let posr = PosRelative(l.BackSector);
+			If (CurPos.Z >= l.BackSector.CeilingPlane.ZatPoint(posr.XY))
+			{
+				// Hack to prevent missiles exploding against the sky.
+				// Does not handle sky floors.
+				Return True;
+			}
+		}
+
+		// [RH] Don't explode on horizon lines.
+		If (l.Special == Line_Horizon)
+		{
+			Return True;
+		}
+		Return False;
+	}
+
+	Bool CheckSkyHit(Vector3 CurPos, FCheckPosition tm)
+	{
+		If (tr.Results.HitType == TRACE_HITWALL && CheckSkyLine(CurPos, tr.Results.HitLine))
+		{
+			Return True;
+		}
+		If (tm)
+		{
+			If (tm.CeilingLine && CheckSkyLine(CurPos, tm.CeilingLine))
+			{
+				Return True;
+			}
+			If (CurPos.Z < tm.FloorZ && tm.FloorPic == SkyFlatNum)
+			{
+				Return True;
+			}
+			If ((CurPos.Z + Height) >= tm.CeilingZ && tm.CeilingPic == SkyFlatNum)
+			{
+				Return True;
+			}
+		}
+		Bool HitFloor = tr.Results.HitType == TRACE_HITFLOOR || CurPos.Z < FloorZ;
+		Bool HitCeil = tr.Results.HitType == TRACE_HITCEILING || (CurPos.Z + Height) >= CeilingZ;
+		If (HitFloor && FloorPic == SkyFlatNum)
+		{
+			Return True;
+		}
+		If (HitCeil && CeilingPic == SkyFlatNum)
+		{
+			Return True;
+		}
+		Return False;
+	}
+
+	Int HandleCollision(Vector3 OldPos, Vector3 OldVel, Vector3 startPos)
+	{
+		Double hitDist = Level.Vec3Diff(startPos, tr.Results.HitPos).Length();
+		If (hitDist > abs(OldVel.Length()) + Radius)
+		{
+			If (tr.Results.HitType == TRACE_HITACTOR && tr.Results.HitActor && tr.ActorsToIgnore.Find(tr.Results.HitActor) == tr.ActorsToIgnore.Size())
+			{
+				tr.ActorsToIgnore.Push(tr.Results.HitActor);
+			}
+			Return 0;
+		}
+		Double MaxDist = abs(OldVel.Length());
+		Let HitPos = Level.Vec3Offset(OldPos, (OldVel.Unit() * hitDist));
+		HitPos += -(OldVel.Unit() * abs(Radius / 4.));
+
+		SetOrigin(HitPos, InterpFastProj);
+
+		If (!bSKYEXPLODE && CheckSkyHit(Pos, Null))
+		{
+			HitSky = True;
+			SpawnEffects(OldPos, tr.Results.Distance, OldVel);
+			Destroy();
+			Return 1;
+		}
+
+		If (tr.Results.HitType == TRACE_HITFLOOR)
+		{
+			HitPos = tr.Results.HitPos;
+		}
+		Else If (tr.Results.HitType == TRACE_HITCEILING)
+		{
+			HitPos = Level.Vec3Offset(tr.Results.HitPos, (0, 0, -(Height - 1)));
+		}
+
+		Vector3 rHitPos = tr.Results.HitPos;
+
+		Double RealFloorZ = GetZAt(rHitPos.X, rHitPos.Y, Flags: GZF_ABSOLUTEPOS | GZF_ABSOLUTEANG);
+		Double RealCeilingZ = GetZAt(rHitPos.X, rHitPos.Y, Flags: GZF_ABSOLUTEPOS | GZF_ABSOLUTEANG | GZF_Ceiling);
+
+		Bool FloorHit = (rHitPos.Z <= RealFloorZ || rHitPos.Z ~== RealFloorZ);
+		Bool CeilingHit;
+		//{
+		Let HitPosTop = Level.Vec3Offset(rHitPos, (0, 0, Height));
+		CeilingHit = HitPosTop.Z > RealCeilingZ;
+		//}
+
+		FCheckPosition tm;
+		tm.DoRipping = bRIPPER;
+
+		SetZ(HitPos.Z);
+		If (!TryMove(Level.Vec2Offset(HitPos.XY, (Double.Epsilon * 3, Double.Epsilon * 3)), True, tm: tm))
+		{
+			SetOrigin(HitPos, InterpFastProj);
+			Bool DidHitSky = CheckSkyHit(Pos, tm);
+			SpawnEffects(OldPos, tr.Results.Distance, OldVel);
+			A_Stop();
+			EOA_ExplodeMissile(BlockingLine, BlockingMobj, (!BlockingLine && !BlockingMobj) ? DidHitSky : False);
+
+			Return 1;
+		} 
+		Else If (tr.Results.HitType == TRACE_HITACTOR && tr.Results.HitActor)
+		{
+			If (tr.ActorsToIgnore.Find(tr.Results.HitActor) == tr.ActorsToIgnore.Size())
+			{
+				tr.ActorsToIgnore.Push(tr.Results.HitActor);
+			}
+
+			If (bRIPPER && tr.ActorsRipped.Find(tr.Results.HitActor) == tr.ActorsRipped.Size() && tr.Results.HitActor.bSHOOTABLE)
+			{
+				tr.ActorsRipped.Push(tr.Results.HitActor);
+			}
+		} 
+		Else If (tr.Results.HitType == TRACE_HITWALL && tr.Results.HitLine)
+		{
+			Let hl = tr.Results.HitLine;
+			Int OldSide = EOA_ActorExtensions.PointOnLineSidePrecise(OldPos.X, OldPos.Y, hl);
+
+			Int ActivationType = -1;
+
+			If ((hl.Activation & SPAC_MCross) && bACTIVATEMCROSS)
+			{
+				ActivationType = SPAC_MCross;
+			}
+			Else If ((hl.Activation & SPAC_PCross) && bACTIVATEPCROSS)
+			{
+				ActivationType = SPAC_PCross;
+			}
+			If (ActivationType != -1)
+			{
+				hl.Activate(Self, OldSide, ActivationType);
+				SetOrigin(OldPos, False);
+				Return -1;
+			}
+		}
+		Else
+		{
+			If ((tr.Results.HitType == TRACE_HITFLOOR && FloorHit) || (tr.Results.HitType == TRACE_HITCEILING && CeilingHit))
+			{
+				SetOrigin(HitPos, InterpFastProj);
+				Bool DidHitSky = ((FloorHit && FloorPic == SkyFlatNum) || (CeilingHit && CeilingPic == SkyFlatNum) || CheckSkyHit(Pos, Null));
+				If (tr.Results.HitType == TRACE_HITFLOOR)
+				{
+					SetZ(FloorZ);
+					HitFloor();
+					BlockingFloor = CurSector;
+				}
+				Else
+				{
+					BlockingCeiling = CurSector;
+				}
+				If (bMISSILE)
+				{
+					A_Stop();
+					EOA_ExplodeMissile(Null, Null, DidHitSky);
+				}
+				Return 1;
+			}
+		}
+		SetOrigin(OldPos, False);
+		Return 0;
+	}
+}
+
+Class EOA_FastProjectile : EOA_Projectile
+{
+	Default
+	{
+		EOA_Projectile.MovementMode FastProjectile;
+		EOA_Projectile.FastProjCollision ColMode_Center|ColMode_Corners|ColMode_EdgeCenters;
+		EOA_Projectile.EffectStepMul 0.0625;
+		EOA_Projectile.TrueSpeed 400;
+	}
+	Override Void BeginPlay()
+	{
+		If (Radius < 2 && Height < 2)
+		{
+			fpCollisionMode = ColMode_Center; //[DoomKrakken]: Force a collision mode from the center only, if it's too small... else it'll waste more processing than necessary.
+		}
+		Super.BeginPlay();
+	}
+}

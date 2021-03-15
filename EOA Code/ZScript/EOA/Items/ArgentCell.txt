@@ -1,0 +1,558 @@
+Class EOA_ArgentCell : Actor //[DoomKrakken]: Written by strongbelly, converted to ZScript and edited much further by me.
+{
+	Mixin EOA_MapMarkerUser;
+	PlayerPawn Opener;
+	Bool Opened;
+	Bool Grabbed;
+	Bool Taken;
+	Int TicDelay;
+	Default
+	{
+		Radius 20;
+		Height 32;
+		Scale 0.7;
+		EOA_ArgentCell.MarkerType "EOA_ArgentCellMarker";
+		+DONTBLAST
+		+DONTGIB
+		+DONTTHRUST
+		+FLOORCLIP
+		+FORCEXYBILLBOARD
+		+LOOKALLAROUND
+		+NOBLOOD
+		+NODAMAGE
+	}
+	Override Bool Used(Actor User)
+	{
+		If (Opened && !Grabbed)
+		{
+			PlayerInfo Player = Players[ConsolePlayer];
+			If (Player == User.Player && Player && Player.Mo && Player.Mo == User && Distance3D(User) <= Player.Mo.UseRange && Distance3D(User) >= Radius) //Only open the menu for the right Player.
+			{
+				A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);
+				Opener = PlayerPawn(User);
+				If (User.FindInventory("EOA_InteractWeapon", True) || (User.CountInv("EOA_ArgentHealthBonusCounter") >= 4 && User.CountInv("EOA_ArgentArmorBonusCounter") >= 4 && User.CountInv("EOA_ArgentAmmoBonusCounter") >= 4))
+				{
+					//User.A_GiveInventory("ArgentCellBonuses");
+					Return False;
+				}
+				Else If (Opener)
+				{
+					For (Int i = 0; i < MAXPLAYERS; i++)
+					{
+						PlayerInfo Player = Players[i];
+						If (Player && Player.Mo && Player.Mo == Opener)
+						{
+							Player.Mo.GiveInventory("EOA_ArgentCellWeapon", 1);
+							Let ArgHand = EOA_InteractWeapon(Player.Mo.FindInventory("EOA_ArgentCellWeapon"));
+							If (ArgHand)
+							{
+								ArgHand.ReselectWeapon = Player.ReadyWeapon.GetClass();
+								ArgHand.Giver = Self;
+								Player.Mo.A_Face(Self, Max_Pitch: 90, Flags: FAF_MIDDLE);
+								Player.PendingWeapon = ArgHand;
+								Player.ReadyWeapon = Null;
+								If (Marker)
+								{
+									Marker.ItemClaimed = True;
+								}
+							}
+							Break;
+						}
+					}
+					Let StaticArchive = EOA_StaticArchive.Get();
+					StaticArchive.ArgentCellsClaimed++;
+					Grabbed = True;
+					Return True;
+				}
+			}
+			Return False;
+		}
+		Return False;
+	}
+	Override Void Tick()
+	{
+		If (Grabbed)
+		{
+			TicDelay++;
+			If (TicDelay >= 6)
+			{
+				Taken = True;
+			}
+		}
+		Super.Tick();
+	}
+	States
+	{
+	Spawn:
+		ARCS A 1 NoDelay A_LookEx(LOF_NOSOUNDCHECK, MaxSeeDist: 256, FOV: 360, Label: "OpenUp");
+		Wait;
+	OpenUp:
+		ARCS A 2;
+		ARCS B 15 A_StartSound("ArgentCache/Open");
+		TNT1 A 0 A_StartSound("ArgentCache/Close", 5);
+		ARCS CD 2; 
+		ARCS E 2; 
+		ARCS FG 2; 
+		ARCS H 2 A_StartSound("ArgentCache/Motor1", 6);
+		ARCS IJKL 4;
+		ARCS M 15 Light("ArgentGlow") A_StartSound("ArgentCache/Spin");
+		ARCS NOPQRSTUV 1 Light("ArgentGlow");
+		ARCT ABCDEFGHIJ 1 Light("ArgentGlow");
+		ARCU ABCDEFGHIJ 1 Light("ArgentGlow");
+		ARCV ABCDEFGHIJ 1 Light("ArgentGlow");
+		ARCW ABCDEFGHIJ 1 Light("ArgentGlow");
+		ARGT A 0
+		{
+			Opened = True;
+		}	
+	Opened:
+		TNT1 A 0 A_SpawnItemEx("ArgentSmoke", random(3, -3), random(5, -5), 25, frandom(0.3, -0.3), frandom(0.3, -0.3), frandom(0.01, 0.3), 0, SXF_NOCHECKPOSITION, 180);
+		ARGT ABC 1 Light("ArgentGlow")
+		{
+			A_StartSound("Item/Glow", 5, CHANF_LOOPING);
+			If (Taken)
+			{
+				Return ResolveState("Empty");
+			}
+			Return ResolveState(Null);
+		}
+		TNT1 A 0 A_SpawnItemEx("ArgentSmoke", random(3, -3), random(5, -5), 25, frandom(0.3, -0.3), frandom(0.3, -0.3), frandom(0.01, 0.3), 0, SXF_NOCHECKPOSITION, 180);
+		ARGT DCB 1 Light("ArgentGlow")
+		{
+			A_StartSound("Item/Glow", 5, CHANF_LOOPING);
+			If (Taken)
+			{
+				Return ResolveState("Empty");
+			}
+			Return ResolveState(Null);
+		}
+		Loop;
+	Empty:
+		ARGT E -1 A_StopSound(5);
+		Stop;
+	}
+}
+
+Class EOA_ArgentCellWeapon : EOA_InteractWeapon
+{
+	Int Timer;
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("ArgentCell/Pick");
+		MarkSound("ArgentCell/Creak");
+		MarkSound("ArgentCell/Break");
+		MarkSound("Argent/Bass");
+		MarkSound("Argent/Energy");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void DoEffect()
+	{
+		PlayerInfo Player = Owner.Player;
+		If (Giver && Player && Player.Mo && Player.Mo == Owner)
+		{
+			Owner.A_Face(Giver, Max_Pitch: 90, Flags: FAF_MIDDLE);
+		}
+		Super.DoEffect();
+	}
+	States
+	{
+	Ready:
+		TNT1 A 0
+		{
+			A_OverlayFlags(PSP_WEAPON, PSPF_FLIP|PSPF_MIRROR, 1);
+			EOA_SpawnPersistentNoiseMaker(10, "Item/Glow");
+		}
+		GHND ABCDEF 1 A_WeaponOffset(12, Flags: WOF_KEEPY|WOF_ADD);
+		TNT1 A 0
+		{
+			EOA_SpawnNoiseMaker("ArgentCell/Pick");
+			A_Overlay(-10, "Lights");
+		}
+		GHND GHIJKL 1 A_WeaponOffset(12, Flags: WOF_KEEPY|WOF_ADD);
+		TNT1 A 5
+		{
+			A_OverlayFlags(PSP_WEAPON, PSPF_FLIP|PSPF_MIRROR, 0);
+			A_WeaponOffset(-144, 70);
+		}
+		ACLH AAAAAA 1 Bright A_WeaponOffset(24, -6, WOF_ADD);
+		ACLH A 18 Bright;
+		ACLH A 0 EOA_SpawnNoiseMaker("ArgentCell/Creak");
+		ACLH AAAAAAAAA 1 Bright A_WeaponOffset(random(-1, 1), random(32, 33), WOF_INTERPOLATE);
+		ACLH AAAAAAAAA 1 Bright A_WeaponOffset(random(-2, 2), random(32, 34), WOF_INTERPOLATE);
+		ACRH AA 1 Bright A_WeaponOffset(random(-4, 4), random(32, 36), WOF_INTERPOLATE);
+		TNT1 A 0
+		{
+			A_WeaponOffset(Flags: WOF_INTERPOLATE);
+			A_Overlay(-2, "Shards");
+			EOA_DestroyPersistentNoiseMaker(10);
+			EOA_SpawnNoiseMaker("ArgentCell/Break");
+			EOA_SpawnNoiseMaker("Argent/Bass");
+			EOA_SpawnNoiseMaker("Argent/Energy");
+		}
+		ACRF AAABBBCCC 1 Bright;
+		ACRF DDDEEEFFFGGGHHHIIIEEEFFFGGGHHHIII 1 Bright A_WeaponOffset(random(-1, 1), random(32, 33), WOF_INTERPOLATE);
+		ACRF JJJKKKLLLMMMNNNOOOPPPJJJKKKLLLMMMNNNOOOPPPJJJKKKLLLMMMNNNOOOPPP 1 Bright A_WeaponOffset(random(-2, 2), random(32, 34), WOF_INTERPOLATE);
+		TNT1 A 0 A_WeaponOffset(Flags: WOF_INTERPOLATE);
+		ACRO A 1 Bright A_WeaponOffset(-8, -12, WOF_ADD);
+		ACRO A 1 Bright A_WeaponOffset(-4, -6, WOF_ADD);
+		ACRO A 1 Bright A_WeaponOffset(-2, -3, WOF_ADD);
+		ACRO BBB 1 Bright A_WeaponOffset(-1, -1, WOF_ADD);
+		ACRO DDDAAACCCDDD 1 Bright;
+		ACRL AAAB 1 Bright A_WeaponOffset(2, 2, WOF_ADD);
+		ACRL BBCC 1 Bright A_WeaponOffset(4, 4, WOF_ADD);
+		ACRL CDDD 1 Bright A_WeaponOffset(6, 6, WOF_ADD);
+		ACRC AAAB 1 Bright A_WeaponOffset(8, 8, WOF_ADD);
+		ACRC BBCC 1 Bright A_WeaponOffset(10, 10, WOF_ADD);
+		ACRC CDDD 1 Bright A_WeaponOffset(12, 12, WOF_ADD);
+		TNT1 A 5;
+		TNT1 A 5
+		{
+			A_WeaponOffset(Flags: WOF_INTERPOLATE);
+			If (!(CountInv("EOA_ArgentHealthBonusCounter") >= 4 && CountInv("EOA_ArgentArmorBonusCounter") >= 4 && CountInv("EOA_ArgentAmmoBonusCounter") >= 4))
+			{
+				Menu.SetMenu("ArgentCellMenu");
+			}
+		}
+		Goto Deselect;
+	Shards:
+		ACSH AABBCCDDEEFFGGHHIIJJKK 1;
+		Stop;
+	Lights:
+		TNT1 A 1
+		{
+			If (Invoker.Timer++ <= 55)
+			{
+				EOA_SpawnCustomDynamicLight("ArgentLight", DynamicLight.PointLight, (255, 16, 0), 32, 0, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 1, (0, 0, Height / 2));
+			}
+			Else If (Invoker.Timer > 55 && Invoker.Timer <= 192)
+			{
+				EOA_SpawnCustomDynamicLight("ArgentLight", DynamicLight.PointLight, (255, 16, 0), 64, 0, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 1, (0, 0, Height / 2));
+			}
+			Else
+			{
+				Return ResolveState("Null");
+			}
+			Return ResolveState(Null);
+		}
+		Wait;
+	}
+}
+
+Class ArgentSmoke : Actor //code borrowed from QCDE
+{
+	Default
+	{
+		RenderStyle "Add";
+		Alpha 0.0;
+		Scale 0.2;
+		Translation "0:255=%[0, 0, 0]:[1, 0.0625, 0]";
+		+NOINTERACTION
+		+CLIENTSIDEONLY
+		+NONETID
+		+FORCEXYBILLBOARD
+		+ROLLSPRITE
+		+ROLLCENTER
+	}
+	States
+	{
+	Spawn:
+		X110 A 0 NoDelay A_SetRoll(random(0, 359));
+		X110 ABCDEFGHIJK 1 Bright A_FadeIn(0.09);
+		X110 LMNOPQRSTUVWXY 1 Bright;
+	Looper:
+		X110 ABCDEFGHIJKLMNOPQRSTUVWXY 1 Bright A_FadeOut(0.03);
+		Loop;
+	}
+}
+
+Class EOA_ArgentHealthBonus : CustomInventory
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+		-INVENTORY.INVBAR
+	}
+	States
+	{
+	Spawn:
+		TNT1 A -1;
+		Stop;
+	
+	Pickup:
+		TNT1 A 0
+		{
+			If (!CheckInventory("EOA_ArgentHealthBonusCounter", 0))
+			{
+				A_GiveInventory("EOA_ArgentHealthBonusCounter");
+				A_GiveInventory("EOA_ArgentHealthBonusMax");
+			}
+			A_GiveInventory("EOA_MegaStim");
+		}
+		Stop;
+	}
+}
+
+Class EOA_ArgentHealthBonusMax : CustomInventory
+{
+	Default
+	{
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+		-INVENTORY.INVBAR
+	}
+	States
+	{
+	Spawn:
+		TNT1 A -1;
+		Stop;
+	Pickup:
+		TNT1 A 0
+		{
+			Let PPtr = PlayerPawn(Self);
+			PPtr.MaxHealth = GetSpawnHealth() + 25 * CountInv("EOA_ArgentHealthBonusCounter");
+		}
+		Stop;
+	}
+}
+
+Class EOA_ArgentArmorBonus : CustomInventory
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+		-INVENTORY.INVBAR
+	}
+	States
+	{
+	Spawn:
+		TNT1 A -1;
+		Stop;
+	Pickup:
+		TNT1 A 0 
+		{
+			If (!CheckInventory("EOA_ArgentArmorBonusCounter", 0))
+			{
+				A_GiveInventory("EOA_ArgentArmorBonusCounter");
+				A_GiveInventory("EOA_ArgentArmorBonusMax");
+			}
+		}
+		Stop;
+	}
+}
+
+Class EOA_ArgentArmorBonusMax : EOA_Armor
+{
+	Override Bool Use(Bool Pickup)
+	{
+		Int TrueMaxSaveAmount = 50 + 25 * Owner.CountInv("EOA_ArgentArmorBonusCounter");
+		SaveAmount = TrueMaxSaveAmount;
+		MaxSaveAmount = Max(MaxSaveAmount, TrueMaxSaveAmount);
+		Let Armor = BasicArmor(Owner.FindInventory("BasicArmor"));
+		If (Armor == Null)
+		{
+			Armor = BasicArmor(Spawn("BasicArmor"));
+			Armor.BecomeItem();
+			Armor.Amount = 0;
+			Armor.MaxAmount = MaxSaveAmount;
+			Owner.AddInventory(Armor);
+		}
+		If (Armor)
+		{
+			Armor.MaxAmount = max(Armor.MaxAmount, TrueMaxSaveAmount, MaxSaveAmount); //[DoomKrakken]: This way, temp armor doesn't home in on the player if he has more armor than his current maximum.  We're duplicating this here because by default, the armor already in your inventory doesn't know if you've obtained an Argent Armor upgrade if you're carrying more armor than you should (such as via a Mega Health).  This bonus wouldn't have been picked up if you're carrying more armor than you should.  You will have to lose armor to the point of whatever armor maximum you had before picking up the Argent Armor Bonus(es) in order to pick up armor, in order for the max amount to update for you to pick up more armor to your new maximum.  Long story short, this check is performed here to ensure that this behavior doesn't happen, so that you can pick up more armor should you fall below your new maximum. ;)
+		}
+		Return Super.Use(Pickup);
+	}
+}
+
+Class EOA_ArgentAmmoBonus : CustomInventory
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+		-INVENTORY.INVBAR
+	}
+	States
+	{
+	Spawn:
+		TNT1 A -1;
+		Stop;
+	Pickup:
+		TNT1 A 0
+		{
+			If (!CheckInventory("EOA_ArgentAmmoBonusCounter", 0))
+			{
+				A_GiveInventory("EOA_ArgentAmmoBonusCounter");
+				A_GiveInventory("EOA_ArgentAmmoBonusMax");
+			}
+		}
+		//[DoomKrakken]: Intentional fall-through.  It'll do the above, then do the below to set the inventory in order to bring these items into the inventory, then do the below again.
+	Use:
+		TNT1 A 0
+		{
+			If (CountInv("EOA_HeavyAssaultRifle") || CountInv("EOA_Chaingun"))
+			{
+				A_SetInventory("EOA_BulletAmmo", 90 + 30 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			}
+			If (CountInv("EOA_CombatShotgun") || CountInv("EOA_SuperShotgun"))
+			{
+				A_SetInventory("EOA_ShellAmmo", 20 + 10 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			}
+			If (CountInv("EOA_RocketLauncher"))
+			{
+				A_SetInventory("EOA_RocketAmmo", 15 + 5 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			}
+			If (CountInv("EOA_PlasmaRifle") || CountInv("EOA_GaussCannon"))
+			{
+				A_SetInventory("EOA_CellAmmo", 150 + 50 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			}
+			If (CountInv("EOA_Chainsaw"))
+			{
+				A_SetInventory("EOA_FuelAmmo", 3 + 1 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			}
+			If (CountInv("EOA_BFG"))
+			{
+				A_SetInventory("EOA_BFGAmmo", 3);
+			}
+		}
+		Stop;
+	}
+}
+
+Class EOA_ArgentAmmoBonusMax : CustomInventory
+{
+	Default
+	{
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+		-INVENTORY.INVBAR
+	}
+	Action Void A_SetMaxInventory(Class<Inventory> ItemType, Int Amount)
+	{
+		Let Item = FindInventory(ItemType);
+		If (!Item)
+		{
+			Return;
+		}
+		Item.MaxAmount = Amount;
+	}
+	Action Int CountMaxInv(Class<Inventory> ItemType)
+	{
+		Let Item = FindInventory(ItemType);
+		If (!Item)
+		{
+			Return 0;
+		}
+		Else
+		{
+			Return Item.MaxAmount;
+		}
+	}
+	States
+	{
+	Spawn:
+		TNT1 A -1;
+		Stop;
+	Pickup:
+		TNT1 A 0
+		{
+			A_SetMaxInventory("EOA_BulletAmmo", 90 + 30 * CountInv("EOA_ArgentAmmoBonusCounter"));
+			A_SetMaxInventory("EOA_ShellAmmo", 20 + 10 * CountInv("EOA_ArgentAmmoBonusCounter"));
+			A_SetMaxInventory("EOA_RocketAmmo", 15 + 5 * CountInv("EOA_ArgentAmmoBonusCounter"));
+			A_SetMaxInventory("EOA_CellAmmo", 150 + 50 * CountInv("EOA_ArgentAmmoBonusCounter"));
+			A_SetMaxInventory("EOA_FuelAmmo", 3 + 1 * CountInv("EOA_ArgentAmmoBonusCounter"));
+		}
+		Stop;
+	}
+}
+
+Class EOA_ArgentBonusCounter : Inventory
+{
+	Default
+	{
+		Inventory.Amount 1;
+		Inventory.MaxAmount 4;
+		+INVENTORY.UNDROPPABLE
+		-INVENTORY.INVBAR
+	}
+}
+
+Class EOA_ArgentHealthBonusCounter : EOA_ArgentBonusCounter
+{
+	Override Void DoEffect()
+	{
+		Owner.A_GiveInventory("EOA_ArgentHealthBonusMax");
+		Super.DoEffect();
+	}
+}
+Class EOA_ArgentArmorBonusCounter : EOA_ArgentBonusCounter
+{
+	Override Void DoEffect()
+	{
+		Int TrueMaxSaveAmount = 50 + 25 * Owner.CountInv("EOA_ArgentArmorBonusCounter");
+		Let Armor = BasicArmor(Owner.FindInventory("BasicArmor"));
+		If (Armor == Null)
+		{
+			Armor = BasicArmor(Spawn("BasicArmor"));
+			Armor.BecomeItem();
+			Armor.Amount = 0;
+			Armor.MaxAmount = TrueMaxSaveAmount;
+			Owner.AddInventory(Armor);
+		}
+		If (Armor)
+		{
+			Armor.MaxAmount = max(Armor.MaxAmount, TrueMaxSaveAmount);
+		}
+		Super.DoEffect();
+	}
+}
+Class EOA_ArgentAmmoBonusCounter : EOA_ArgentBonusCounter
+{
+	Override Void DoEffect()
+	{
+		Owner.A_GiveInventory("EOA_ArgentAmmoBonusMax");
+		Super.DoEffect();
+	}
+}
+
+//HAX.
+Class ArgentCellBonuses : CustomInventory
+{
+	Default
+	{
+		Inventory.MaxAmount 0;
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.AUTOACTIVATE
+	}
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EOA_ArgentHealthBonusCounter", 4);
+			A_GiveInventory("EOA_ArgentHealthBonusMax");
+			A_GiveInventory("EOA_MegaStim");
+			A_GiveInventory("EOA_ArgentArmorBonusCounter", 4);
+			A_GiveInventory("EOA_ArgentArmorBonusMax");
+			A_GiveInventory("EOA_ArgentAmmoBonusCounter", 4);
+			A_GiveInventory("EOA_ArgentAmmoBonusMax");
+		}
+		//[DoomKrakken]: Intentional fall-through.  It'll do the above, then do the below to set the inventory in order to bring these items into the inventory, then do the below again.
+	Use:
+		TNT1 A 0
+		{
+			A_SetInventory("EOA_BulletAmmo", 90 + 30 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			A_SetInventory("EOA_ShellAmmo", 20 + 10 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			A_SetInventory("EOA_RocketAmmo", 15 + 5 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			A_SetInventory("EOA_CellAmmo", 150 + 50 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			A_SetInventory("EOA_FuelAmmo", 3 + 1 * CountInv("EOA_ArgentAmmoBonusCounter"), AAPTR_DEFAULT, True);
+			A_SetInventory("EOA_BFGAmmo", 3);
+		}
+		Stop;
+	}
+}

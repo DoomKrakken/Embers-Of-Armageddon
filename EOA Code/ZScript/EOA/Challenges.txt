@@ -1,0 +1,1270 @@
+Class EOA_ChallengeEventHandler : StaticEventHandler //Thank you, phantombeta and J. P. LeBreton!
+{
+	Const INIT_TICS = 1;
+	Static Bool IsClassOrSpecies(Actor ToCheck, Class<Actor> ToCheckFor)
+	{
+		If (ToCheck && ToCheckFor)
+		{
+			Return ToCheck Is ToCheckFor || ToCheck.GetSpecies() == ToCheckFor;
+		}
+		Return False;
+	}
+	Override Void WorldLoaded(WorldEvent e)
+	{
+		Let Challenges = EOA_ChallengeArchive.Get();
+		If (Challenges)
+		{
+			/*For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+			{
+				If (Challenges.ChallengeData[i].Active)
+				{
+					Console.PrintF("(Savegame) %d: ChallengeData: %s", i, Challenges.ChallengeData[i].Name);
+				}
+			}
+			For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+			{
+				If (Challenges.ChallengeData[i].Active)
+				{
+					Console.PrintF("(Savegame) %d: ChallengeData: %s", i, Challenges.ChallengeData[i].Name);
+				}
+			}*/
+			If (!Level.MapTime) //[DoomKrakken]: Reinitialize for each map we visit.
+			{
+				Challenges.FodderSpawned = 0;
+				Challenges.BarrelsSpawned = 0;
+				Challenges.HeaviesSpawned = 0;
+				Challenges.ImpsSpawned = 0;
+				Challenges.KnightsSpawned = 0;
+				Challenges.CacosSpawned = 0;
+				Challenges.BaronsSpawned = 0;
+				Challenges.Tier1Spawned = 0;
+				Challenges.CompletedChallenges = 0;
+				Challenges.ChallengeMilestone = 0;
+				Challenges.PowerupsSpawned = 0;
+				Challenges.QuadDamageSpawned = 0;
+				
+				If (!Level.Time) //[DoomKrakken]: Reinitialize for every hub cluster we visit.
+				{
+					If (Challenges.SelectedChallenges.Size() >= 9)
+					{
+						While (Challenges.SelectedChallenges.Size() >= 6)
+						{
+							Challenges.SelectedChallenges.Delete(0, 3); //[DoomKrakken]: When 9 challenges have passed, and we've moved to another map outside of the hub cluster (which includes singular maps), delete the first three used so that we don't run out of challenges... and also so that they can be recycled for later use.  If we're in a hub with a lot of maps, this will not happen until we've traveled outside of the hub cluster... in which case, we'll need to continue deleting until 6 are left.
+						}
+					}
+					For (Int j = 0; j < Challenges.ChallengeData.Size(); j++)
+					{
+						//[DoomKrakken]: Reinitialize these specific variables so that they're ready for selection if selected in the future.
+						Challenges.ChallengeData[j].Selected = False; 
+						Challenges.ChallengeData[j].Active = False;
+						Challenges.ChallengeData[j].OldAmount = 0;
+						Challenges.ChallengeData[j].Amount = 0;
+						Challenges.ChallengeData[j].ChallengeNum = 0;
+						Challenges.ChallengeData[j].MapName = "";
+						Challenges.ChallengeData[j].GloryKills.Clear();
+					}
+				}
+				For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+				{
+					If (Challenges.ChallengeData[i].Active && Challenges.ChallengeData[i].Amount >= Challenges.ChallengeData[i].MaxAmount)
+					{
+						Challenges.CompletedChallenges++;
+					}
+				}
+				Challenges.ChallengeMilestone = max(Challenges.CompletedChallenges, 2 * (CVar.GetCVar("EOA_PointSparsity").GetInt() == -2) + (Challenges.CompletedChallenges >= 3) * (CVar.GetCVar("EOA_PointSparsity").GetInt() == -2));
+			}
+		}
+	}
+	Override Void RenderOverlay(RenderEvent e)
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player && Player.Mo && Player.Mo == e.Camera && PlayerInGame[ConsolePlayer])
+		{
+			Let Challenges = EOA_ChallengeArchive.Retrieve();
+			Let MessageHandler = EOA_HandlerItem(e.Camera.FindInventory("EOA_HandlerItem"));
+			If (MessageHandler && Challenges)
+			{
+				If (e.Camera.CountInv("PowerChallenge1Active") && !e.Camera.CountInv("PowerMsg1Active"))
+				{
+					EOA_ChallengeData MaxInvItem1;
+					For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+					{
+						If (MessageHandler.UpgradeType1 == Challenges.ChallengeData[i].Name)
+						{
+							MaxInvItem1 = Challenges.ChallengeData[i];
+							Break;
+						}
+					}
+					If (MaxInvItem1)
+					{
+						If (MaxInvItem1.Amount < MaxInvItem1.MaxAmount)
+						{
+							Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 720, MessageHandler.UpgradeType1, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+							Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 740, String.Format("%d / %d", MaxInvItem1.Amount, MaxInvItem1.MaxAmount), DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						}
+						Else If (MessageHandler.UpgradeType1) //[DoomKrakken]: For this and other corresponding checks below, this is necessary so that the "Challenge Complete" message doesn't show up upon loading a save.
+						{
+							Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 720, MessageHandler.UpgradeType1, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+							Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 740, "Challenge Complete", DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						}
+					}
+				}
+				Else If (!e.Camera.CountInv("PowerMsg1Active"))
+				{
+					EventHandler.SendNetworkEvent("ClearMsg1");
+				}
+				If (e.Camera.CountInv("PowerChallenge2Active") && !e.Camera.CountInv("PowerMsg2Active"))
+				{
+					EOA_ChallengeData MaxInvItem2;
+					For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+					{
+						If (MessageHandler.UpgradeType2 == Challenges.ChallengeData[i].Name)
+						{
+							MaxInvItem2 = Challenges.ChallengeData[i];
+							Break;
+						}
+					}
+					If (MaxInvItem2)
+					{
+						If (MaxInvItem2.Amount < MaxInvItem2.MaxAmount)
+						{
+							Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 620, MessageHandler.UpgradeType2, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+							Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 640, String.Format("%d / %d", MaxInvItem2.Amount, MaxInvItem2.MaxAmount), DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						}
+						Else If (MessageHandler.UpgradeType2)
+						{
+							Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 620, MessageHandler.UpgradeType2, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+							Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 640, "Challenge Complete", DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						}
+					}
+				}
+				Else If (!e.Camera.CountInv("PowerMsg2Active"))
+				{
+					EventHandler.SendNetworkEvent("ClearMsg2");
+				}
+				If (e.Camera.CountInv("PowerChallenge3Active") && !e.Camera.CountInv("PowerMsg3Active"))
+				{
+					EOA_ChallengeData MaxInvItem3;
+					For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+					{
+						If (MessageHandler.UpgradeType3 == Challenges.ChallengeData[i].Name)
+						{
+							MaxInvItem3 = Challenges.ChallengeData[i];
+							Break;
+						}
+					}
+					If (MaxInvItem3)
+					{
+						If (MaxInvItem3.Amount < MaxInvItem3.MaxAmount)
+						{
+							Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 520, MessageHandler.UpgradeType3, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+							Screen.DrawText("BigFont", Font.CR_WHITE, 1500, 540, String.Format("%d / %d", MaxInvItem3.Amount, MaxInvItem3.MaxAmount), DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						}
+						Else If (MessageHandler.UpgradeType3)
+						{
+							Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 520, MessageHandler.UpgradeType3, DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+							Screen.DrawText("BigFont", Font.CR_GOLD, 1500, 540, "Challenge Complete", DTA_VirtualWidth, 1920, DTA_VirtualHeight, 1080, DTA_KeepRatio, True);
+						}
+					}
+				}
+				Else If (!e.Camera.CountInv("PowerMsg3Active"))
+				{
+					EventHandler.SendNetworkEvent("ClearMsg3");
+				}
+			}
+		}
+	}
+	Override Void WorldThingSpawned(WorldEvent e)
+	{
+		//e.Thing.GiveInventory("EOA_TimeTracker", 1);
+		Let Challenges = EOA_ChallengeArchive.Get();
+		Let StaticArchive = EOA_StaticArchive.Get();
+		If (Challenges && StaticArchive && Level.MapTime < INIT_TICS)
+		{
+			//[DoomKrakken]: Compile a list of stuff to do.
+			If (e.Thing.Default.bISMONSTER && e.Thing.Default.Health < 300)
+			{
+				Challenges.Tier1Spawned++;
+			}
+			If (IsClassOrSpecies(e.Thing, "ZombieMan") || IsClassOrSpecies(e.Thing, "ShotgunGuy"))
+			{
+				Challenges.FodderSpawned++;
+				If (e.Thing.CountProximity("Zombieman", 384, Flags: CPXF_CHECKSIGHT|CPXF_ANCESTOR) + e.Thing.CountProximity("ShotgunGuy", 384, Flags: CPXF_CHECKSIGHT|CPXF_ANCESTOR) >= 2 && StaticArchive.ShotgunSpawned)
+				{
+					Challenges.TwoFer.Selected = True;
+				}
+				If (Challenges.FodderSpawned >= 5 && !Challenges.VarietyIsTheSpiceOfDeathII.Selected && !Challenges.VarietyIsTheSpiceOfDeathIII.Selected)
+				{
+					Challenges.VarietyIsTheSpiceOfDeathI.Selected = True;
+				}
+			}
+			If (e.Thing Is "ExplosiveBarrel")
+			{
+				Challenges.BarrelsSpawned++;
+				If (e.Thing.CountProximity("Zombieman", 384, Flags: CPXF_CHECKSIGHT|CPXF_ANCESTOR) + e.Thing.CountProximity("ShotgunGuy", 384, Flags: CPXF_CHECKSIGHT|CPXF_ANCESTOR) >= 3)
+				{
+					Challenges.ThreeZombiesOneBarrel.Selected = True;
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "ChaingunGuy"))
+			{
+				Challenges.HeaviesSpawned++;
+				If (Challenges.HeaviesSpawned >= 5 && !Challenges.VarietyIsTheSpiceOfDeathI.Selected && !Challenges.VarietyIsTheSpiceOfDeathIII.Selected && !Random[EOA](0, 1))
+				{
+					Challenges.VarietyIsTheSpiceOfDeathII.Selected = True;
+				}
+				Else If (Challenges.HeaviesSpawned >= 3)
+				{
+					Challenges.CurbStomp.Selected = True;
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "DoomImp"))
+			{
+				Challenges.ImpsSpawned++;
+				If (Challenges.ImpsSpawned >= 5 && !Challenges.VarietyIsTheSpiceOfDeathI.Selected && !Challenges.VarietyIsTheSpiceOfDeathII.Selected && !Random[EOA](0, 1))
+				{
+					Challenges.VarietyIsTheSpiceOfDeathIII.Selected = True;
+				}
+				Else If (Challenges.ImpsSpawned >= 4 && !Challenges.VarietyIsTheSpiceOfDeathIII.Selected && !Random[EOA](0, 1))
+				{
+					Challenges.Chiropractor.Selected = True;
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "HellKnight"))
+			{
+				Challenges.KnightsSpawned++;
+				If (Challenges.KnightsSpawned >= 2)
+				{
+					Challenges.ToBeKnighted.Selected = True;
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "BaronOfHell") && !(IsClassOrSpecies(e.Thing, "HellKnight")))
+			{
+				Challenges.BaronsSpawned++;
+				If (e.Thing.CountProximity("BaronOfHell", 384, Flags: CPXF_CHECKSIGHT|CPXF_ANCESTOR) && Challenges.BaronsSpawned >= 2 && !random[EOA](0, 1))
+				{
+					Challenges.HoldStill.Selected = True;
+				}
+				Else
+				{
+					Challenges.AtopTheMountain.Selected = True;
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "Cacodemon"))
+			{
+				Challenges.CacosSpawned++;
+				If (e.Thing.CountProximity("Cacodemon", 384, Flags: CPXF_CHECKSIGHT|CPXF_ANCESTOR) && Challenges.CacosSpawned >= 2 && !random[EOA](0, 1))
+				{
+					Challenges.TwoMouthsToFeed.Selected = True;
+				}
+				Else If (StaticArchive.ChainsawSpawnedInLevel)
+				{
+					Challenges.MyTeethAreSharper.Selected = True;
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "Fatso"))
+			{
+				Challenges.APinPopsABalloon.Selected = True;
+			}
+			If (e.Thing Is "EOA_RuneTrialStone")
+			{
+				If (StaticArchive.RuneTrialStonesSpawned - StaticArchive.RuneTrialStonesClaimed >= 2 && !random[EOA](0, 1))
+				{
+					Challenges.DoubleTake.Selected = True;
+				}
+				Else
+				{
+					Challenges.WalkThePath.Selected = True;
+				}
+			}
+			If (e.Thing Is "EOA_EliteGuardCorpse" && StaticArchive.PraetorTokensSpawned - StaticArchive.PraetorTokensClaimed >= 4)
+			{
+				Challenges.DeadManStalking.Selected = True;
+			}
+			If (e.Thing Is "EOA_Item")
+			{
+				Challenges.PowerupsSpawned++;
+				If (e.Thing Is "EOA_QuadDamage")
+				{
+					Challenges.QuadDamageSpawned = True;
+				}
+			}
+			If (e.Thing Is "EOA_AutomapStation")
+			{
+				Challenges.BirdsEyeView.Selected = True;
+			}
+		}
+	}
+	Override Void WorldThingDamaged(WorldEvent e)
+	{
+		//[DoomKrakken]: DEBUGGING! :D
+		/*If (e.Thing)
+		{
+			Console.PrintF("e.Thing: %s", e.Thing.GetClassName());
+		}
+		If (e.Inflictor)
+		{
+			Console.PrintF("e.Inflictor: %s", e.Inflictor.GetClassName());
+		}
+		If (e.DamageSource)
+		{
+			Console.PrintF("e.DamageSource: %s", e.DamageSource.GetClassName());
+		}*/
+		Let Challenges = EOA_ChallengeArchive.Get();
+		If (Challenges && e.Inflictor && e.Thing.bISMONSTER && e.Thing.Health <= 0 && e.DamageSource)
+		{
+			If (e.DamageSource.Player && e.Inflictor.bMISSILE)
+			{
+				If (Challenges.ThreadTheNeedle.Active)
+				{
+					e.Inflictor.GiveInventory("ThreadTheNeedleChallengeCounter", 1);
+					ThinkerIterator It = ThinkerIterator.Create();
+					Actor Mo;
+					While (Mo = Actor(It.Next()))
+					{
+						If (Mo.GetClassName() == e.Inflictor.GetClassName() && Mo.Target && Mo.Target == e.DamageSource && Mo.GetLevelSpawnTime() == e.Inflictor.GetLevelSpawnTime() && Mo != e.Inflictor) //[DoomKrakken]: Find all other actors that came from the same shot.  Use the time tracker to determine if the projectiles were spawned at the same time, indicating a salvo attack.
+						{
+							Mo.A_SetInventory("ThreadTheNeedleChallengeCounter", max(e.Inflictor.CountInv("ThreadTheNeedleChallengeCounter"), Mo.CountInv("ThreadTheNeedleChallengeCounter")));
+							e.Inflictor.A_SetInventory("ThreadTheNeedleChallengeCounter", max(e.Inflictor.CountInv("ThreadTheNeedleChallengeCounter"), Mo.CountInv("ThreadTheNeedleChallengeCounter")));
+							//Do nothing if they're equal.  It could potentially screw something up.  Else, set it to the larger one.
+						}
+					}
+					If (e.Inflictor.CountInv("ThreadTheNeedleChallengeCounter") >= 10)
+					{
+						Challenges.ThreadTheNeedle.Amount++;
+					}
+				}
+				If (IsClassOrSpecies(e.Thing, "Cacodemon") && Challenges.TwoMouthsToFeed.Active)
+				{
+					e.Inflictor.GiveInventory("TwoMouthsToFeedChallengeCounter", 1);
+					ThinkerIterator It = ThinkerIterator.Create();
+					Actor Mo;
+					While (Mo = Actor(It.Next()))
+					{
+						If (Mo.GetClassName() == e.Inflictor.GetClassName() && Mo.Target && Mo.Target == e.DamageSource && Mo.GetLevelSpawnTime() == e.Inflictor.GetLevelSpawnTime() && Mo != e.Inflictor) //[DoomKrakken]: Find all other actors that came from the same shot.  Use the time tracker to determine if the projectiles were spawned at the same time, indicating a salvo attack.
+						{
+							Mo.A_SetInventory("TwoMouthsToFeedChallengeCounter", max(e.Inflictor.CountInv("TwoMouthsToFeedChallengeCounter"), Mo.CountInv("TwoMouthsToFeedChallengeCounter")));
+							e.Inflictor.A_SetInventory("TwoMouthsToFeedChallengeCounter", max(e.Inflictor.CountInv("TwoMouthsToFeedChallengeCounter"), Mo.CountInv("TwoMouthsToFeedChallengeCounter")));
+							//Do nothing if they're equal.  It could potentially screw something up.  Else, set it to the larger one.
+						}
+					}
+					If (e.Inflictor.CountInv("TwoMouthsToFeedChallengeCounter") >= 2)
+					{
+						Challenges.TwoMouthsToFeed.Amount++;
+					}
+				}
+				If (IsClassOrSpecies(e.Thing, "BaronOfHell") && !(IsClassOrSpecies(e.Thing, "HellKnight")) && Challenges.HoldStill.Active)
+				{
+					e.Inflictor.GiveInventory("HoldStillChallengeCounter", 1);
+					ThinkerIterator It = ThinkerIterator.Create();
+					Actor Mo;
+					While (Mo = Actor(It.Next()))
+					{
+						If (Mo.GetClassName() == e.Inflictor.GetClassName() && Mo.Target && Mo.Target == e.DamageSource && Mo.GetLevelSpawnTime() == e.Inflictor.GetLevelSpawnTime() && Mo != e.Inflictor) //[DoomKrakken]: Find all other actors that came from the same shot.  Use the time tracker to determine if the projectiles were spawned at the same time, indicating a salvo attack.
+						{
+							Mo.A_SetInventory("HoldStillChallengeCounter", max(e.Inflictor.CountInv("HoldStillChallengeCounter"), Mo.CountInv("HoldStillChallengeCounter")));
+							e.Inflictor.A_SetInventory("HoldStillChallengeCounter", max(e.Inflictor.CountInv("HoldStillChallengeCounter"), Mo.CountInv("HoldStillChallengeCounter")));
+							//Do nothing if they're equal.  It could potentially screw something up.  Else, set it to the larger one.
+						}
+					}
+					If (e.Inflictor.CountInv("HoldStillChallengeCounter") >= 2)
+					{
+						Challenges.HoldStill.Amount++;
+					}
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "Zombieman") || IsClassOrSpecies(e.Thing, "ShotgunGuy"))
+			{
+				If ((e.Inflictor.GetClassName() == ("CombatShotgunTracer") || e.Inflictor.GetClassName() == ("ExplosiveShotGrenade") || e.Inflictor.GetClassName() == ("ClusterBomb")) && Challenges.TwoFer.Active)
+				{
+					e.Inflictor.GiveInventory("TwoFerChallengeCounter", 1);
+					ThinkerIterator It = ThinkerIterator.Create();
+					Actor Mo;
+					While (Mo = Actor(It.Next()))
+					{
+						If (Mo.GetClassName() == e.Inflictor.GetClassName() && Mo.Target && Mo.Target == e.DamageSource && Mo.GetLevelSpawnTime() == e.Inflictor.GetLevelSpawnTime() && Mo != e.Inflictor) //[DoomKrakken]: Find all other actors that came from the same shot.  Use the time tracker to determine if the projectiles were spawned at the same time, indicating a salvo attack.
+						{
+							Mo.A_SetInventory("TwoFerChallengeCounter", max(e.Inflictor.CountInv("TwoFerChallengeCounter"), Mo.CountInv("TwoFerChallengeCounter")));
+							e.Inflictor.A_SetInventory("TwoFerChallengeCounter", max(e.Inflictor.CountInv("TwoFerChallengeCounter"), Mo.CountInv("TwoFerChallengeCounter")));
+							//Do nothing if they're equal.  It could potentially screw something up.  Else, set it to the larger one.
+						}
+					}
+					If (e.Inflictor.CountInv("TwoFerChallengeCounter") >= 2)
+					{
+						Challenges.TwoFer.Amount++;
+					}
+				}
+				If (e.Inflictor Is "ExplosiveBarrel" && Challenges.ThreeZombiesOneBarrel.Active)
+				{
+					e.DamageSource.GiveInventory("ThreeZombiesOneBarrelChallengeCounter", 1);
+					If (e.DamageSource.CountInv("ThreeZombiesOneBarrelChallengeCounter") >= 3)
+					{
+						Challenges.ThreeZombiesOneBarrel.Amount++;
+					}
+				}
+			}
+			If (IsClassOrSpecies(e.Thing, "Fatso") && e.Inflictor Is "EMGTracer")
+			{
+				Challenges.APinPopsABalloon.Amount++;
+			}
+			If (e.Inflictor Is "ExplosiveBarrel" && Challenges.WaitForIt.Active)
+			{
+				Challenges.WaitForIt.Amount++;
+			}
+			If (e.Inflictor Is "EOA_FragGrenadeProjectile" && Challenges.GorePinata.Active)
+			{
+				e.DamageSource.GiveInventory("GorePinataChallengeCounter", 1);
+				If (e.DamageSource.CountInv("GorePinataChallengeCounter") >= 3)
+				{
+					Challenges.GorePinata.Amount++;
+				}
+			}
+			If (e.Inflictor Is "EOA_BFGBall" && Challenges.BigREDACTEDGun.Active)
+			{
+				Challenges.BigREDACTEDGun.Amount++;
+			}
+			If (e.DamageSource.CountInv("PowerBerserk") || e.DamageSource.CountInv("PowerHaste") || e.DamageSource.CountInv("PowerQDMG") || e.DamageSource.CountInv("PowerInvulnerability"))
+			{
+				If (Challenges.Dominator.Active)
+				{
+					Challenges.Dominator.Amount++;
+				}
+				If (Challenges.MomentumSwing.Active)
+				{
+					Challenges.MomentumSwing.Amount++;
+				}
+				If (Challenges.Overkiller.Active && e.DamageSource.CountInv("PowerQDMG"))
+				{
+					Challenges.Overkiller.Amount++;
+				}
+			}
+		}
+	}
+	Override Void WorldTick()
+	{
+		Let Challenges = EOA_ChallengeArchive.Get();
+		If (Challenges)
+		{
+			If (Level.MapTime == INIT_TICS)
+			{
+				InitChallenges();
+			}
+			If (Level.MapTime > INIT_TICS)
+			{
+				//[DoomKrakken]: Iterate through all of the variables and apply these changes...
+				Challenges.CompletedChallenges = 0;
+				For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+				{
+					Challenges.ChallengeData[i].Selected = False; //[DoomKrakken]: It only needs to be selected during initial setup.
+					Challenges.ChallengeData[i].Active = Challenges.ChallengeData[i].MapName == Level.MapName; //[DoomKrakken]: Only those challenges yielded in the level you're in will be considered "active".
+					Challenges.ChallengeData[i].Amount = clamp(Challenges.ChallengeData[i].Amount, 0, Challenges.ChallengeData[i].MaxAmount); //[DoomKrakken]: So that it doesn't go over the max amount, so that the challenge will always print properly. :D
+					If (Challenges.ChallengeData[i].Amount > Challenges.ChallengeData[i].OldAmount && Challenges.ChallengeData[i].Amount <= Challenges.ChallengeData[i].MaxAmount)
+					{
+						PrintChallengeProgress(Challenges.ChallengeData[i].Name, Challenges.ChallengeData[i].Desc, Challenges.ChallengeData[i].Name); //[DoomKrakken]: Use the name of the challenge here so that it remains different from other such messages in all aspects.
+						S_StartSound("MasteryChallenge/Ticker", 1, 0, 1, ATTN_NONE);
+						If (Challenges.ChallengeData[i].Amount == Challenges.ChallengeData[i].MaxAmount)
+						{
+							S_StartSound("Challenge/Complete", 2, 0, 1, ATTN_NONE);
+						}
+					}
+					If (Challenges.ChallengeData[i].Active && Challenges.ChallengeData[i].Amount >= Challenges.ChallengeData[i].MaxAmount)
+					{
+						Challenges.CompletedChallenges++;
+					}
+					Challenges.ChallengeData[i].OldAmount = Challenges.ChallengeData[i].Amount;
+				}
+				/*If (Level.MapTime == 2)
+				{
+					For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+					{
+						If (Challenges.ChallengeData[i].Active)
+						{
+							Console.PrintF("%d: ChallengeData: %s", i, Challenges.ChallengeData[i].Name);
+						}
+					}
+				}*/
+				//Rewards for successfully completing challenges (based on sparsity settings).  Accomodate for the point sparsity CVar.  This way, one point per challenge is given by default, two are given per challenge on the "double" setting, and only one point is given after successfully completing all three challenges.
+				If (Challenges.CompletedChallenges > Challenges.ChallengeMilestone)
+				{
+					For (Int i = 0; i < MAXPLAYERS; i++)
+					{
+						PlayerInfo Player = Players[i];
+						If (Player && Player.Mo && PlayerInGame[i])
+						{
+							Player.Mo.A_GiveInventory("BossKillReward"); //[DoomKrakken]: Remember, this only gives the weapon upgrade point.  No need to make the same function with a different name.
+							If (CVar.GetCVar("EOA_PointSparsity").GetInt() == 2)
+							{
+								Player.Mo.A_GiveInventory("BossKillReward"); //[DoomKrakken]: Give the item again.
+							}
+						}
+					}
+					Challenges.ChallengeMilestone = max(Challenges.CompletedChallenges, 2 * (CVar.GetCVar("EOA_PointSparsity").GetInt() == -2) + (Challenges.CompletedChallenges >= 3) * (CVar.GetCVar("EOA_PointSparsity").GetInt() == -2));
+				}
+				
+				//Quite The Explorer
+				If (Challenges.QuiteTheExplorer.Active)
+				{
+					Challenges.QuiteTheExplorer.Amount = Level.Found_Secrets;
+				}
+				
+				//Searching High And Low
+				If (Challenges.SearchingHighAndLow.Active)
+				{
+					Challenges.SearchingHighAndLow.Amount = Level.Found_Secrets;
+				}
+
+				//Quite The Collector
+				If (Challenges.QuiteTheCollector.Active)
+				{
+					Challenges.QuiteTheCollector.Amount = Level.Found_Items;
+				}
+				
+				//Hide And Seek
+				If (Challenges.HideAndSeek.Active)
+				{
+					Challenges.HideAndSeek.Amount = Level.Found_Items;
+				}
+
+				//Glory Kill challenges...
+				If (Challenges.QueueGK)
+				{
+					Challenges.QueueGK = False;
+					Let VictimInfo = Challenges.QueueGloryKills();
+					If (VictimInfo)
+					{
+						//Variety Is The Spice Of Death I
+						If (Challenges.VarietyIsTheSpiceOfDeathI.Active && (IsClassOrSpecies(VictimInfo.Victim, "Zombieman") || IsClassOrSpecies(VictimInfo.Victim, "ShotgunGuy")))
+						{
+							Int i;
+							For (i = 0; i < Challenges.VarietyIsTheSpiceOfDeathI.GloryKills.Size(); i++)
+							{
+								If (Challenges.VarietyIsTheSpiceOfDeathI.GloryKills[i].Victim == VictimInfo.Victim)
+								{
+									Break;
+								}
+								If (Challenges.VarietyIsTheSpiceOfDeathI.GloryKills[i].Angle == VictimInfo.Angle && Challenges.VarietyIsTheSpiceOfDeathI.GloryKills[i].MOD == VictimInfo.MOD && Challenges.VarietyIsTheSpiceOfDeathI.GloryKills[i].DeathFromAbove == VictimInfo.DeathFromAbove)
+								{
+									Break;
+								}
+							}
+							If (i >= Challenges.VarietyIsTheSpiceOfDeathI.GloryKills.Size())
+							{
+								Challenges.VarietyIsTheSpiceOfDeathI.GloryKills.Push(VictimInfo);
+								Challenges.VarietyIsTheSpiceOfDeathI.Amount = Challenges.VarietyIsTheSpiceOfDeathI.GloryKills.Size();
+							}
+						}
+						
+						//Variety Is The Spice Of Death II / Curb Stomp
+						If (IsClassOrSpecies(VictimInfo.Victim, "ChaingunGuy"))
+						{
+							If (Challenges.VarietyIsTheSpiceOfDeathII.Active)
+							{
+								Int i;
+								For (i = 0; i < Challenges.VarietyIsTheSpiceOfDeathII.GloryKills.Size(); i++)
+								{
+									If (Challenges.VarietyIsTheSpiceOfDeathII.GloryKills[i].Victim == VictimInfo.Victim)
+									{
+										Break;
+									}
+									If (Challenges.VarietyIsTheSpiceOfDeathII.GloryKills[i].Angle == VictimInfo.Angle && Challenges.VarietyIsTheSpiceOfDeathII.GloryKills[i].MOD == VictimInfo.MOD && Challenges.VarietyIsTheSpiceOfDeathII.GloryKills[i].DeathFromAbove == VictimInfo.DeathFromAbove)
+									{
+										Break;
+									}
+								}
+								If (i >= Challenges.VarietyIsTheSpiceOfDeathII.GloryKills.Size())
+								{
+									Challenges.VarietyIsTheSpiceOfDeathII.GloryKills.Push(VictimInfo);
+									Challenges.VarietyIsTheSpiceOfDeathII.Amount = Challenges.VarietyIsTheSpiceOfDeathII.GloryKills.Size();
+								}
+							}
+							If (Challenges.CurbStomp.Active)
+							{
+								If (VictimInfo.DeathFromAbove)
+								{
+									Int i;
+									For (i = 0; i < Challenges.CurbStomp.GloryKills.Size(); i++)
+									{
+										If (Challenges.CurbStomp.GloryKills[i].Victim == VictimInfo.Victim)
+										{
+											Break;
+										}
+									}
+									If (i >= Challenges.CurbStomp.GloryKills.Size())
+									{
+										Challenges.CurbStomp.GloryKills.Push(VictimInfo);
+										Challenges.CurbStomp.Amount = Challenges.CurbStomp.GloryKills.Size();
+									}
+								}
+							}
+						}
+						
+						//Variety Is The Spice Of Death III / Chiropractor
+						If (IsClassOrSpecies(VictimInfo.Victim, "DoomImp"))
+						{
+							If (Challenges.VarietyIsTheSpiceOfDeathIII.Active)
+							{
+								Int i;
+								For (i = 0; i < Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills.Size(); i++)
+								{
+									If (Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills[i].Victim == VictimInfo.Victim)
+									{
+										Break;
+									}
+									If (Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills[i].Angle == VictimInfo.Angle && Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills[i].MOD == VictimInfo.MOD && Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills[i].DeathFromAbove == VictimInfo.DeathFromAbove)
+									{
+										Break;
+									}
+								}
+								If (i >= Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills.Size())
+								{
+									Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills.Push(VictimInfo);
+									Challenges.VarietyIsTheSpiceOfDeathIII.Amount = Challenges.VarietyIsTheSpiceOfDeathIII.GloryKills.Size();
+								}
+							}
+							If (Challenges.Chiropractor.Active)
+							{
+								If (VictimInfo.Angle >= 3 && VictimInfo.Angle <= 5 && VictimInfo.MOD == "Normal" && !VictimInfo.DeathFromAbove)
+								{
+									Int i;
+									For (i = 0; i < Challenges.Chiropractor.GloryKills.Size(); i++)
+									{
+										If (Challenges.Chiropractor.GloryKills[i].Victim == VictimInfo.Victim)
+										{
+											Break;
+										}
+									}
+									If (i >= Challenges.Chiropractor.GloryKills.Size())
+									{
+										Challenges.Chiropractor.GloryKills.Push(VictimInfo);
+										Challenges.Chiropractor.Amount = Challenges.Chiropractor.GloryKills.Size();
+									}
+								}
+							}					
+						}
+						
+						//To Be Knighted
+						If (Challenges.ToBeKnighted.Active && IsClassOrSpecies(VictimInfo.Victim, "HellKnight"))
+						{
+							If (VictimInfo.DeathFromAbove)
+							{
+								Int i;
+								For (i = 0; i < Challenges.ToBeKnighted.GloryKills.Size(); i++)
+								{
+									If (Challenges.ToBeKnighted.GloryKills[i].Victim == VictimInfo.Victim)
+									{
+										Break;
+									}
+								}
+								If (i >= Challenges.ToBeKnighted.GloryKills.Size())
+								{
+									Challenges.ToBeKnighted.GloryKills.Push(VictimInfo);
+									Challenges.ToBeKnighted.Amount = Challenges.ToBeKnighted.GloryKills.Size();
+								}
+							}
+						}
+						
+						//Atop The Mountain
+						If (Challenges.AtopTheMountain.Active && IsClassOrSpecies(VictimInfo.Victim, "BaronOfHell") && !(IsClassOrSpecies(VictimInfo.Victim, "HellKnight")))
+						{
+							If (VictimInfo.DeathFromAbove)
+							{
+								Int i;
+								For (i = 0; i < Challenges.AtopTheMountain.GloryKills.Size(); i++)
+								{
+									If (Challenges.AtopTheMountain.GloryKills[i].Victim == VictimInfo.Victim) //[DoomKrakken]: Likely not necessary, since this only needs one kill to suffice.
+									{
+										Break;
+									}
+								}
+								If (i >= Challenges.AtopTheMountain.GloryKills.Size())
+								{
+									Challenges.AtopTheMountain.GloryKills.Push(VictimInfo);
+									Challenges.AtopTheMountain.Amount = Challenges.AtopTheMountain.GloryKills.Size();
+								}
+							}
+						}					
+						
+						//Close Encounters
+						If (Challenges.CloseEncounters.Active)
+						{
+							If (VictimInfo.MOD == "Chainsaw")
+							{
+								Int i;
+								For (i = 0; i < Challenges.CloseEncounters.GloryKills.Size(); i++)
+								{
+									If (Challenges.CloseEncounters.GloryKills[i].Victim == VictimInfo.Victim)
+									{
+										Break;
+									}
+								}
+								If (i >= Challenges.CloseEncounters.GloryKills.Size())
+								{
+									Challenges.CloseEncounters.GloryKills.Push(VictimInfo);
+									Challenges.CloseEncounters.Amount = Challenges.CloseEncounters.GloryKills.Size();
+								}
+							}
+						}
+						
+						//My Teeth Are Sharper
+						If (Challenges.MyTeethAreSharper.Active)
+						{
+							If (VictimInfo.MOD == "Chainsaw" && IsClassOrSpecies(VictimInfo.Victim, "Cacodemon"))
+							{
+								Int i;
+								For (i = 0; i < Challenges.MyTeethAreSharper.GloryKills.Size(); i++)
+								{
+									If (Challenges.MyTeethAreSharper.GloryKills[i].Victim == VictimInfo.Victim) //[DoomKrakken]: Likely not necessary, since this only needs one kill to suffice.
+									{
+										Break;
+									}
+								}
+								If (i >= Challenges.MyTeethAreSharper.GloryKills.Size())
+								{
+									Challenges.MyTeethAreSharper.GloryKills.Push(VictimInfo);
+									Challenges.MyTeethAreSharper.Amount = Challenges.MyTeethAreSharper.GloryKills.Size();
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	Void InitChallenges()
+	{
+		Let Challenges = EOA_ChallengeArchive.Get();
+		Let StaticArchive = EOA_StaticArchive.Get();
+		If (Challenges && StaticArchive)
+		{
+			If (Level.Total_Secrets >= 3)
+			{
+				Challenges.QuiteTheExplorer.Selected = True;
+			}
+			If (Level.Total_Items >= 2)
+			{
+				Challenges.QuiteTheCollector.Selected = True;
+			}
+			If (Challenges.PowerupsSpawned)
+			{
+				If (Level.Total_Monsters >= 20 && Challenges.PowerupsSpawned >= 3)
+				{
+					Challenges.Dominator.Selected = True;
+				}
+				Else If (Level.Total_Monsters >= 15 && Challenges.QuadDamageSpawned)
+				{
+					Challenges.Overkiller.Selected = True;
+				}
+				Else If (Level.Total_Monsters >= 10)
+				{
+					Challenges.MomentumSwing.Selected = True;
+				}
+			}
+			If (Challenges.FodderSpawned >= 10 && Challenges.BarrelsSpawned >= 10)
+			{
+				Challenges.WaitForIt.Selected = True;
+			}
+			Else If (Challenges.Tier1Spawned >= 5 && StaticArchive.ChainsawSpawnedInLevel && StaticArchive.FuelAmmoSpawnedInLevel >= 2)
+			{
+				Challenges.CloseEncounters.Selected = True;
+			}
+			For (Int i = 0; i < MAXPLAYERS; i++)
+			{
+				PlayerInfo Player = Players[i];
+				If (Player && Player.Mo && PlayerInGame[i])
+				{
+					If (Player.Mo.CountInv("EOA_BFG") && Level.Total_Monsters >= 250)
+					{
+						Challenges.ThreadTheNeedle.Selected = True;
+						Challenges.BigREDACTEDGun.Selected = True;
+						Break;
+					}
+				}
+			}
+			If (StaticArchive.EquipmentSpawned)
+			{
+				Challenges.GorePinata.Selected = True;
+			}
+			EOA_ChallengeArchive.RetrieveChallenges();
+			If (Challenges.UnselectedChallenges.Size() >= 3) //[DoomKrakken]: We must have at least three challenges to do.  Else we won't do any.
+			{
+				For (Int i = 1; i <= 3; i++)
+				{
+					String SelectedChallenge = EOA_ChallengeArchive.SelectNewChallenge();
+					If (SelectedChallenge ~== "")
+					{
+						Break; //[DoomKrakken]: If it returns an empty string, there's no challenge to retrieve.
+					}
+					//[DoomKrakken]: Debug block.
+					/*If (i == 1)
+					{
+						SelectedChallenge = <insert challenge name here>;
+					}*/
+					For (Int j = 0; j < Challenges.ChallengeData.Size(); j++)
+					{
+						If (Challenges.ChallengeData[j].Name == SelectedChallenge)
+						{
+							Challenges.ChallengeData[j].MapName = Level.MapName;
+							Challenges.ChallengeData[j].ChallengeNum = i;
+							Challenges.SelectedChallenges.Push(SelectedChallenge);
+							Break;
+						}
+					}
+				}
+			}
+			Challenges.UnselectedChallenges.Clear();
+		}
+	}
+	Static Void PrintChallengeProgress(String UpgradeType, String UpgradeMsg, String UpgradeItem)
+	{
+		PlayerInfo Player = Players[ConsolePlayer];
+		If (Player && Player.Mo && PlayerInGame[ConsolePlayer])
+		{
+			Int Msg1Tics;
+			Int Msg2Tics;
+			Int Msg3Tics;
+			Let MessageHandler = EOA_HandlerItem(Player.Mo.FindInventory("EOA_HandlerItem"));
+			Let Msg1 = Powerup(Player.Mo.FindInventory("PowerMsg1Active"));
+			Let Msg2 = Powerup(Player.Mo.FindInventory("PowerMsg2Active"));
+			Let Msg3 = Powerup(Player.Mo.FindInventory("PowerMsg3Active"));
+			Let Chlg1 = Powerup(Player.Mo.FindInventory("PowerChallenge1Active"));
+			Let Chlg2 = Powerup(Player.Mo.FindInventory("PowerChallenge2Active"));
+			Let Chlg3 = Powerup(Player.Mo.FindInventory("PowerChallenge3Active"));
+			Msg1Tics = Chlg1 ? Chlg1.EffectTics : Msg1 ? Msg1.EffectTics : 0;
+			Msg2Tics = Chlg2 ? Chlg2.EffectTics : Msg2 ? Msg2.EffectTics : 0;
+			Msg3Tics = Chlg3 ? Chlg3.EffectTics : Msg3 ? Msg3.EffectTics : 0;
+			If (MessageHandler)
+			{
+				If ((!Msg1Tics || (Msg1Tics <= Msg2Tics && Msg1Tics <= Msg3Tics && MessageHandler.UpgradeType1 && MessageHandler.UpgradeType2 && MessageHandler.UpgradeType3)) && UpgradeMsg != MessageHandler.UpgradeMsg2 && UpgradeItem != MessageHandler.UpgradeItem2 && UpgradeMsg != MessageHandler.UpgradeMsg3 && UpgradeItem != MessageHandler.UpgradeItem3)
+				{
+					Player.Mo.A_GiveInventory("PowerChallenge1Active");
+					MessageHandler.UpgradeType1 = UpgradeType;
+					MessageHandler.UpgradeMsg1 = UpgradeMsg;
+					MessageHandler.UpgradeItem1 = UpgradeItem;
+				}
+				Else If ((!Msg2Tics || (Msg2Tics <= Msg1Tics && Msg2Tics <= Msg3Tics && MessageHandler.UpgradeType1 && MessageHandler.UpgradeType2 && MessageHandler.UpgradeType3)) && UpgradeMsg != MessageHandler.UpgradeMsg1 && UpgradeItem != MessageHandler.UpgradeItem1 && UpgradeMsg != MessageHandler.UpgradeMsg3 && UpgradeItem != MessageHandler.UpgradeItem3)
+				{
+					Player.Mo.A_GiveInventory("PowerChallenge2Active");
+					MessageHandler.UpgradeType2 = UpgradeType;
+					MessageHandler.UpgradeMsg2 = UpgradeMsg;
+					MessageHandler.UpgradeItem2 = UpgradeItem;
+				}
+				Else If ((!Msg3Tics || (Msg3Tics <= Msg1Tics && Msg3Tics <= Msg2Tics && MessageHandler.UpgradeType1 && MessageHandler.UpgradeType2 && MessageHandler.UpgradeType3)) && UpgradeMsg != MessageHandler.UpgradeMsg1 && UpgradeItem != MessageHandler.UpgradeItem1 && UpgradeMsg != MessageHandler.UpgradeMsg2 && UpgradeItem != MessageHandler.UpgradeItem2)
+				{
+					Player.Mo.A_GiveInventory("PowerChallenge3Active");
+					MessageHandler.UpgradeType3 = UpgradeType;
+					MessageHandler.UpgradeMsg3 = UpgradeMsg;
+					MessageHandler.UpgradeItem3 = UpgradeItem;
+				}
+			}
+		}
+	}
+}
+
+Class EOA_ChallengeArchive : Thinker
+{
+	Int FodderSpawned;
+	Int BarrelsSpawned;
+	Int HeaviesSpawned;
+	Int ImpsSpawned;
+	Int KnightsSpawned;
+	Int CacosSpawned;
+	Int BaronsSpawned;
+	Int Tier1Spawned;
+	Int CompletedChallenges;
+	Int ChallengeMilestone;
+	Int PowerupsSpawned;
+	Bool QuadDamageSpawned;
+	Bool QueueGK;
+	Array<String> UnselectedChallenges;
+	Array<String> SelectedChallenges;
+	Array<EOA_ChallengeData> ChallengeData;
+	EOA_ChallengeData TwoFer;
+	EOA_ChallengeData VarietyIsTheSpiceOfDeathI;
+	EOA_ChallengeData QuiteTheExplorer;
+	EOA_ChallengeData ThreeZombiesOneBarrel;
+	EOA_ChallengeData CurbStomp;
+	EOA_ChallengeData QuiteTheCollector;
+	EOA_ChallengeData WalkThePath;
+	EOA_ChallengeData BirdsEyeView;
+	EOA_ChallengeData ToBeKnighted;
+	EOA_ChallengeData Chiropractor;
+	EOA_ChallengeData SearchingHighAndLow;
+	EOA_ChallengeData Overkiller;
+	EOA_ChallengeData DeadManStalking;
+	EOA_ChallengeData MomentumSwing;
+	EOA_ChallengeData CloseEncounters;
+	EOA_ChallengeData DoubleTake;
+	EOA_ChallengeData HideAndSeek;
+	EOA_ChallengeData VarietyIsTheSpiceOfDeathII;
+	EOA_ChallengeData ThreadTheNeedle;
+	EOA_ChallengeData AtopTheMountain;
+	EOA_ChallengeData Dominator;
+	EOA_ChallengeData APinPopsABalloon;
+	EOA_ChallengeData TwoMouthsToFeed;
+	EOA_ChallengeData WaitForIt;
+	EOA_ChallengeData VarietyIsTheSpiceOfDeathIII;
+	EOA_ChallengeData GorePinata;
+	EOA_ChallengeData MyTeethAreSharper;
+	EOA_ChallengeData HoldStill;
+	EOA_ChallengeData BigREDACTEDGun;
+	EOA_ChallengeArchive Init()
+	{
+		//[DoomKrakken]: Initialize these as new EOA_ChallengeData instances.
+		TwoFer = New("EOA_ChallengeData");
+		VarietyIsTheSpiceOfDeathI = New("EOA_ChallengeData");
+		QuiteTheExplorer = New("EOA_ChallengeData");
+		ThreeZombiesOneBarrel = New("EOA_ChallengeData");
+		CurbStomp = New("EOA_ChallengeData");
+		QuiteTheCollector = New("EOA_ChallengeData");
+		WalkThePath = New("EOA_ChallengeData");
+		BirdsEyeView = New("EOA_ChallengeData");
+		ToBeKnighted = New("EOA_ChallengeData");
+		Chiropractor = New("EOA_ChallengeData");
+		SearchingHighAndLow = New("EOA_ChallengeData");
+		Overkiller = New("EOA_ChallengeData");
+		DeadManStalking = New("EOA_ChallengeData");
+		MomentumSwing = New("EOA_ChallengeData");
+		CloseEncounters = New("EOA_ChallengeData");
+		DoubleTake = New("EOA_ChallengeData");
+		HideAndSeek = New("EOA_ChallengeData");
+		VarietyIsTheSpiceOfDeathII = New("EOA_ChallengeData");
+		ThreadTheNeedle = New("EOA_ChallengeData");
+		AtopTheMountain = New("EOA_ChallengeData");
+		Dominator = New("EOA_ChallengeData");
+		APinPopsABalloon = New("EOA_ChallengeData");
+		TwoMouthsToFeed = New("EOA_ChallengeData");
+		WaitForIt = New("EOA_ChallengeData");
+		VarietyIsTheSpiceOfDeathIII = New("EOA_ChallengeData");
+		GorePinata = New("EOA_ChallengeData");
+		MyTeethAreSharper = New("EOA_ChallengeData");
+		HoldStill = New("EOA_ChallengeData");
+		BigREDACTEDGun = New("EOA_ChallengeData");
+		
+		//[DoomKrakken]: Assign display names the first chance you get.
+		TwoFer.Name = "Two-Fer";
+		VarietyIsTheSpiceOfDeathI.Name = "Variety Is The Spice Of Death I";
+		QuiteTheExplorer.Name = "Quite The Explorer";
+		ThreeZombiesOneBarrel.Name = "Three Zombies, One Barrel";
+		CurbStomp.Name = "Curb Stomp";
+		QuiteTheCollector.Name = "Quite The Collector";
+		WalkThePath.Name = "Walk The Path";
+		BirdsEyeView.Name = "Bird's Eye View";
+		ToBeKnighted.Name = "To Be Knighted";
+		Chiropractor.Name = "Chiropractor";
+		SearchingHighAndLow.Name = "Searching High And Low";
+		Overkiller.Name = "Overkiller";
+		DeadManStalking.Name = "Dead Man Stalking";
+		MomentumSwing.Name = "Momentum Swing";
+		CloseEncounters.Name = "Close Encounters";
+		DoubleTake.Name = "Double Take";
+		HideAndSeek.Name = "Hide And Seek";
+		VarietyIsTheSpiceOfDeathII.Name = "Variety Is The Spice Of Death II";
+		ThreadTheNeedle.Name = "Thread The Needle";
+		AtopTheMountain.Name = "Atop The Mountain";
+		Dominator.Name = "Dominator";
+		APinPopsABalloon.Name = "A Pin Pops A Balloon";
+		TwoMouthsToFeed.Name = "Two Mouths To Feed";
+		WaitForIt.Name = "Wait For It";
+		VarietyIsTheSpiceOfDeathIII.Name = "Variety Is The Spice Of Death III";
+		GorePinata.Name = "Gore Piñata";
+		MyTeethAreSharper.Name = "My Teeth Are Sharper";
+		HoldStill.Name = "Hold Still";
+		BigREDACTEDGun.Name = "Big [REDACTED] Gun";
+		
+		//[DoomKrakken]: Also assign descriptions ASAP.
+		TwoFer.Desc = "Kill 2 troopers/sergeants with one trigger pull from the Shotgun.";
+		VarietyIsTheSpiceOfDeathI.Desc = "Perform 5 different Glory Kills on troopers/sergeants.";
+		QuiteTheExplorer.Desc = "Find 3 Secrets.";
+		ThreeZombiesOneBarrel.Desc = "Kill 3 troopers/sergeants with one Explosive Barrel.";
+		CurbStomp.Desc = "Perform 3 \"Death From Above\" Glory Kills on Chaingunners.";
+		QuiteTheCollector.Desc = "Find 2 items.";
+		WalkThePath.Desc = "Interact with a Rune Trial Stone";
+		BirdsEyeView.Desc = "Acquire an Automap.";
+		ToBeKnighted.Desc = "Perform 2 \"Death From Above\" Glory Kills on Bruiser Knights.";
+		Chiropractor.Desc = "Perform 4 Glory Kills on the Imp from behind.";
+		SearchingHighAndLow.Desc = "Find 3 Secrets.";
+		Overkiller.Desc = "Kill 15 enemies using Quad Damage.";
+		DeadManStalking.Desc = "Earn 4 Praetor Tokens.";
+		MomentumSwing.Desc = "Kill 10 enemies while using powerups.";
+		CloseEncounters.Desc = "Kill 5 enemies with the Chainsaw.";
+		DoubleTake.Desc = "Interact with 2 Rune Trial Stones.";
+		HideAndSeek.Desc = "Find 2 items.";
+		VarietyIsTheSpiceOfDeathII.Desc = "Perform 5 different Glory Kills on Chaingunners.";
+		ThreadTheNeedle.Desc = "Kill 10 enemies with a single shot.";
+		AtopTheMountain.Desc = "Perform a \"Death From Above\" Glory Kill on a Bruiser Baron.";
+		Dominator.Desc = "Kill 20 enemies while using powerups.";
+		APinPopsABalloon.Desc = "Kill a Mancubus with the Pistol.";
+		TwoMouthsToFeed.Desc = "Kill 2 Cacodemons with one shot.";
+		WaitForIt.Desc = "Kill 10 enemies with Explosive Barrels.";
+		VarietyIsTheSpiceOfDeathIII.Desc = "Perform 5 different Glory Kills on Imps.";
+		GorePinata.Desc = "Kill 3 enemies with one Frag Grenade.";
+		MyTeethAreSharper.Desc = "Kill a Cacodemon with the Chainsaw.";
+		HoldStill.Desc = "Kill two Bruiser Barons with one shot.";
+		BigREDACTEDGun.Desc = "Kill 25 enemies with the BFG.";
+		
+		//[DoomKrakken]: And also assign the desired max amounts for each challenge to keep track of.
+		TwoFer.MaxAmount = 1;
+		VarietyIsTheSpiceOfDeathI.MaxAmount = 5;
+		QuiteTheExplorer.MaxAmount = 3;
+		ThreeZombiesOneBarrel.MaxAmount = 1;
+		CurbStomp.MaxAmount = 3;
+		QuiteTheCollector.MaxAmount = 2;
+		WalkThePath.MaxAmount = 1;
+		BirdsEyeView.MaxAmount = 1;
+		ToBeKnighted.MaxAmount = 2;
+		Chiropractor.MaxAmount = 4;
+		SearchingHighAndLow.MaxAmount = 3;
+		Overkiller.MaxAmount = 15;
+		DeadManStalking.MaxAmount = 4;
+		MomentumSwing.MaxAmount = 10;
+		CloseEncounters.MaxAmount = 5;
+		DoubleTake.MaxAmount = 2;
+		HideAndSeek.MaxAmount = 2;
+		VarietyIsTheSpiceOfDeathII.MaxAmount = 5;
+		ThreadTheNeedle.MaxAmount = 1;
+		AtopTheMountain.MaxAmount = 1;
+		Dominator.MaxAmount = 20;
+		APinPopsABalloon.MaxAmount = 1;
+		TwoMouthsToFeed.MaxAmount = 1;
+		WaitForIt.MaxAmount = 10;
+		VarietyIsTheSpiceOfDeathIII.MaxAmount = 5;
+		GorePinata.MaxAmount = 1;
+		MyTeethAreSharper.MaxAmount = 1;
+		HoldStill.MaxAmount = 1;
+		BigREDACTEDGun.MaxAmount = 25;
+		
+		//[DoomKrakken]: Push all of these into an array for accessibility. :D
+		ChallengeData.Push(TwoFer);
+		ChallengeData.Push(VarietyIsTheSpiceOfDeathI);
+		ChallengeData.Push(QuiteTheExplorer);
+		ChallengeData.Push(ThreeZombiesOneBarrel);
+		ChallengeData.Push(CurbStomp);
+		ChallengeData.Push(QuiteTheCollector);
+		ChallengeData.Push(WalkThePath);
+		ChallengeData.Push(BirdsEyeView);
+		ChallengeData.Push(ToBeKnighted);
+		ChallengeData.Push(Chiropractor);
+		ChallengeData.Push(SearchingHighAndLow);
+		ChallengeData.Push(Overkiller);
+		ChallengeData.Push(DeadManStalking);
+		ChallengeData.Push(MomentumSwing);
+		ChallengeData.Push(CloseEncounters);
+		ChallengeData.Push(DoubleTake);
+		ChallengeData.Push(HideAndSeek);
+		ChallengeData.Push(VarietyIsTheSpiceOfDeathII);
+		ChallengeData.Push(ThreadTheNeedle);
+		ChallengeData.Push(AtopTheMountain);
+		ChallengeData.Push(Dominator);
+		ChallengeData.Push(APinPopsABalloon);
+		ChallengeData.Push(TwoMouthsToFeed);
+		ChallengeData.Push(WaitForIt);
+		ChallengeData.Push(VarietyIsTheSpiceOfDeathIII);
+		ChallengeData.Push(GorePinata);
+		ChallengeData.Push(MyTeethAreSharper);
+		ChallengeData.Push(HoldStill);
+		ChallengeData.Push(BigREDACTEDGun);
+		ChangeStatNum(STAT_STATIC);
+		Return Self;
+	}
+	Static EOA_ChallengeArchive Get()
+	{
+		ThinkerIterator It = ThinkerIterator.Create("EOA_ChallengeArchive", STAT_STATIC);
+		Let GVars = EOA_ChallengeArchive(It.Next());
+		If (GVars == Null)
+		{
+			GVars = New("EOA_ChallengeArchive").Init();
+		}
+		Return GVars;
+	}
+	Static Clearscope EOA_ChallengeArchive Retrieve() //[DoomKrakken]: UI-friendly version.  Gluten-free, too! XD
+	{
+		Let It = ThinkerIterator.Create("EOA_ChallengeArchive", STAT_STATIC);
+		Let GVars = EOA_ChallengeArchive(It.Next());
+		If (!GVars)
+		{
+			Return Null;
+		}
+		Return GVars;		
+	}
+	Static Void RetrieveChallenges()
+	{
+		Let Challenges = EOA_ChallengeArchive.Get();
+		If (Challenges)
+		{
+			//[DoomKrakken]: Check if conditions in the map have allowed for the challenge to be completed.
+			For (Int i = 0; i < Challenges.ChallengeData.Size(); i++)
+			{
+				If (Challenges.ChallengeData[i].Selected && Challenges.SelectedChallenges.Find(Challenges.ChallengeData[i].Name) == Challenges.SelectedChallenges.Size())
+				{
+					Challenges.UnselectedChallenges.Push(Challenges.ChallengeData[i].Name);
+				}
+			}
+			/*For (Int i = 0; i < Challenges.UnselectedChallenges.Size(); i++)
+			{
+				Console.PrintF("%d: UnselectedChallenges: %s", i, Challenges.UnselectedChallenges[i]);
+			}*/
+		}
+	}
+	Static String SelectNewChallenge()
+	{
+		Let Challenges = EOA_ChallengeArchive.Get();
+		If (Challenges)
+		{
+			If (Challenges.UnselectedChallenges.Size() < 1)
+			{
+				Return "";
+			}
+			Int Idx = Random[EOA](0, Challenges.UnselectedChallenges.Size() - 1);
+			String Ret = Challenges.UnselectedChallenges[Idx];
+			Challenges.UnselectedChallenges.Delete(Idx, 1);
+			Return Ret;
+		}
+		Return "";
+	}
+	Static SavageryArray QueueGloryKills()
+	{
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			PlayerInfo Player = Players[i];
+			If (Player && Player.Mo && PlayerInGame[i] && Player.Mo.Tracer)
+			{
+				Let VictimInfo = New("SavageryArray");
+				VictimInfo.Victim = Player.Mo.Tracer;
+				VictimInfo.ClassName = VictimInfo.Victim.GetClassName();
+				Int VictimAngle = Int(VictimInfo.Victim.DeltaAngle(VictimInfo.Victim.AngleTo(Player.Mo), VictimInfo.Victim.Angle)); //Difference in angle between inflictor and victim.
+				If (-22.5 < VictimAngle && VictimAngle < 22.5)
+				{
+					VictimInfo.Angle = 0;
+				}
+				Else If (22.5 <= VictimAngle && VictimAngle < 67.5)
+				{
+					VictimInfo.Angle = 1;
+				}
+				Else If (67.5 <= VictimAngle && VictimAngle < 112.5)
+				{
+					VictimInfo.Angle = 2;
+				}
+				Else If (112.5 <= VictimAngle && VictimAngle < 147.5)
+				{
+					VictimInfo.Angle = 3;
+				}
+				Else If (abs(VictimAngle) >= 147.5)
+				{
+					VictimInfo.Angle = 4;
+				}
+				Else If (-147.5 < VictimAngle && VictimAngle <= -112.5)
+				{
+					VictimInfo.Angle = 5;
+				}
+				Else If (-112.5 < VictimAngle && VictimAngle <= -67.5)
+				{
+					VictimInfo.Angle = 6;
+				}
+				Else If (-67.5 < VictimAngle && VictimAngle <= -22.5)
+				{
+					VictimInfo.Angle = 7;
+				}
+				If (Player.Mo.CountInv("PowerBerserk"))
+				{
+					VictimInfo.MOD = "Berserk";
+				}
+				Else If (Player.Mo.CountInv("ChainsawRipAndTear"))
+				{
+					VictimInfo.MOD = "Chainsaw";
+				}
+				Else
+				{
+					VictimInfo.MOD = "Normal";
+				}
+				VictimInfo.DeathFromAbove = Player.Mo.CountInv("DeathFromAbove");
+				Return VictimInfo;
+				//Console.PrintF("ClassName: %s, Angle: %d, MOD: %s, DeathFromAbove: %d", VictimInfo.ClassName, VictimInfo.Angle, VictimInfo.MOD, VictimInfo.DeathFromAbove); //[DoomKrakken]: Debugging (move one line up when uncommented).
+			}
+		}
+		Return Null;
+	}
+}
+
+Class EOA_ChallengeData
+{
+	Bool Selected;
+	Bool Active;
+	Int OldAmount;
+	Int Amount;
+	Int MaxAmount;
+	Int ChallengeNum;
+	String MapName;
+	String Name;
+	String Desc;
+	Array<SavageryArray> GloryKills; //[DoomKrakken]: This array type used in the Savagery Upgrade Challenge for recording information on different Glory Kills performed.  It's PERFECT for any other Glory Kill-related challenges!
+}
+
+Class PowerChallenge1Active : Powerup
+{
+	Default
+	{
+		Powerup.Duration -5;
+	}
+}
+
+Class PowerChallenge2Active : Powerup
+{
+	Default
+	{
+		Powerup.Duration -5;
+	}
+}
+
+Class PowerChallenge3Active : Powerup
+{
+	Default
+	{
+		Powerup.Duration -5;
+	}
+}
+
+Class TwoFerChallengeCounter : Inventory
+{
+	Default
+	{
+		Inventory.MaxAmount 2;
+	}
+}
+
+Class ThreeZombiesOneBarrelChallengeCounter : Inventory
+{
+	Bool Expired;
+	Default
+	{
+		Inventory.MaxAmount 3;
+	}
+	Override Void DoEffect()
+	{
+		If (Expired)
+		{
+			Destroy();
+		}
+		Expired = True;
+		Super.DoEffect();
+	}
+}
+
+Class GorePinataChallengeCounter : ThreeZombiesOneBarrelChallengeCounter{}
+
+Class ThreadTheNeedleChallengeCounter : Inventory
+{
+	Default
+	{
+		Inventory.MaxAmount 10;
+	}
+}
+
+Class TwoMouthsToFeedChallengeCounter : Inventory
+{
+	Default
+	{
+		Inventory.MaxAmount 2;
+	}
+}
+
+Class HoldStillChallengeCounter : TwoMouthsToFeedChallengeCounter{}

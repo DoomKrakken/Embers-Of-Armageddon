@@ -1,0 +1,202 @@
+Class EOAWeapons : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EOA_Chainsaw");
+			A_GiveInventory("EOA_Pistol"); //Just in case. ;)
+			A_GiveInventory("EOA_CombatShotgun");
+			A_GiveInventory("EOA_SuperShotgun");
+			A_GiveInventory("EOA_HeavyAssaultRifle");
+			A_GiveInventory("EOA_RocketLauncher");
+			A_GiveInventory("EOA_PlasmaRifle");
+			A_GiveInventory("EOA_GaussCannon");
+			A_GiveInventory("EOA_Chaingun");
+			A_GiveInventory("EOA_BFG");
+		}
+		Stop;
+	}
+}
+
+Class EOAMods : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("CSGMods");
+			A_GiveInventory("HARMods");
+			A_GiveInventory("RLRMods");
+			A_GiveInventory("PLRMods");
+			A_GiveInventory("GCNMods");
+			A_GiveInventory("CGNMods");
+		}
+		Stop;
+	}
+}
+
+Class EOAUpgrades : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EMGUpgrades");
+			A_GiveInventory("CSGUpgrades");
+			A_GiveInventory("SSGUpgrades");
+			A_GiveInventory("HARUpgrades");
+			A_GiveInventory("RLRUpgrades");
+			A_GiveInventory("PLRUpgrades");
+			A_GiveInventory("GCNUpgrades");
+			A_GiveInventory("CGNUpgrades");
+		}
+		Stop;
+	}
+}
+
+Class EOAMastery : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("IncreasedPower");
+			A_GiveInventory("PowerShot");
+			A_GiveInventory("ClusterStrike");
+			A_GiveInventory("DoubleTrouble");
+			A_GiveInventory("BottomlessMissiles");
+			A_GiveInventory("DevastatorRounds");
+			A_GiveInventory("MultiTargeting");
+			A_GiveInventory("ExternalPayload");
+			A_GiveInventory("HeatedCore");
+			A_GiveInventory("ChainStun");
+			A_GiveInventory("VolatileDischarge");
+			A_GiveInventory("MobileSiege");
+			A_GiveInventory("IncendiaryRounds");
+			A_GiveInventory("UltimateCooling");		
+		}
+		Stop;
+	}
+}
+
+Class EOAEquipment : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EOA_FragGrenadePickup");
+			A_GiveInventory("EOA_HologramPickup");
+			A_GiveInventory("EOA_SiphonGrenadePickup");
+		}
+		Stop;
+	}
+}
+
+Class PraetorSuitUpgrades : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EnvironmentalResistance");
+			A_GiveInventory("HazardProtection");
+			A_GiveInventory("SelfPreservation");
+			A_GiveInventory("BarrelsOFun");
+			A_GiveInventory("AreaScanningTechnology");
+			A_GiveInventory("ItemAwareness");
+			A_GiveInventory("SecretFinder");
+			A_GiveInventory("FullView");
+			A_GiveInventory("EquipmentSystem");
+			A_GiveInventory("QuickCharge");
+			A_GiveInventory("StockUp");
+			A_GiveInventory("RapidCharge");
+			A_GiveInventory("PowerupEffectiveness");
+			A_GiveInventory("PowerSurge");
+			A_GiveInventory("HealingPower");
+			A_GiveInventory("PowerExtender");
+			A_GiveInventory("Dexterity");
+			A_GiveInventory("Adept");
+			A_GiveInventory("QuickHands");
+			A_GiveInventory("HotSwap");
+		}
+		Stop;
+	}
+}
+
+Class EOARunes : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("Vacuum");
+			A_GiveInventory("DazedAndConfused");
+			A_GiveInventory("AmmoBoost");
+			A_GiveInventory("EquipmentPower");
+			A_GiveInventory("Savagery");
+			A_GiveInventory("SeekAndDestroy");
+			A_GiveInventory("InFlightMobility");
+			A_GiveInventory("ArmoredOffensive");
+			A_GiveInventory("BloodFueled");
+			A_GiveInventory("IntimacyIsBest");
+			A_GiveInventory("RichGetRicher");
+			A_GiveInventory("SavingThrow");
+		}
+		Stop;
+	}
+}
+
+Class EOARunesII : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("VacuumII");
+			A_GiveInventory("DazedAndConfusedII");
+			A_GiveInventory("AmmoBoostII");
+			A_GiveInventory("EquipmentPowerII");
+			A_GiveInventory("SavageryII");
+			A_GiveInventory("SeekAndDestroyII");
+			A_GiveInventory("InFlightMobilityII");
+			A_GiveInventory("ArmoredOffensiveII");
+			A_GiveInventory("BloodFueledII");
+			A_GiveInventory("IntimacyIsBestII");
+			A_GiveInventory("RichGetRicherII");
+			A_GiveInventory("SavingThrowII");
+		}
+		Stop;
+	}
+}
+
+Class EOAAll : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EOAWeapons");
+			A_GiveInventory("EOAMods");
+			A_GiveInventory("EOAUpgrades");
+			A_GiveInventory("EOAMastery");
+			A_GiveInventory("EOAEquipment");
+			A_GiveInventory("EOARunes");
+			A_GiveInventory("EOARunesII");
+			A_GiveInventory("ArgentCellBonuses");
+			A_GiveInventory("PraetorSuitUpgrades");
+			A_GiveInventory("EOA_ThrustBoots");
+		}
+		Stop;
+	}
+}

@@ -1,0 +1,537 @@
+Class SuperShotgunSelected : EOA_Token {}
+
+//Improvements - These improve the Super Shotgun's capabilities.
+Class SSGUraniumCoating : EOA_Token {} //Shots penetrate enemies.
+Class FasterReload : EOA_Token {} //As it says on the label...
+
+Class MC_DoubleTrouble : EOA_MasteryChallengeToken //Kill multiple enemies with one shot 30 times.
+{
+	Default
+	{
+		EOA_MasteryChallengeToken.MasteryItem "DoubleTrouble";
+		EOA_MasteryChallengeToken.ChallengeCounter "DoubleTroubleMasteryCounter";
+		Tag "Double Trouble";
+	}
+}
+
+Class DoubleTrouble : EOA_Token {} //Mastery Upgrade - Fire twice before needing to reload (you can two fire full-power shots at half the ammo cost per shot before needing to reload).
+
+Class DoubleTroubleKillCounter1 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerDoubleTroubleKillCounter1";
+		Powerup.Duration 18;
+	}
+}
+
+Class DoubleTroubleKillCounter2 : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerDoubleTroubleKillCounter2";
+		Powerup.Duration 18;
+	}
+}
+
+Class DoubleTroubleDampener : EOA_TempToken
+{
+	Default
+	{
+		Powerup.Type "PowerDoubleTroubleDampener";
+		Powerup.Duration 18;
+	}
+}
+
+Class PowerDoubleTroubleKillCounter1 : PowerEOA_TempToken {}
+Class PowerDoubleTroubleKillCounter2 : PowerEOA_TempToken {}
+Class PowerDoubleTroubleDampener: PowerEOA_TempToken {}
+
+Class DoubleTroubleMasteryCounter : EOA_Token {Default {Inventory.MaxAmount 30;} }
+
+Class SSGZoomCounter : EOA_Token {}
+Class SSGReloadCounter : EOA_Token {}
+Class SSGLoadedCounter : EOA_Token {}
+Class SSGEmptyChamberCounter : EOA_Token {}
+Class SSGShots : EOA_Token {Default {Inventory.MaxAmount 2;} }
+
+Class SSGUpgrades : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("SSGUraniumCoating");
+			A_GiveInventory("FasterReload");
+		}
+		Stop;
+	}
+}
+
+Class EOA_SuperShotgun : EOA_Weapon
+{
+	Default
+	{
+		Inventory.Icon "ICONSSG";
+		Weapon.AmmoType "EOA_ShellAmmo";
+		Weapon.AmmoUse 2;
+		Weapon.AmmoGive 20;
+		Weapon.SlotNumber 3;
+		EOA_Weapon.MeleeTics 32;
+		Inventory.PickupMessage "Super Shotgun";
+		Tag "Super Shotgun";
+		+EOA_WEAPON.SEMIAUTO
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("SSG/Fire");
+		MarkSound("SSG/Open");
+		MarkSound("SSG/Eject");
+		MarkSound("SSG/EjectShell");
+		MarkSound("SSG/Load");
+		MarkSound("SSG/LoadShell");
+		MarkSound("SSG/Close");
+		MarkSound("SSG/ZoomIn");
+		MarkSound("SSG/ZoomOut");
+		Super.MarkPrecacheSounds();
+	}
+	Override Void DoEffect()
+	{
+		//Mastery - Double Trouble (Improvements)
+		If (!Owner.CountInv("DoubleTrouble") && Owner.CountInv("SSGUraniumCoating") && Owner.CountInv("FasterReload"))
+		{
+			//[DoomKrakken]: Had to order it like this so that the completion message had time to display before the necessary counters were taken away.
+			Owner.A_GiveInventory("MC_DoubleTrouble");
+			If (Owner.CountInv("DoubleTroubleMasteryCounter") >= 30)
+			{
+				Owner.A_GiveInventory("DoubleTrouble");
+				Owner.A_TakeInventory("DoubleTroubleMasteryCounter");
+			}
+			If (Owner.CountInv("PowerDoubleTroubleKillCounter1") && Owner.CountInv("PowerDoubleTroubleKillCounter2") && !Owner.CountInv("PowerDoubleTroubleDampener"))
+			{
+				Owner.A_GiveInventory("DoubleTroubleDampener");
+				Owner.A_GiveInventory("DoubleTroubleMasteryCounter");
+			}
+		}
+		Else
+		{
+			Owner.A_TakeInventory("MC_DoubleTrouble");
+		}
+		AmmoUse1 = Owner.CountInv("DoubleTrouble") ? 1 : 2;
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon != Self)
+		{
+			If (Owner.CountInv("SuperShotgunSelected"))
+			{
+				Owner.A_TakeInventory("SuperShotgunSelected");
+				Owner.A_TakeInventory("SSGReloadCounter");
+				Owner.A_TakeInventory("SSGLoadedCounter");
+				Owner.A_TakeInventory("SSGZoomCounter");
+				FOVScale = 1;
+			}
+		}
+		Super.DoEffect();
+	}
+	States
+	{
+	Spawn:
+		SSGW A -1;
+		Stop;
+	Select:
+		TNT1 A 0
+		{
+			Invoker.SemiAutoOverride = True;
+			A_WeaponOffset();
+			A_GiveInventory("SuperShotgunSelected");
+			A_SetInventory("SSGShots", min(1 + CountInv("DoubleTrouble"), CountInv("EOA_ShellAmmo")));
+			If (GetCVar("EOA_Reticles"))
+			{
+				ACS_NamedExecuteAlways("SSGReticle", 0);
+				A_SetCrosshair(99);
+			}
+			Else
+			{
+				A_SetCrosshair(0);
+			}
+		}
+		TNT1 A 0 A_Raise();
+		Wait;
+	Deselect:
+		TNT1 A 0
+		{
+			A_ZoomFactor(1);
+			A_TakeInventory("SSGReloadCounter");
+			A_TakeInventory("SSGLoadedCounter");
+			If (CountInv("SSGZoomCounter"))
+			{
+				A_TakeInventory("SSGZoomCounter");
+				EOA_SpawnNoiseMaker("SSG/ZoomOut");
+			}
+		}
+		SSGR HFDB 1;
+		TNT1 A 4
+		{
+			A_TakeInventory("SuperShotgunSelected");
+			A_SetTics(4 * !CountInv("Adept") * !CountInv("PowerBerserk"));
+		}
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	Ready:
+		TNT1 A 0
+		{
+			If (Level.Time)
+			{
+				EOA_SpawnNoiseMaker("Weapon/Switch");
+			}
+		}
+		SSGR ACEG 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		Goto ReadyLoop;
+	ReRaise:
+		TNT1 A 0 A_WeaponOffset(-144, 32);
+		SSGR ABDEGH 1
+		{
+			EOA_WeaponReady(WRF_NOFIRE|WRF_NOBOB|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			A_WeaponOffset(24, 0, WOF_KEEPY|WOF_ADD);
+		}
+	ReadyLoop:
+		SSGI A 1
+		{
+			If (!CountInv("SSGShots") && CountInv("EOA_ShellAmmo"))
+			{
+				Return ResolveState("ReloadTransition");
+			}
+			A_TakeInventory("SSGLoadedCounter");
+			EOA_WeaponReady(WRF_NOSWITCH * Invoker.SemiAutoOverride|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK) * !Invoker.SemiAutoOverride|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+			Invoker.SemiAutoOverride = False;
+			Return ResolveState(Null);
+		}
+		Wait;
+	ReadyZoom:
+		SSGZ E 1
+		{
+			If (CountInv("Grabbing_A_Ledge") || !(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK))
+			{
+				Return ResolveState("ZoomOut");
+			}
+			Else If (!CountInv("SSGShots") && CountInv("EOA_ShellAmmo"))
+			{
+				Return ResolveState("ReloadTransition");
+			}
+			EOA_WeaponReady(WRF_NOSWITCH * Invoker.SemiAutoOverride|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM));
+			Invoker.SemiAutoOverride = False;
+			Return ResolveState(Null);
+		}
+		Loop;
+	Fire:
+		TNT1 A 0
+		{
+			Return A_JumpIf(CountInv("EOA_ShellAmmo") >= 2 - CountInv("DoubleTrouble") || CheckInfiniteAmmo(), 2);
+		}
+		TNT1 A 0 A_SelectWeapon("EOA_Weapon", SWF_SELECTPRIORITY);
+		SGZF A 0 A_JumpIfInventory("SSGZoomCounter", 1, 2);
+		SSGF A 0 ;
+		"####" "#" 0
+		{
+			EOA_SpawnNoiseMaker("SSG/Fire");
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+			A_AlertMonsters();
+			A_TakeInventory("SSGShots", 1);
+			EOA_FireBullets(16 - 6 * CountInv("SSGZoomCounter"), 4 - 1.5 * CountInv("SSGZoomCounter"), 16, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "SuperShotgunTracer", GetViewZ(), 4 - CountInv("SSGZoomCounter") + GetRelVelY() / 3);
+			EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -6, 0, 0.5);
+			EOA_SpawnCustomDynamicLight("SSG_Light", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 2, (0, 0, Height / 2), 0.1);
+			If (!CountInv("SSGShots"))
+			{
+				A_GiveInventory("SSGReloadCounter");
+			}
+		}
+		"####" A 1 EOA_WeaponReady(WRF_NOFIRE, EOA_DISABLEHASTE);
+		"####" BCDEFFFGHIJKL 1
+		{
+			If (CountInv("Grabbing_A_Ledge") && CountInv("SSGZoomCounter"))
+			{
+				EOA_SpawnNoiseMaker("SSG/ZoomOut");
+				A_ZoomFactor(1);
+				A_TakeInventory("SSGZoomCounter");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY * !(CountInv("DoubleTrouble") && CountInv("SSGShots"))|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+			If (!(GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && CountInv("SSGZoomCounter") && CountInv("SSGShots"))
+			{
+				EOA_SpawnNoiseMaker("SSG/ZoomOut");
+				A_ZoomFactor(1);
+				A_TakeInventory("SSGZoomCounter");
+			}
+			Else If (((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ALTATTACK)) && !CountInv("SSGZoomCounter") && CountInv("SSGShots"))
+			{
+				EOA_SpawnNoiseMaker("SSG/ZoomIn");
+				A_ZoomFactor(1.25, ZOOM_NOSCALETURNING);
+				A_GiveInventory("SSGZoomCounter");
+			}
+		}
+		"####" A 0 A_JumpIf(CountInv("EOA_ShellAmmo") >= 2 - CountInv("DoubleTrouble") || CheckInfiniteAmmo(), 2);
+		"####" A 0 A_SelectWeapon("EOA_Weapon", SWF_SELECTPRIORITY);
+		"####" A 0 A_JumpIfInventory("SSGShots", 1, 1);
+		Goto SSGReload;
+		"####" MNOP 1
+		{
+			If (CountInv("Grabbing_A_Ledge") && CountInv("SSGZoomCounter"))
+			{
+				A_ZoomFactor(1);
+				A_TakeInventory("SSGZoomCounter");
+				EOA_SpawnNoiseMaker("SSG/ZoomOut");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE);
+		}
+		"####" "#" 0 A_JumpIfInventory("SSGZoomCounter", 1, "ReadyZoom");
+		Goto ReadyLoop;
+	ReloadTransition:
+		SSGF PONM 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+	SSGReload:
+		SSGL A 1 
+		{
+			If (CountInv("SSGZoomCounter"))
+			{
+				A_ZoomFactor(1);
+				A_TakeInventory("SSGZoomCounter");
+				EOA_SpawnNoiseMaker("SSG/ZoomOut");
+			}
+			EOA_SpawnNoiseMaker("SSG/Open", 0, 0.5);
+			If (CountInv("SSGEmptyChamberCounter"))
+			{
+				A_TakeInventory("SSGEmptyChamberCounter");
+			}
+			Else
+			{
+				EOA_SpawnNoiseMaker("SSG/Eject", 0, 0.3);
+				EOA_SpawnNoiseMaker("SSG/EjectShell", 0, 0.3);
+				A_FireProjectile("EOA_EmptyShotShell2", -60 - abs(Pitch) / 2, 0, 1, 0, 0, -(5 + Pitch / 2));
+				A_FireProjectile("EOA_EmptyShotShell2", -60 - abs(Pitch) / 2, 0, 1, 0, 0, -(5 + Pitch / 2));
+			}
+		}
+		SSGL BBBBBBCDEFGHIJKLL 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("FasterReload"));
+		TNT1 A 0 
+		{
+			EOA_SpawnNoiseMaker("SSG/Load", 0, 0.5);
+			EOA_SpawnNoiseMaker("SSG/LoadShell", 0, 0.5);
+			A_TakeInventory("SSGReloadCounter");
+			A_GiveInventory("SSGLoadedCounter");
+			A_GiveInventory("SSGShots", 1 + CountInv("DoubleTrouble"));
+		}
+		SSGL MNOPQRSTUUU 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("FasterReload"));
+		SSGL VW 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_DISABLEHASTE);
+		TNT1 A 0 
+		{	
+			EOA_SpawnNoiseMaker("SSG/Close", 0, 0.5);
+			A_TakeInventory("SSGLoadedCounter");
+		}
+		SSGL XXYY 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("FasterReload"));
+		SSGI AAAAAA 1 EOA_WeaponReady(WRF_NOFIRE|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT|EOA_WEAPSPEEDUPGRADE * CountInv("FasterReload"));
+		Goto ReadyLoop;
+	AltFire:
+		TNT1 A 0
+		{
+			EOA_SpawnNoiseMaker("SSG/ZoomIn");
+			A_ZoomFactor(1.25, ZOOM_NOSCALETURNING);
+			A_GiveInventory("SSGZoomCounter");
+		}
+		SSGZ ABCDE 1
+		{
+			If (CountInv("Grabbing_A_Ledge"))
+			{
+				Return ResolveState("ZoomOut");
+			}
+			EOA_WeaponReady(WRF_NOPRIMARY * !CountInv("SSGShots")|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY * !((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)), EOA_DISABLEHASTE);
+			Return ResolveState(Null);
+		}
+		Goto ReadyZoom;
+	ZoomOut:
+		"####" "#" 0
+		{
+			EOA_SpawnNoiseMaker("SSG/ZoomOut");
+			A_ZoomFactor(1);
+			A_TakeInventory("SSGZoomCounter");
+		}
+		SSGZ EDCBA 1 EOA_WeaponReady(WRF_NOPRIMARY * !CountInv("SSGShots")|WRF_NOPRIMARY * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_NOSECONDARY * !((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		Goto ReadyLoop;
+	Zoom:
+		TNT1 A 0
+		{
+			If (!CountInv("SSGShots"))
+			{
+				A_GiveInventory("SSGEmptyChamberCounter");
+			}
+			If (CountInv("SSGZoomCounter"))
+			{
+				EOA_SpawnNoiseMaker("SSG/ZoomOut");
+				A_ZoomFactor(1);
+				A_TakeInventory("SSGZoomCounter");
+			}
+		}
+		SGT3 A 0 A_JumpIfInventory("SSGLoadedCounter", 1, "CloseShotgun");
+		SGT2 A 0 A_JumpIfInventory("SSGReloadCounter", 1, "CloseShotgun");
+		Goto MeleeContinue;
+	CloseShotgun:
+		"####" "#" 0 A_TakeInventory("SSGReloadCounter");
+		"####" AB 1
+		{
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+			If (CountInv("RipAndTear"))
+			{
+				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+				Return ResolveState("GloryKill");
+			}
+			Else
+			{
+				Return ResolveState(Null);
+			}
+		}
+		"####" C 1
+		{
+			EOA_SpawnNoiseMaker("SSG/Close", 0, 0.5);
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+			If (CountInv("RipAndTear"))
+			{
+				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+				Return ResolveState("GloryKill");
+			}
+			Return ResolveState(Null);
+		}
+		"####" D 1
+		{
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+			If (CountInv("RipAndTear"))
+			{
+				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+				Return ResolveState("GloryKill");
+			}
+			Return ResolveState(Null);
+		}
+		SSGT E 1
+		{
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			{
+				EOA_CheckGloryKill();
+			}
+			If (CountInv("RipAndTear"))
+			{
+				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
+				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+				Return ResolveState("GloryKill");
+			}
+			Return ResolveState(Null);
+		}
+		Goto Super::Melee+2;
+	MeleeContinue:
+		SSGT A 0;
+		Goto Super::Melee;
+	UseEquipment:
+		SGT3 A 0 A_JumpIfInventory("SSGLoadedCounter", 1, "CloseShotgun2");
+		SGT2 A 0 A_JumpIfInventory("SSGReloadCounter", 1, "CloseShotgun2");
+		Goto UseEquipmentContinue;
+	CloseShotgun2:
+		"####" "#" 0 A_TakeInventory("SSGReloadCounter");
+		"####" AB 1;
+		"####" C 1
+		{
+			EOA_SpawnNoiseMaker("SSG/Close", 0, 0.5);
+			If (!CountInv("SSGShots"))
+			{
+				A_GiveInventory("SSGEmptyChamberCounter");
+			}
+		}
+		"####" D 1;
+		SSGT E 1;
+		Goto Super::UseEquipment+2;
+	UseEquipmentContinue:
+		SSGT A 0;
+		Goto Super::UseEquipment;
+	}
+}
+
+Class SuperShotgunTracer : CombatShotgunTracer
+{
+	Default
+	{
+		DamageFunction 16;
+		EOA_Projectile.PuffType "SuperShotgunPuff";
+		EOA_Projectile.PointBlankDamage 30;
+		EOA_Projectile.PBDamageFalloffDistStart 240;
+		EOA_Projectile.PBDamageFalloffDistEnd 290;
+		EOA_Projectile.MaxDamage 24;
+		EOA_Projectile.DamageFalloffDistStart 340;
+	}
+	Override Void PostBeginPlay()
+	{
+		If (Target)
+		{
+			If (Target.CountInv("SSGUraniumCoating"))
+			{
+				If (!Target.CountInv("PowerQDMG"))
+				{
+					A_SetTranslation("Silver");
+				}
+				bRIPPER = True;
+			}
+		}
+		Super.PostBeginPlay();
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		If (Self.Target)
+		{
+			If (Self.Target.CountInv("SSGUraniumCoating"))
+			{
+				If (!Self.Target.CountInv("PowerQDMG"))
+				{
+					A_SetTranslation("Silver");
+				}
+				If (!bRIPPER)
+				{
+					Damage = 0;
+				}
+				bRIPPER = True;
+			}
+		}
+		Return Super.DoSpecialDamage(Target, Damage, DamageType);
+	}
+}
+
+Class SuperShotgunPuff : CombatShotgunPuff
+{
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			If (CountInv("SSGUraniumCoating", AAPTR_TARGET))
+			{
+				A_SetTranslation("Silver");
+			}
+		}
+		Goto Super::Spawn;
+	}
+}
+
+Class EOA_EmptyShotShell2 : EOA_EmptyShotShell
+{
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_ChangeVelocity(frandom(0.0, 2.0), frandom(0.0, 2.0), frandom(0.0, 2.0), CVF_RELATIVE);
+		Goto Super::SpawnLoop;
+	}
+}

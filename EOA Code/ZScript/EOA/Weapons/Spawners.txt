@@ -1,0 +1,72 @@
+//[DoomKrakken]: I have to spawn weapons in this way because they won't spawn properly from other sources if the check is done in their own Spawn state sequences.
+
+//See the Event Handler's WorldThingSpawned event for future reference.  As that happens after PostBeginPlay, I have to do this under Tick so that the proper variables are set beforehand.
+Class EOA_WeaponReplacer : Actor
+{
+	Bool SecondarySpawn;
+	Override Void Tick()
+	{
+		DropItem DropList = GetDropItems();
+		If (DropList)
+		{
+			If (SecondarySpawn)
+			{
+				DropList = DropList.Next;
+			}
+			A_SpawnItemEx(DropList.Name, Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL, FailChance: 256 * bDROPPED); //Items will fail to spawn if they were dropped.
+		}
+		Destroy();
+	}
+}
+
+//[DoomKrakken]: The order here matters, for it will read the list from bottom to top.
+Class EOA_ShotgunReplacer : EOA_WeaponReplacer
+{
+	Default
+	{
+		DropItem "EOA_SuperShotgun";
+		DropItem "EOA_CombatShotgun";
+	}
+}
+
+Class EOA_SuperShotgunReplacer : EOA_WeaponReplacer
+{
+	Default
+	{
+		DropItem "EOA_SuperShotgun";
+	}
+}
+
+Class EOA_ChaingunReplacer : EOA_WeaponReplacer
+{
+	Default
+	{
+		DropItem "EOA_Chaingun";
+		DropItem "EOA_HeavyAssaultRifle";
+	}
+}
+
+Class EOA_RocketLauncherReplacer : EOA_WeaponReplacer
+{
+	Default
+	{
+		DropItem "EOA_RocketLauncher";
+	}
+}
+
+Class EOA_PlasmaRifleReplacer : EOA_WeaponReplacer
+{
+	Default
+	{
+		DropItem "EOA_GaussCannon";
+		DropItem "EOA_PlasmaRifle";
+	}
+}
+
+Class EOA_BFGReplacer : EOA_WeaponReplacer
+{
+	Default
+	{
+		DropItem "EOA_BFG";
+	}
+}

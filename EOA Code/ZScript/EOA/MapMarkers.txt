@@ -1,0 +1,181 @@
+Mixin Class EOA_MapMarkerUser //: Actor
+{
+	EOA_MapMarker Marker;
+	Class<EOA_MapMarker> MarkerType;
+	Double MarkerScale;
+	Property MarkerType : MarkerType;
+	Property MarkerScale : MarkerScale;
+	Override Void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+		If (MarkerType)
+		{
+			Marker = EOA_MapMarker(Spawn(MarkerType, Pos)); //strongbelly: spawns the map marker
+			If (Marker)
+			{
+				If (!MarkerScale)
+				{
+					MarkerScale = 0.75;
+				}
+				Marker.Init(MarkerScale, Self);
+			}
+		}
+	}
+}
+
+//[DoomKrakken]: The following code was originally made by strongbelly, and edited further by me.
+
+Class EOA_MapMarker : MapMarker //map marker system based on Hellscape Navigator by m8f
+{
+	Bool ItemClaimed;
+	Bool ItemFound;
+	Actor ItemClaimer;
+	Private Actor Item;
+	Default
+	{
+		XScale 0.2;
+		YScale 0.2;
+		Args 0, 0; //[DoomKrakken]: Markers are always visible anywhere on the map.
+	}
+	
+  	Void Init(Double MapScale, Actor Item)
+	{
+		Scale.X *= MapScale;
+		Scale.Y *= MapScale;
+		Self.Item = Item;
+	}
+
+	Override Void Tick()
+	{
+		Super.Tick();
+		If (Item)
+		{
+			SetOrigin(Item.Pos, True);
+		}
+		If (ItemClaimed)
+		{
+			bDORMANT = False;
+			SetState(ResolveState("Claimed"));//set the state when item is used/claimed. Turning to orange icon.
+			Return;
+		}
+		If (!ItemFound)
+		{
+			For (Int i = 0; i < MAXPLAYERS; i++)
+			{
+				PlayerInfo Player = Players[i];
+				If (Player && Player.Mo && PlayerInGame[i])
+				{
+					If (Player.Mo.CountInv("FullView") || Distance3D(Player.Mo) <= 512 * (1 + Player.Mo.CountInv("ItemAwareness")))
+					{
+						bDORMANT = False; //sets it once item is found,
+						ItemFound = True; //and to make it permanently visible in automap.
+						Return; 
+					}
+					bDORMANT = True;
+				}
+			}
+		}
+	}
+}
+
+Class EOA_EliteGuardCorpseMarker : EOA_MapMarker
+{
+	States
+	{
+		Spawn: //state of marker when item is found and will remain here until item is used/claimed.
+		PRIC A -1;
+		Stop;
+		
+		Claimed: //state of marker when item is used/claimed
+		PRIC B -1;
+		Stop;
+	}
+
+}
+
+Class EOA_FieldDroneMarker : EOA_MapMarker
+{
+	States
+	{
+		Spawn: //state of marker when item is found and will remain here until item is used/claimed.
+		DRIC A -1;
+		Stop;
+		
+		Claimed: //state of marker when item is used/claimed
+		DRIC B -1;
+		Stop;
+	}
+
+}  
+
+Class EOA_ArgentCellMarker : EOA_MapMarker
+{
+	States
+	{
+		Spawn: //state of marker when item is found and will remain here until item is used/claimed.
+		ARIC A -1;
+		Stop;
+		
+		Claimed: //state of marker when item is used/claimed
+		ARIC B -1;
+		Stop;
+	}
+
+}
+
+Class EOA_RuneTrialStoneMarker : EOA_MapMarker
+{
+	States
+	{
+		Spawn: //state of marker when item is found and will remain here until item is used/claimed.
+		RNIC A -1;
+		Stop;
+		
+		Claimed: //state of marker when item is used/claimed
+		RNIC B -1;
+		Stop;
+	}
+
+}
+
+Class EOA_LargeArmorMarker : EOA_MapMarker
+{
+	States
+	{
+		Spawn: //state of marker when item is found and will remain here until item is used/claimed.
+		HAIC A -1;
+		Stop;
+		
+		Claimed: //state of marker when item is used/claimed
+		HAIC B -1;
+		Stop;
+	}
+}
+
+Class EOA_AllmapMarker : EOA_MapMarker
+{
+	States
+	{
+		Spawn: //state of marker when item is found and will remain here until item is used/claimed.
+		AMIC A -1;
+		Stop;
+		
+		Claimed: //state of marker when item is used/claimed
+		AMIC B -1;
+		Stop;
+	}
+}
+
+Class EOA_PowerupMarker : EOA_MapMarker
+{
+	States
+	{
+		Spawn: //state of marker when item is found and will remain here until item is used/claimed.
+		PUIC A -1;
+		Stop;
+		
+		Claimed: //state of marker when item is used/claimed
+		PUIC B -1;
+		Stop;
+	}
+}

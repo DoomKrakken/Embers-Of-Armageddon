@@ -1,0 +1,370 @@
+Mixin Class EOA_TempItem
+{
+	Int SpawnDelay;
+	Int AngleOfsDir;
+	Default
+	{
+		Radius 5;
+		Height 10;
+		Speed 20;
+		Gravity 0.5;
+		Scale 0.375;
+		BounceType "Doom";
+		BounceFactor 0.5;
+		BounceSound "Item/Bounce";
+		ReactionTime 1050;
+		+BOUNCEONCEILINGS
+		+BOUNCEONFLOORS
+		+BOUNCEONWALLS
+		+BRIGHT
+		+DONTBLAST
+		+DONTTHRUST
+		+FIXMAPTHINGPOS
+		+FORCEXYBILLBOARD
+		+MBFBOUNCER
+		+NEVERRESPAWN
+		+NOBLOCKMONST
+		+NOTRIGGER
+		+SEEKERMISSILE
+		+SLIDESONWALLS
+		+THRUACTORS
+	}
+	Override Void BeginPlay()
+	{
+		SpawnDelay = random(10, 18);
+		AngleOfsDir = randompick(-1, 1);
+		Super.BeginPlay();
+	}
+	Override Bool TryPickup(In Out Actor Toucher)
+	{
+		If (Super.TryPickup(Toucher))
+		{
+			If (Toucher.CountInv("VacuumSelected") && !Toucher.CountInv("VacuumII"))
+			{
+				Toucher.A_GiveInventory("VacuumChallengeCounter");
+			}
+			Return True;
+		}
+		Return False;
+	}
+	Override Void Tick()
+	{
+		If (EOA_CheckPlayerInRange(20) && Tracer && !Tracer.bKILLED)
+		{
+			bTHRUACTORS = False;
+			If (GetAge() >= SpawnDelay)
+			{
+				Warp(Tracer, 0, 0, 0, 0, WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE|WARPF_WARPINTERPOLATION|WARPF_STOP);
+				Super.Tick();
+				Return;
+			}
+		}
+		Else
+		{
+			bTHRUACTORS = True;
+		}
+		If (GetAge() >= SpawnDelay)
+		{
+			If (EOA_CheckPlayerInRange(256) && Tracer && !Tracer.bKILLED)
+			{
+				bNOCLIP = True;
+				A_SetSpeed(25 + 12.5 * CountInv("VacuumSelected", AAPTR_TRACER) + 12.5 * (CountInv("VacuumSelected", AAPTR_TRACER) * CountInv("VacuumII", AAPTR_TRACER)));
+				A_Face(Tracer, 0, 0, 15 * AngleOfsDir, -10, FAF_MIDDLE, -Tracer.Height / 8);
+				Vel3DFromAngle(Speed, Angle, Pitch);
+				If (!bNOGRAVITY) //[DoomKrakken]: Do the check before the flag is changed, so that this only occurs once.
+				{
+					AngleOfsDir = randompick(-1, 1); //DeltaAngle(Angle, Tracer.Angle) > 0 ? -1 : 1;
+					If (CountInv("VacuumSelected", AAPTR_TRACER))
+					{
+						A_StartSound("Rune/Vacuum");
+					}
+				}
+				bNOGRAVITY = True;
+			}
+			Else
+			{
+				Tracer = Null;
+				If (bNOGRAVITY) //[DoomKrakken]: Do the check before the flag is changed, so that this only occurs once.
+				{
+					A_Stop();
+					A_SetSpeed(0);
+				}
+				bNOGRAVITY = False;
+				bNOCLIP = False;
+			}
+			If (!Level.IsFrozen() && ReactionTime-- <= 0)
+			{
+				Destroy();
+				Return;
+			}
+		}
+		Super.Tick();
+	}
+}
+
+//Health
+Class TempStim : EOA_Health
+{
+	Mixin EOA_TempItem;
+	Default
+	{
+		Inventory.Amount 5;
+		Inventory.PickupSound "Health/Stim";
+	}
+	States
+	{
+	Spawn:
+		TSTM A -1 NoDelay A_ChangeVelocity(frandom(-5.0, 5.0), frandom(-5.0, 5.0), 4.0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempStimGK : TempStim
+{
+	Default
+	{
+		ReactionTime 350;
+	}
+}
+
+//Armor
+Class TempArmor : EOA_Armor
+{
+	Mixin EOA_TempItem;
+	Default
+	{
+		ReactionTime 350;
+		Inventory.PickupSound "Armor/Shard";
+		Armor.SaveAmount 3;
+	}
+	States
+	{
+	Spawn:
+		TSHD A -1 NoDelay A_ChangeVelocity(frandom(-5.0, 5.0), frandom(-5.0, 5.0), 4.0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+//Ammo
+Class TempBulletAmmo : EOA_BulletAmmo
+{
+	Mixin EOA_TempItem;
+	Default
+	{
+		Inventory.Amount 10;
+		Ammo.DropAmount 10;
+	}
+	States
+	{
+	Spawn:
+		TMPA A -1 NoDelay A_ChangeVelocity(frandom(-5.0, 5.0), frandom(-5.0, 5.0), 4.0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempShellAmmo : EOA_ShellAmmo
+{
+	Mixin EOA_TempItem;
+	Default
+	{
+		Inventory.Amount 5;
+		Ammo.DropAmount 5;
+	}
+	States
+	{
+	Spawn:
+		TMPA B -1 NoDelay A_ChangeVelocity(frandom(-5.0, 5.0), frandom(-5.0, 5.0), 4.0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempRocketAmmo : EOA_RocketAmmo
+{
+	Mixin EOA_TempItem;
+	Default
+	{
+		Inventory.Amount 2;
+		Ammo.DropAmount 2;
+	}
+	States
+	{
+	Spawn:
+		TMPA C -1 NoDelay A_ChangeVelocity(frandom(-5.0, 5.0), frandom(-5.0, 5.0), 4.0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempCellAmmo : EOA_CellAmmo
+{
+	Mixin EOA_TempItem;
+	Default
+	{
+		Inventory.Amount 15;
+		Ammo.DropAmount 15;
+	}
+	States
+	{
+	Spawn:
+		TMPA D -1 NoDelay A_ChangeVelocity(frandom(-5.0, 5.0), frandom(-5.0, 5.0), 4.0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempBFGAmmo : EOA_BFGAmmo
+{
+	Mixin EOA_TempItem;
+	Default
+	{
+		Ammo.DropAmount 1; //Unnecesary, but just in case.
+		Inventory.Amount 1; //Also unnecessary...
+	}
+	States
+	{
+	Spawn:
+		TBFG A -1 NoDelay A_ChangeVelocity(frandom(-5.0, 5.0), frandom(-5.0, 5.0), 4.0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+//Mega Items
+Class TempMediPack : TempStim
+{
+	Default
+	{
+		Inventory.Amount 50;
+		Inventory.PickupSound "Health/Pack";
+		ReactionTime 0x7FFFFFFF;
+	}
+}
+
+Class MegaTempStim : TempStim
+{
+	Default
+	{
+		Inventory.Amount 0x7FFFFFFF;
+		Inventory.PickupSound "Health/Pack";
+		ReactionTime 0x7FFFFFFF;
+	}
+}
+
+Class EOA_MegaStim : EOA_LargeHealth
+{
+	Default
+	{
+		Inventory.Amount 0x7FFFFFFF;
+		Inventory.PickupSound "Health/Pack";
+	}
+}
+
+Class MegaTempBulletAmmo : TempBulletAmmo
+{
+	Default
+	{
+		Inventory.Amount 0x7FFFFFFF;
+		Ammo.DropAmount 0x7FFFFFFF;
+		Inventory.PickupSound "Item/Pickup";
+		ReactionTime 0x7FFFFFFF;
+	}
+}
+
+Class MegaTempShellAmmo : TempShellAmmo
+{
+	Default
+	{
+		Inventory.Amount 0x7FFFFFFF;
+		Ammo.DropAmount 0x7FFFFFFF;
+		Inventory.PickupSound "Item/Pickup";
+		ReactionTime 0x7FFFFFFF;
+	}
+}
+
+Class MegaTempRocketAmmo : TempRocketAmmo
+{
+	Default
+	{
+		Inventory.Amount 0x7FFFFFFF;
+		Ammo.DropAmount 0x7FFFFFFF;
+		Inventory.PickupSound "Item/Pickup";
+		ReactionTime 0x7FFFFFFF;
+	}
+}
+
+Class MegaTempCellAmmo : TempCellAmmo
+{
+	Default
+	{
+		Inventory.Amount 0x7FFFFFFF;
+		Ammo.DropAmount 0x7FFFFFFF;
+		Inventory.PickupSound "Item/Pickup";
+		ReactionTime 0x7FFFFFFF;
+	}
+}
+
+//Chainsaw drops
+Class TempChainsawBulletAmmo : TempBulletAmmo {Default {ReactionTime 350;} }
+Class TempChainsawShellAmmo : TempShellAmmo {Default {ReactionTime 350;} }
+Class TempChainsawRocketAmmo : TempRocketAmmo {Default {ReactionTime 350;} }
+Class TempChainsawCellAmmo : TempCellAmmo {Default {ReactionTime 350;} }
+
+//Ammo crate drops
+Class TempCrateBulletAmmo : TempChainsawBulletAmmo
+{
+	Default
+	{
+		+EOA_AMMO.NODOUBLE
+	}
+	States
+	{
+	Spawn:
+		TMPA A 2 NoDelay A_ChangeVelocity(30, 0, 0, CVF_RELATIVE|CVF_REPLACE);
+		TMPA A -1 A_ChangeVelocity(5, frandom(-5, 5), 0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempCrateShellAmmo : TempChainsawShellAmmo
+{
+	Default
+	{
+		+EOA_AMMO.NODOUBLE
+	}
+	States
+	{
+	Spawn:
+		TMPA B 2 NoDelay A_ChangeVelocity(30, 0, 0, CVF_RELATIVE|CVF_REPLACE);
+		TMPA B -1 A_ChangeVelocity(5, frandom(-5, 5), 0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempCrateRocketAmmo : TempChainsawRocketAmmo
+{
+	Default
+	{
+		Inventory.Amount 5;
+		Ammo.DropAmount 5;
+		+EOA_AMMO.NODOUBLE
+	}
+	States
+	{
+	Spawn:
+		TMPA C 2 NoDelay A_ChangeVelocity(30, 0, 0, CVF_RELATIVE|CVF_REPLACE);
+		TMPA C -1 A_ChangeVelocity(5, frandom(-5, 5), 0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}
+
+Class TempCrateCellAmmo : TempChainsawCellAmmo
+{
+	Default
+	{
+		+EOA_AMMO.NODOUBLE;
+	}
+	States
+	{
+	Spawn:
+		TMPA D 2 NoDelay A_ChangeVelocity(30, 0, 0, CVF_RELATIVE|CVF_REPLACE);
+		TMPA D -1 A_ChangeVelocity(5, frandom(-5, 5), 0, CVF_RELATIVE|CVF_REPLACE);
+		Wait;
+	}
+}

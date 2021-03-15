@@ -1,0 +1,674 @@
+Class BFGSelected : EOA_Token{}
+
+Class EOA_BFG : EOA_Weapon replaces BFG9000
+{
+	Default
+	{
+		Inventory.Icon "ICONBFG";
+		Weapon.AmmoType "EOA_BFGAmmo";
+		Weapon.AmmoUse 1;
+		Weapon.AmmoGive 3;
+		Weapon.SlotNumber 9;
+		Inventory.PickupMessage "BFG-9000";
+		Tag "BFG-9000";
+		+WEAPON.BFG
+		+WEAPON.NOAUTOFIRE
+		+EOA_WEAPON.POWERWEAPON
+		+EOA_WEAPON.SEMIAUTO
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		MarkSound("BFG/Raise");
+		MarkSound("BFG/Charge");
+		MarkSound("BFG/Fire");
+		MarkSound("BFG/Add");
+		Super.MarkPrecacheSounds();
+	}
+	States
+	{
+	Spawn:
+		BFGW A -1;
+		Stop;
+	Select:
+		TNT1 A 0
+		{
+			Invoker.SemiAutoOverride = True;
+			A_WeaponOffset();
+			A_GiveInventory("BFGSelected");
+			If (GetCVar("EOA_Reticles"))
+			{
+				ACS_NamedExecuteAlways("BFGReticle", 0);
+				A_SetCrosshair(99);
+			}
+			Else
+			{
+				A_SetCrosshair(0);
+			}
+			A_ZoomFactor();
+		}
+		TNT1 A 0 A_Raise();
+		Wait;
+	Deselect:
+		TNT1 A 0 A_ZoomFactor();
+		BFGR FEDCBA 1 EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_WEAPSPEEDUPGRADE * CountInv("Adept"));
+		TNT1 A 6
+		{
+			A_TakeInventory("BFGSelected");
+			A_SetTics(2 + 4 * !CountInv("Adept") * !CountInv("PowerBerserk"));
+		}
+		TNT1 A 1 A_Lower(36);
+		Wait;
+	Ready:
+		TNT1 A 0
+		{
+			If (Level.Time)
+			{
+				EOA_SpawnNoiseMaker("Weapon/Switch");
+				EOA_SpawnNoiseMaker("BFG/Raise", 0, 0.5);
+			}
+		}
+		BFGR ABCDEFGH 1 EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE|EOA_WEAPSPEEDUPGRADE * CountInv("Adept"));
+		Goto ReadyLoop;
+	ReRaise:
+		BFGR ABCDEFGH 1 EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+	ReadyLoop:
+		BFGI A 1 EOA_WeaponReady(WRF_NOFIRE * (GetPlayerInput(INPUT_OLDBUTTONS) & BT_ATTACK)|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_ALLOWEQUIPMENT);
+		Loop;
+	Fire:
+		TNT1 A 0 
+		{
+			EOA_SpawnNoiseMaker("BFG/Charge", 0, 0.5);
+			A_AlertMonsters();
+			A_Overlay(-2, "BFGFOV");
+			EOA_SpawnCustomDynamicLight("BFGLight", DynamicLight.PulseLight, (178, 255, 128), 1, 64, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 20, (0, 0, Height / 2), 0.5);
+		}
+		BFGC AAABBBCCDEFGHIJKLMN 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_DISABLEHASTE);
+		TNT1 A 0
+		{
+			EOA_SpawnNoiseMaker("BFG/Fire");
+			EOA_FireBullets(0, 0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "EOA_BFGBall", -11 + GetViewZ(), 5 + GetRelVelY() / 3);
+			EOA_SetWeaponRecoilOffset(0, -6, 0, 0.5);
+			EOA_SpawnCustomDynamicLight("BFGLight", DynamicLight.PulseLight, (178, 255, 128), 96, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 8, (0, 0, Height / 2), 0.5);
+			If (CountInv("PowerQDMG"))
+			{
+				EOA_SpawnNoiseMaker("QuadDamage/Shot");
+			}
+		}
+		BFGX ABCDEFFGGGHHIIJKLMMNOPQRST 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		"####" "#" 0 EOA_SpawnNoiseMaker("BFG/Add", 0, 0.7);
+		BFGX UVVVVVWXYZ 1 EOA_WeaponReady(WRF_NOFIRE|WRF_NOSWITCH, EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
+		Goto ReadyLoop;
+	BFGFOV:
+		TNT1 A 1 A_ZoomFactor(0.9925, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.985, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.9775, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.97, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.9625, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.955, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.9475, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.94, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.9325, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.925, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.9175, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.91, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.9005, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.89, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.8825, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.875, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.8675, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.86, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.8525, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.85, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.8625, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.875, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.8875, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.9, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.925, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.95, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor(0.975, ZOOM_NOSCALETURNING);
+		TNT1 A 1 A_ZoomFactor();
+		Stop;
+	Zoom:
+		BFGT A 0;
+		Goto Super::Melee;
+	UseEquipment:
+		BFGT A 0;
+		Goto Super::UseEquipment;
+	}
+}
+
+Class EOA_BFGTracerDamager : Thinker
+{
+	Actor Owner; //The actor it's attached to.
+	Actor Source; //The actor responsible for dealing the damage.
+	Actor Inflictor; //The actor that actually dealt the damage.
+	Int Damage; //The damage to deal.
+	Int TicDelay; //The tic delay.
+	Override Void PostBeginPlay()
+	{
+		TicDelay = random(3, 35);
+		Super.PostBeginPlay();
+	}
+	Override Void Tick()
+	{
+		If (Owner)
+		{
+			If (!Level.IsFrozen() && TicDelay-- <= 0)
+			{
+				Owner.DamageMobj(Inflictor, Source, Damage, "Normal", DMG_NO_PAIN);
+				Destroy();
+				Return;
+			}
+		}
+		Else
+		{
+			Destroy();
+		}
+	}
+}
+
+Class ZSTracerRetriever : Actor
+{
+	Int Index;
+	Action Bool AcquireTracerTargets(Int Dist, Double Ang)
+	{
+		Let BFGOwner = EOA_BFGBall(Target);
+		If (BFGOwner)
+		{
+			Tracer = Null;
+			A_CopyFriendliness(AAPTR_MASTER);
+			If (Invoker.Index < BFGOwner.BFGTracerTargets.Size() && BFGOwner.BFGTracerTargets[Invoker.Index] && !BFGOwner.BFGTracerTargets[Invoker.Index].bKILLED && BFGOwner.BFGTracerTargets[Invoker.Index].Distance3D(Invoker) <= Dist)
+			{
+				Tracer = BFGOwner.BFGTracerTargets[Invoker.Index];
+				If (Tracer && CheckIfTargetInLOS(Ang, JLOSF_ALLYNOJUMP|JLOSF_CHECKTRACER, Dist))
+				{
+					Return True;
+				}
+				Else //[DoomKrakken]: Check through all other entries on the list.
+				{
+					For (Int i = 0; i < BFGOwner.BFGTracerTargets.Size(); i++)
+					{
+						Tracer = BFGOwner.BFGTracerTargets[i];
+						If (Tracer && CheckIfTargetInLOS(Ang, JLOSF_ALLYNOJUMP|JLOSF_CHECKTRACER, Dist))
+						{
+							Return True;
+						}
+					}
+					Tracer = Null;
+				}
+			}
+			If (Master && !Tracer)
+			{
+				A_ClearTarget();
+				A_LookEx(LOF_NOSOUNDCHECK|LOF_NOJUMP, 0, Dist, 0, Ang);
+				If (Target && CheckIfTargetInLOS(Ang, JLOSF_ALLYNOJUMP, Dist) && Invoker.Distance3D(Target) <= Dist)
+				{
+					Tracer = Target;
+					Target = BFGOwner;
+					BFGOwner.BFGTracerTargets.Push(Tracer);
+					Return True;
+				}
+				Target = BFGOwner;
+			}
+		}
+		Invoker.Index++;
+		Return False;
+	}
+	Action Void EOA_DamageTracerTarget(Int Damage, Int Inflictor = AAPTR_DEFAULT, Int Source = AAPTR_DEFAULT)
+	{
+		If (Tracer)
+		{
+			EOA_BFGTracerDamager BFGDamager = New("EOA_BFGTracerDamager");
+			If (BFGDamager)
+			{
+				BFGDamager.Owner = Tracer;
+				BFGDamager.Damage = Damage;
+				BFGDamager.Inflictor = GetPointer(Inflictor);
+				BFGDamager.Source = GetPointer(Source);
+			}
+		}
+	}
+}
+
+Class EOA_BFGBall : EOA_Projectile
+{
+	Array<Actor> BFGTracerTargets;
+	Default
+	{
+		Projectile;
+		Radius 8;
+		Height 8;
+		Speed 20;
+		DamageFunction 400;
+		RenderStyle "Add";
+		Alpha 0.99;
+		Scale 0.67;
+		+BRIGHT
+		+EXTREMEDEATH
+		+FORCEXYBILLBOARD
+		+NODAMAGETHRUST
+		+SKYEXPLODE
+	}
+	Override Void PostBeginPlay()
+	{
+		A_StartSound("BFG/Ball", 4, CHANF_LOOPING);
+		Super.PostBeginPlay();
+	}
+	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
+	{
+		If (Target.bBOSS)
+		{
+			If (Target == Tracer)
+			{
+				Target.A_GiveInventory("PowerBFGStunned");
+			}
+			Damage /= 2;
+		}
+		Return Damage;
+	}
+	States
+	{
+	Spawn:
+		BFGP ABCDEFGHIJKLMNOPQRSTUVWXY 1 NoDelay
+		{
+			EOA_SpawnCustomDynamicLight("BFGLight", DynamicLight.PointLight, (178, 255, 128), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, Tics, (0, 0, Height / 2));
+			A_SpawnItemEx("BFGLightningTracerSpawner", 0, 0, -16, -Vel.X, -Vel.Y, -Vel.Z, 0, SXF_ABSOLUTEMOMENTUM|SXF_TRANSFERPOINTERS|SXF_SETMASTER|SXF_ORIGINATOR);
+		}
+		Loop;
+	Death:
+		TNT1 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA 0 A_SpawnProjectile("BFGExplosionFX", 0, 0, random(1, 720), 2, random(0, 360));
+		TNT1 A 8
+		{
+			EOA_SpawnCustomDynamicLight("BFGAddLight", DynamicLight.PulseLight, (178, 255, 128), 128, 1, DYNAMICLIGHT.LF_ADDITIVE, 15, (0, 0, Height / 2), 0.5);
+			EOA_SpawnCustomDynamicLight("BFGAttLight", DynamicLight.PulseLight, (178, 255, 128), 128, 1, DYNAMICLIGHT.LF_ATTENUATE, 15, (0, 0, Height / 2), 0.5);
+			A_StartSound("BFG/Explode");
+			A_Explode(1200, 1200, 0, 1, 1200);
+			A_SpawnItemEx("BFGExplosionFlash", Flags: SXF_NOCHECKPOSITION);
+		}
+		TNT1 A 0
+		{
+			A_SpawnItemEx("BFGImpactFX", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("BFGImpactFX", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("BFGImpactShockwave", Flags: SXF_NOCHECKPOSITION);
+			A_SpawnItemEx("BFGImpactShockwave", Flags: SXF_NOCHECKPOSITION);
+		}
+		BXPL ABCDEFG 1;
+		Stop;
+	}
+}
+
+Class BFGStunLightning : StunBombLightning
+{
+	Default
+	{
+		Scale 0.2;
+		Translation "0:255=%[0, 0, 0]:[0, 1, 0]";
+	}
+}
+
+Class PowerBFGStunned : EOA_Powerup
+{
+	Default
+	{
+		Powerup.Duration -5;
+		DamageFactor "Normal", 2.0;
+		+EOA_POWERUP.NOLIGHT
+	}
+	Override Void AttachToOwner(Actor Other)
+	{
+		ActiveSound = "BFG/Stun";
+		ExpireSound = "BFG/StunEnd";
+		Super.AttachToOwner(Other);
+		If (NoiseMaker)
+		{
+			NoiseMaker.A_StartSound("BFG/StunLightning", 4, CHAN_LOOP|CHAN_OVERLAP);
+		}
+	}
+	Override Void ModifyDamage(Int Damage, Name DamageType, Out Int NewDamage, Bool Passive)
+	{
+		If (Passive && Damage > 0)
+		{
+			NewDamage = max(0, ApplyDamageFactors(GetClass(), DamageType, Damage, Damage / 4));
+		}
+	}
+	Override Void DoEffect()
+	{
+		If (EffectTics < 0)
+		{
+			Destroy();
+			Return;
+		}
+		If (!(GetAge() % 5))
+		{
+			Owner.A_SpawnItemEx("BFGStunLightning", ZOfs: Owner.Height / 2, XVel: frandom(-3, 3), YVel: frandom(-3, 3), ZVel: frandom(-3, 3), Flags: SXF_NOCHECKPOSITION);
+		}
+		Owner.bFORCEPAIN = True;
+		Owner.A_DamageSelf(-1, Flags: DMSS_FOILINVUL|DMSS_NOFACTOR|DMSS_NOPROTECT);
+		Owner.A_DamageSelf(1, Flags: DMSS_FOILINVUL|DMSS_NOFACTOR|DMSS_NOPROTECT);
+		If (Owner)
+		{
+			Owner.bFORCEPAIN = Owner.Default.bFORCEPAIN;
+		}
+		Powerup.DoEffect(); //[DoomKrakken]: Not Super, because it calls unnecessary stuff we can skip.
+	}
+}
+
+//[DoomKrakken]: ZION is credit to team! :D
+Class BFGLightningTracerSpawner : ZSTracerRetriever
+{
+	Default
+	{
+		Projectile;
+		Radius 1;
+		Radius 1;
+		ReactionTime 6;
+		MissileHeight 0;
+		+EXTREMEDEATH
+		+NODAMAGETHRUST
+		+NOINTERACTION
+		+PAINLESS
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_RearrangePointers(AAPTR_MASTER, AAPTR_TARGET);
+	See:
+		TNT1 A 0 
+		{
+			If (AcquireTracerTargets(600, 60))
+			{
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Turnito");
+		}
+	Missile:
+		//[DoomKrakken]: Check for the presence of the BFG kill counter.
+		TNT1 A 0
+		{
+			A_SpawnItemEx("BFGLightningTracer", 0, 0, 16, Flags: SXF_TRANSFERPOINTERS);
+			//A_GiveInventory("BFGKillCounter", 1, AAPTR_TRACER);
+			EOA_DamageTracerTarget(24, AAPTR_TARGET, AAPTR_MASTER);
+			EOA_DamageTracerTarget(24, AAPTR_TARGET, AAPTR_MASTER);
+			EOA_DamageTracerTarget(24, AAPTR_TARGET, AAPTR_MASTER);
+			EOA_DamageTracerTarget(24, AAPTR_TARGET, AAPTR_MASTER);
+			EOA_DamageTracerTarget(24, AAPTR_TARGET, AAPTR_MASTER);
+			EOA_DamageTracerTarget(24, AAPTR_TARGET, AAPTR_MASTER);
+		}
+	Turnito:
+		TNT1 A 0
+		{
+			A_SetAngle(Angle + 60);
+			A_CountDown();
+		}
+		Goto See;
+	}
+}
+
+Class BFGLightningTracer : LightningBeamBase
+{
+	Default
+	{
+		Translation "0:255=%[0, 0, 0]:[0.75, 1, 0.45]";
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			If (Tracer)
+			{
+				Dist[1] = Distance3D(Tracer);
+				Stats[0] = 64;
+				Stats[1] = 900;
+				Stats[2] = 12;
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Null");
+		}
+		Goto Fly;
+	Missile:
+		TNT1 A 0
+		{
+			A_SpawnItemEx("BFGLightningTracerFX", cos(-Pitch) * (Stats[0] / 2), 0, sin(Pitch) * (Stats[0] / 2), cos(-Pitch) * (Stats[0] * 0.0001), 0, sin(Pitch) * (Stats[0] * 0.0001), 0, SXF_TRANSFERPITCH|SXF_TRANSFERTRANSLATION);
+			Return A_Jump(256, "Move");
+		}
+		Goto Move;
+	}
+}
+
+Class BFGLightningTracerFX : LightningBeamTrailBase
+{
+	Default
+	{
+		Translation "0:255=%[0, 0, 0]:[0, 1, 0]";
+	}
+}
+
+Class BFGExplosionFlash : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		RenderStyle "Add";
+		Alpha 0.4;
+		Scale 6;
+		+BRIGHT
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+MISSILE 
+		+NOBLOCKMAP
+		+NOBLOCKMONST
+		+NOGRAVITY
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	Override Void Tick()
+	{
+		If (Scale.X <= 0)
+		{
+			Destroy();
+			Return;
+		}
+		A_SetScale(Scale.X - 0.5);
+		Super.Tick();
+	}
+	States
+	{
+	Spawn:
+		GXPL A 1;
+		Wait;
+	}
+}
+
+Class BFGExplosionFX : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		RenderStyle "Add";
+		Speed 80;
+		ReactionTime 8;
+		Scale 0.1;
+		Translation "0:255=%[0, 0, 0]:[0.5, 2, 0.5]";
+		Alpha 0.75;
+		+BRIGHT
+		+CANNOTPUSH
+		+DONTSPLASH
+		+FORCEXYBILLBOARD
+		+MISSILE 
+		+NOBLOCKMAP
+		+NOBLOCKMONST
+		+NOGRAVITY
+		+NOTRIGGER
+		+THRUACTORS
+	}
+	Override Void PostBeginPlay()
+	{
+		Super.PostBeginPlay();
+	}
+	Override Void Tick()
+	{
+		A_SetScale(Scale.X * 1.15);
+		ReactionTime--;
+		If (ReactionTime <= 0)
+		{
+			Destroy();
+			Return;
+		}
+		Super.Tick();
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 1 NoDelay
+		{
+			A_SetAngle(Angle + 180);
+			A_ScaleVelocity(-0.2);
+		}
+		NULL A 1;
+		Wait;
+	}
+}
+
+Class BFGImpactFX : GaussImpactFX
+{
+	Default
+	{
+		Scale 0.125;
+	}
+	States
+	{
+	Spawn:
+		BFBA A 0 NoDelay A_Jump(256, random(1, 8));
+		BFBA ABCDEFGH 0
+		{
+			A_SpawnItemEx("BFGImpactFX2", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPRITEFRAME);
+			Return ResolveState("Fade");
+		}
+	Fade:
+		"####" "######" 1 A_SetScale(Scale.X * 1.27, Scale.Y * 1.1);
+		"####" "#" 1
+		{
+			A_SetScale(Scale.X * 1.27, Scale.Y * 1.1);
+			A_FadeOut(0.25);
+		}
+		Wait;
+	}
+}
+
+Class BFGImpactFX2 : BFGImpactFX
+{
+	Default
+	{
+		Scale 0.09875;
+	}
+	States
+	{
+	Spawn:
+		"####" "#" 0 NoDelay A_SetRoll(90);
+	Fade:
+		"####" "######" 1 A_SetScale(Scale.X * 1.1, Scale.Y * 1.27);
+		"####" "#" 1
+		{
+			A_SetScale(Scale.X * 1.1, Scale.Y * 1.27);
+			A_FadeOut(0.25);
+		}
+		Wait;
+	}
+}
+
+Class BFGImpactShockwave : GaussCannonImpactShockWave
+{
+	Default
+	{
+		Scale 0.3;
+	}
+	States
+	{
+	Spawn:
+		BSW3 B 0 NoDelay 
+		{
+			A_SetRoll(random(0, 359));
+		}
+		BSW3 B 1 
+		{
+			A_SetScale(Scale.X * 1.25);
+			A_CountDown();
+		}
+		Wait;
+	Death:
+		BSW3 B 1
+		{
+			A_SetScale(Scale.X * 1.25);
+			A_FadeOut(0.25);
+		}
+		Wait;
+	}
+}
+
+Class BFGSplashFX : Actor
+{
+	Default
+	{
+		+NOINTERACTION
+		+DONTTHRUST
+	}
+	States
+	{
+	Spawn:
+		TNT1 AAA 0 NoDelay
+		{
+			A_SpawnItemEx("BFGExplosionSprite", 0, 0, 0, frandom(-1.5, 1.5), frandom(-1.5, 1.5), frandom(-1.5, 1.5), random(1, 360));
+			A_SpawnItemEx("BFGSplashExplosionTiny");
+		}
+		TNT1 AAAAAAAAAAAA 2 A_SpawnItemEx("BFGSplashLightning");
+		Stop;
+	}
+}
+
+Class BFGExplosionSprite : EOA_GenericExplosionFX
+{
+	Default
+	{
+		Scale 0.5;
+		Alpha 0.5;
+		Translation "0:255=%[0, 0, 0]:[0.75, 1, 0.45]";
+	}
+}
+
+Class BFGSplashExplosionTiny : BFGExplosionSprite
+{
+	Default
+	{
+		Scale 0.33;
+		Alpha 1;
+	}
+}
+
+Class BFGSplashLightning : BFGStunLightning
+{
+	Default
+	{
+		Scale 0.1;
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_SetRoll(random(0, 359));
+			Return A_Jump(256, random(1, 8));
+		}
+		LBLT ABCDEFGH 0 A_Jump(256, "KeepSprite");
+	KeepSprite:
+		LBLT "#" 1 Bright 
+		{
+			A_FadeOut(0.25);
+			A_SetScale(Scale.X * 1.3);
+		}
+		Wait;
+	}
+}

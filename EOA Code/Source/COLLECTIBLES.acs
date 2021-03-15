@@ -1,0 +1,954 @@
+#library "COLLECTIBLES"
+#include "zcommon.acs"
+
+// 	This pathetic, lame, sorry hacky excuse of an ACS Script was written by Ziani Chang (a.k.a. ScrubHead).
+//	Please don't chainsaw me; this was my FIRST EVER attempt at casting spells in ye olde ACS Evil Runic Majicks.
+//	Later in the scripts, you'll notice that I deliberately de-synced the delays for each of the 4 types of collectibles scripts' start/end sequences:
+//	That's because I'm paranoid about GZDoom's real-time checks & their memory use (am I even using the right vocab here? Wow what a Scrub)
+//	even though I don't know that much about the deep-tech behind said engine, better safe than sorry (-_-);
+
+
+/*==============================================================================
+=====================	AUTOMAP COLLECTIBLES TRACKER	========================
+==============================================================================*/
+Script "CollectiblesTracker" ENTER
+{	
+	Delay(13);
+	
+	SetHUDSize (1024, 780, 0);//SetHUDSize (1152, 864, 0);
+	
+	//Mission Label
+	SetFont	("MISSION");
+	HudMessage(s:"A"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -991, CR_UNTRANSLATED, 0.1, 70.1, 0);
+	
+	//box background
+	SetFont	("HUDTOKEN"); 
+	HudMessage(s:"0"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -992, CR_UNTRANSLATED, 1024.2, 730.2, 0, 0.4);
+	HudMessage(s:"1"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -993, CR_UNTRANSLATED, 1024.2, 730.2, 0);
+	
+	//background for wep upgrade points and praetor tokens counter
+	SetFont ("PTOKENS");
+	HudMessage(s:"A"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -994, CR_UNTRANSLATED, 1024.2, 50.1, 0);
+	
+	//wep upgrade points and praetor tokens counter
+	
+	While (1 /*GetActorProperty(0, APROP_HEALTH) > 0*/)
+	{
+		int totalmonsters = GetLevelInfo(LEVELINFO_TOTAL_MONSTERS);
+		int killedmonsters = GetLevelInfo(LEVELINFO_KILLED_MONSTERS);
+		int weppoint = CheckInventory("WeaponUpgradePoint");
+		int prtoken = CheckInventory("PraetorToken");
+		SetFont	("SPRMLT"); 
+		HudMessage(d:weppoint; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -995, CR_UNTRANSLATED, 880.1, 55.1, 0);
+		HudMessage(d:prtoken; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -996, CR_UNTRANSLATED, 940.1, 55.1, 0);
+		SetFont	("TTSMALL"); 
+		HudMessage(d:killedmonsters,s:" / ",d:totalmonsters; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -997, CR_UNTRANSLATED, 152.1, 153.1, 0);
+		Delay(17);
+	}
+	
+}
+
+//	Now for the actual "per-type-of-collectible" trackers. As you'll see, they're progged so that they show catalogued rows of those sweet shiny orange icons,
+//	rather that bland numbers - up to a maximum of SIX(6) for each of the 4 collectible types. They will start greyed-out, & turn orange as you collect them.
+//	Easy on the eyes, & super-quick to digest info feed.
+//	The limit for this display type is 6: You'll NEVER find more than 6 [insert collectible type here] in one map...
+
+//	HOWEVER: Just in case a map is crazy enough to house more than 6 of any given collectible type, the display will auto-shift to a more traditional,
+//	yet still dynamic, numbered ratio display. in this instance, You'll see the Collectible's icon in GREY coupled with a "found/remaining" ratio.
+//	Once you have successfully scavenged ALL 666 collectibles of the same type in your crazy map, its Icon will turn ORANGE: proof that you're done looting
+//	said collectible type.
+
+
+//	My FIRST-EVER ACS script & I jump straight to using Switch-Case shenanigans? Talk about biting off more than I can chew.
+//	And what a hacky, ugly way of doing it too :(
+
+Script "SecretCircularCounter" ENTER //added by strongbelly for tracking secrets.
+{ 
+	int TotalSecrets = GetLevelInfo(LEVELINFO_TOTAL_SECRETS);
+	int SecretCheckpoint = TotalSecrets / 8;
+	
+	If (TotalSecrets < 1)
+		Terminate;
+		
+	SetHUDSize (2048, 1536, 0);
+	SetFont("HUDTOKEN");
+	
+	While (1 /*GetActorProperty(0, APROP_HEALTH) > 0*/)
+	{	
+			int SecretsFound = GetLevelInfo(LEVELINFO_FOUND_SECRETS);
+			Delay(1);
+			
+			switch(TotalSecrets)
+			{
+			case 1:
+				If (SecretsFound == 1) 
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				Else
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+			break;
+			
+			case 2:
+				If (SecretsFound == 2) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 1) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else
+				{ HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			
+			case 3:
+				If (SecretsFound == 3) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 2) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"e"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 1) 
+				{ HudMessage(s:"d"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}    
+				Else
+				{ HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			
+			case 4:
+				If (SecretsFound == 4) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 3) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"b"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 2) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 1) 
+				{ HudMessage(s:"b"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}    
+				Else
+				{ HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			
+			case 5:
+				If (SecretsFound == 5) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 4) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"i"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 3) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"h"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 2) 
+				{ HudMessage(s:"g"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 1) 
+				{ HudMessage(s:"f"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}    
+				Else
+				{ HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			
+			case 6:
+				If (SecretsFound == 6) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 5) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"d"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 4) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"e"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 3) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 2) 
+				{ HudMessage(s:"d"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 1) 
+				{ HudMessage(s:"e"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}    
+				Else
+				{ HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			
+			case 7:
+				If (SecretsFound == 7) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 6) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"o"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 5) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"n"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 4) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"m"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 3) 
+				{ HudMessage(s:"l"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 2) 
+				{ HudMessage(s:"k"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 1) 
+				{ HudMessage(s:"j"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}    
+				Else
+				{ HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			
+			case 8:
+				If (SecretsFound == 8) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 7) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"c"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 6) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"b"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 5) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"a"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 4) 
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 3) 
+				{ HudMessage(s:"c"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}  
+				Else If (SecretsFound == 2) 
+				{ HudMessage(s:"b"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound == 1) 
+				{ HudMessage(s:"a"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}    
+				Else
+				{ HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			
+			Default:
+				If (SecretsFound >= TotalSecrets)
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound >= SecretCheckpoint * 7)
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"c"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound >= SecretCheckpoint * 6)
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"b"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound >= SecretCheckpoint * 5)
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"a"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound >= SecretCheckpoint * 4)
+				{ HudMessage(s:"Y"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound >= SecretCheckpoint * 3)
+				{ HudMessage(s:"c"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound >= SecretCheckpoint * 2)
+				{ HudMessage(s:"b"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else If (SecretsFound >= SecretCheckpoint * 1)
+				{ HudMessage(s:"a"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+				Else 
+				{
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -601, CR_UNTRANSLATED, 1242.1, 1198.0, 0, 1.0);
+				  HudMessage(s:"X"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERHUD, -602, CR_UNTRANSLATED, 1368.1, 1198.0, 0, 1.0);}
+			break;
+			}
+			Delay(4);
+	}	
+}		
+
+Script "SecretCounter" ENTER //added by strongbelly for tracking secrets.
+{
+	Delay(5); //just a small wait for the spawners to do their thing. Just to be sure.
+	
+	int TotalSecrets = GetLevelInfo(LEVELINFO_TOTAL_SECRETS);
+	int TotalSecretMarkers = ThingCountName("EOA_SecretMarker", 0); /*+ ThingCountName("EOA_SecretMarker1", 0)
+							 + ThingCountName("EOA_SecretMarker2", 0) + ThingCountName("EOA_SecretMarker3", 0)
+							 + ThingCountName("EOA_SecretMarker4", 0) + ThingCountName("EOA_SecretMarker5", 0)
+							 + ThingCountName("EOA_SecretMarker6", 0) + ThingCountName("EOA_SecretMarker7", 0);*/
+	
+	If (TotalSecrets < 1)
+		Terminate;
+		
+	SetHUDSize (4096, 3120, 0);
+	SetFont	("HUDTOKEN");
+	
+	While (1 /*GetActorProperty(0, APROP_HEALTH) > 0*/)
+	{	
+			int SecretsFound = GetLevelInfo(LEVELINFO_FOUND_SECRETS);
+			Delay(2);
+			
+			switch(TotalSecrets)
+			{
+			case 1:
+				If (SecretsFound == 1) 
+				{ HudMessage(s:"8"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+				  HudMessage(s:"S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+
+			case 2:
+				If (SecretsFound == 2)
+				{ HudMessage(s:"88"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 1)
+				{ HudMessage(s:"8S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+					HudMessage(s:"SS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+
+			case 3:
+				If (SecretsFound == 3)
+				{ HudMessage(s:"888"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 2)
+				{ HudMessage(s:"88S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 1)
+				{ HudMessage(s:"8SS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+				    HudMessage(s:"SSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+			
+			case 4:
+				If (SecretsFound == 4)
+				{ HudMessage(s:"8888"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 3)
+				{ HudMessage(s:"888S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 2)
+				{ HudMessage(s:"88SS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 1)
+				{ HudMessage(s:"8SSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+					HudMessage(s:"SSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+
+			case 5:
+				If (SecretsFound == 5)
+				{ HudMessage(s:"88888"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 4)
+				{ HudMessage(s:"8888S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 3)
+				{ HudMessage(s:"888SS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 2)
+				{ HudMessage(s:"88SSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 1)
+				{ HudMessage(s:"8SSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+					HudMessage(s:"SSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+						
+			case 6:
+				If (SecretsFound == 6)
+				{ HudMessage(s:"888888"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 5)
+				{ HudMessage(s:"88888S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 4)
+				{ HudMessage(s:"8888SS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 3)
+				{ HudMessage(s:"888SSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 2)
+				{ HudMessage(s:"88SSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 1)
+				{ HudMessage(s:"8SSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+					HudMessage(s:"SSSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+			
+			case 7:
+				If (SecretsFound == 7)
+				{ HudMessage(s:"8888888"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 6)
+				{ HudMessage(s:"888888S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 5)
+				{ HudMessage(s:"88888SS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 4)
+				{ HudMessage(s:"8888SSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 3)
+				{ HudMessage(s:"888SSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 2)
+				{ HudMessage(s:"88SSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 1)
+				{ HudMessage(s:"8SSSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+					HudMessage(s:"SSSSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+			
+			case 8:
+				If (SecretsFound == 8)
+				{ HudMessage(s:"88888888"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 7)
+				{ HudMessage(s:"8888888S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 6)
+				{ HudMessage(s:"888888SS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 5)
+				{ HudMessage(s:"88888SSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 4)
+				{ HudMessage(s:"8888SSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 3)
+				{ HudMessage(s:"888SSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 2)
+				{ HudMessage(s:"88SSSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else If (SecretsFound == 1)
+				{ HudMessage(s:"8SSSSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);}
+				Else
+					HudMessage(s:"SSSSSSSS"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -100, CR_UNTRANSLATED, 3019.1, 2410.0, 0, 1.0);
+			break;
+			
+			Default:
+				If (SecretsFound >= TotalSecrets)	// the ">" is impossible under normal circumstances, but just in case
+				  { HudMessage(s:"8"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -110, CR_UNTRANSLATED, 3320.1, 2410.0, 0, 1.0);}
+				Else
+					HudMessage(s:"S"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -110, CR_UNTRANSLATED, 3320.1, 2410.0, 0, 1.0);
+				ACS_NamedExecuteAlways("TooManySecrets",0,0,0,0);
+			break;
+			}
+
+			Delay(5); //Total Delay = 7 tics=. Sufficient, Hopefully
+		}
+}
+
+Script "TooManySecrets" (void)	// This is where, when the map has more than 6 Secrets, the Tracker HUD will switch to an Icon-&-ratio display. 
+{
+	Delay(1);
+	
+	int TotalSecrets = GetLevelInfo(LEVELINFO_TOTAL_SECRETS);
+	int SecretsFound = GetLevelInfo(LEVELINFO_FOUND_SECRETS);
+	
+	If (SecretsFound == TotalSecrets)
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:SecretsFound, s:" / ", d:TotalSecrets; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -111, CR_ORANGE, 870.1, 595.0, 0, 1.0);
+	}
+	Else
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:SecretsFound, s:" / ", d:TotalSecrets; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -111, CR_GREY, 870.1, 595.0, 0, 0.70);
+	}
+	Delay(3);
+}
+
+/*==============================================================================
+=====================	PRAETOR TOKEN TRACKER (AUTOMAP)	========================
+==============================================================================*/
+Script "PraetorTokenCounter" ENTER //revised by strongbelly. Also a pathetic, lame, sorry hacky excuse of an ACS Script. :)
+{	
+	Delay(5); //just a small wait for the spawners to do their thing. Just to be sure.
+	
+	Int TotalEliteGuards = ThingCountName("EOA_EliteGuardCorpse", 0);
+						  
+		
+	If (TotalEliteGuards < 1)
+		Terminate;
+
+	SetHUDSize(4096, 3120, 0);
+	SetFont("HUDTOKEN");	
+	While (1 /*GetActorProperty(0, APROP_HEALTH) > 0*/)
+	{
+		Int FoundEliteTokens = TotalEliteGuards - ScriptCall("EOA_StaticArchive", "GetPraetorTokensSpawned") + ScriptCall("EOA_StaticArchive", "GetPraetorTokensClaimed"); //CheckInventory("PraetorHUDToken");
+						 
+					   
+		Delay(4);
+		switch(TotalEliteGuards)
+		{
+		case 1:
+				If (FoundEliteTokens == 1) 
+				{ HudMessage(s:"2"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else
+				  HudMessage(s:"P"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);
+		break;
+		
+		case 2:
+				If (FoundEliteTokens == 2)
+				{ HudMessage(s:"22"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 1)
+				{ HudMessage(s:"2P"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"PP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);
+		break;
+		
+		case 3:
+				If (FoundEliteTokens == 3)
+				{ HudMessage(s:"222"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 2)
+				{ HudMessage(s:"22P"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 1)
+				{ HudMessage(s:"2PP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else
+				    HudMessage(s:"PPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);
+		break;
+			
+		case 4:
+				If (FoundEliteTokens == 4)
+				{ HudMessage(s:"2222"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 3)
+				{ HudMessage(s:"222P"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 2)
+				{ HudMessage(s:"22PP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 1)
+				{ HudMessage(s:"2PPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"PPPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);
+		break;		
+		
+		case 5:
+				If (FoundEliteTokens == 5)
+				{ HudMessage(s:"22222"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 4)
+				{ HudMessage(s:"2222P"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 3)
+				{ HudMessage(s:"222PP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 2)
+				{ HudMessage(s:"22PPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 1)
+				{ HudMessage(s:"2PPPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"PPPPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);
+		break;		
+		
+		case 6:
+				If (FoundEliteTokens == 6)
+				{ HudMessage(s:"222222"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 5)
+				{ HudMessage(s:"22222P"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 4)
+				{ HudMessage(s:"2222PP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 3)
+				{ HudMessage(s:"222PPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 2)
+				{ HudMessage(s:"22PPPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else If (FoundEliteTokens == 1)
+				{ HudMessage(s:"2PPPPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"PPPPPP"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -201, CR_UNTRANSLATED, 2485.1, 2654.0, 0, 1.0);
+		break;				
+		
+		Default:
+			If (FoundEliteTokens >= TotalEliteGuards)	// the ">" is impossible under normal circumstances, but just in case
+			  { HudMessage(s:"2"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -210, CR_UNTRANSLATED, 2680.1, 2654.0, 0, 1.0);}
+			Else
+				HudMessage(s:"P"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -210, CR_UNTRANSLATED, 2680.1, 2654.0, 0, 1.0);
+			ACS_NamedExecuteAlways("TooManyElites",0,0,0,0);
+		break;
+		
+		}
+		Delay(5); //Total Delay = 9 tics=. Sufficient, Hopefully
+	}
+}
+
+Script "TooManyElites" (void)	// This is where, when the map has more than 6 Elites, the Tracker HUD will switch to an Icon-&-ratio display. 
+{
+	Delay(1);
+	
+	int TotalEliteGuards = ThingCountName("EOA_EliteGuardCorpse", 0);
+	int FoundEliteTokens = TotalEliteGuards - ScriptCall("EOA_StaticArchive", "GetPraetorTokensSpawned") + ScriptCall("EOA_StaticArchive", "GetPraetorTokensClaimed"); //CheckInventory("PraetorHUDToken");
+
+	
+	If (FoundEliteTokens == TotalEliteGuards)
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundEliteTokens, s:" / ", d:TotalEliteGuards; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -211, CR_ORANGE, 710.1, 655.0, 0, 1.0);
+	}
+	Else
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundEliteTokens, s:" / ", d:TotalEliteGuards; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -211, CR_GREY, 710.1, 655.0, 0, 0.7);
+	}
+	Delay(3);
+}
+
+/*==============================================================================
+=====================	FIELD DRONE TRACKER (AUTOMAP)	========================
+==============================================================================*/
+Script "DroneCounter" ENTER //revised by strongbelly. Also a pathetic, lame, sorry hacky excuse of an ACS Script. :)
+{	
+	Delay(5); //just a small wait for the spawners to do their thing. Just to be sure.
+	
+	int TotalFieldDrones = ThingCountName("EOA_FieldDrone", 0);
+						  
+		
+	If (TotalFieldDrones < 1)
+		Terminate;
+
+	SetHUDSize (4096, 3120, 0); 
+	SetFont	("HUDTOKEN");
+	While (1 /*GetActorProperty(0, APROP_HEALTH) > 0*/)
+	{
+		int FoundFieldDrones = TotalFieldDrones - ScriptCall("EOA_StaticArchive", "GetFieldDronesSpawned") + ScriptCall("EOA_StaticArchive", "GetFieldDronesClaimed"); //CheckInventory("DroneHUDToken");
+						  
+						   
+		Delay(6);
+		switch(TotalFieldDrones)
+		{
+		case 1:
+				If (FoundFieldDrones == 1) 
+				{ HudMessage(s:"3"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else
+				  HudMessage(s:"D"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);
+		break;
+		
+		case 2:
+				If (FoundFieldDrones == 2)
+				{ HudMessage(s:"33"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 1)
+				{ HudMessage(s:"3D"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"DD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);
+		break;
+		
+		case 3:
+				If (FoundFieldDrones == 3)
+				{ HudMessage(s:"333"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 2)
+				{ HudMessage(s:"33D"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 1)
+				{ HudMessage(s:"3DD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else
+				    HudMessage(s:"DDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);
+		break;
+		
+		case 4:
+				If (FoundFieldDrones == 4)
+				{ HudMessage(s:"3333"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 3)
+				{ HudMessage(s:"333D"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 2)
+				{ HudMessage(s:"33DD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 1)
+				{ HudMessage(s:"3DDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"DDDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);
+		break;	
+		
+		case 5:
+				If (FoundFieldDrones == 5)
+				{ HudMessage(s:"33333"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 4)
+				{ HudMessage(s:"3333D"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 3)
+				{ HudMessage(s:"333DD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 2)
+				{ HudMessage(s:"33DDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 1)
+				{ HudMessage(s:"3DDDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"DDDDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);
+		break;	
+		
+		case 6:
+				If (FoundFieldDrones == 6)
+				{ HudMessage(s:"333333"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 5)
+				{ HudMessage(s:"33333D"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 4)
+				{ HudMessage(s:"3333DD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 3)
+				{ HudMessage(s:"333DDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 2)
+				{ HudMessage(s:"33DDDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else If (FoundFieldDrones == 1)
+				{ HudMessage(s:"3DDDDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);}
+				Else
+					HudMessage(s:"DDDDDD"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -301, CR_UNTRANSLATED, 3300.1, 2654.0, 0, 1.0);
+		break;
+		
+		Default:
+			If (FoundFieldDrones >= TotalFieldDrones)
+			  { HudMessage(s:"3"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -310, CR_UNTRANSLATED, 3500.1, 2654.0, 0, 1.0); }
+			Else
+				HudMessage(s:"D"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -310, CR_UNTRANSLATED, 3500.1, 2654.0, 0, 1.0);
+			ACS_NamedExecuteAlways("TooManyDrones",0,0,0,0);
+		break;
+		}
+		Delay(5); //Same
+	}
+}
+Script "TooManyDrones" (void)
+{
+	Delay(1);
+	
+	int TotalFieldDrones = ThingCountName("EOA_FieldDrone", 0);
+	int FoundFieldDrones = TotalFieldDrones - ScriptCall("EOA_StaticArchive", "GetFieldDronesSpawned") + ScriptCall("EOA_StaticArchive", "GetFieldDronesClaimed"); //CheckInventory("DroneHUDToken");
+						  
+						  	
+	If (FoundFieldDrones == TotalFieldDrones)
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundFieldDrones, s:" / ", d:TotalFieldDrones; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -311, CR_ORANGE, 915.1, 655.0, 0, 1.0);
+	}
+	Else
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundFieldDrones, s:" / ", d:TotalFieldDrones; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -311, CR_GREY, 915.1, 655.0, 0, 0.7);
+	}
+	Delay(3);
+}
+
+/*==============================================================================
+=====================	ARGENT CELL TRACKER (AUTOMAP)	========================
+==============================================================================*/
+Script "ArgentCellCounter" ENTER //revised by strongbelly. Also a pathetic, lame, sorry hacky excuse of an ACS Script. :)
+{	
+	Delay(5); //just a small wait for the spawners to do their thing. Just to be sure.
+
+	int TotalArgentCells = ThingCountName("EOA_ArgentCell", 0);
+	
+	If (TotalArgentCells < 1)
+		Terminate;
+
+	SetHUDSize (4096, 3120, 0); 
+	SetFont	("HUDTOKEN");
+	While (1 /*GetActorProperty(0, APROP_HEALTH) > 0*/)
+	{
+		int FoundArgentCells = TotalArgentCells - ScriptCall("EOA_StaticArchive", "GetArgentCellsSpawned") + ScriptCall("EOA_StaticArchive", "GetArgentCellsClaimed"); //CheckInventory("ArgentHUDToken");
+						
+		Delay(8);
+		switch(TotalArgentCells)
+		{
+		case 1:
+				If (FoundArgentCells == 1) 
+				{ HudMessage(s:"5"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else
+				  HudMessage(s:"C"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 2:
+				If (FoundArgentCells == 2)
+				{ HudMessage(s:"55"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 1)
+				{ HudMessage(s:"5C"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"CC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 3:
+				If (FoundArgentCells == 3)
+				{ HudMessage(s:"555"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 2)
+				{ HudMessage(s:"55C"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 1)
+				{ HudMessage(s:"5CC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else
+				    HudMessage(s:"CCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 4:
+				If (FoundArgentCells == 4)
+				{ HudMessage(s:"5555"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 3)
+				{ HudMessage(s:"555C"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 2)
+				{ HudMessage(s:"55CC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 1)
+				{ HudMessage(s:"5CCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"CCCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 5:
+				If (FoundArgentCells == 5)
+				{ HudMessage(s:"55555"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 4)
+				{ HudMessage(s:"5555C"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 3)
+				{ HudMessage(s:"555CC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 2)
+				{ HudMessage(s:"55CCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 1)
+				{ HudMessage(s:"5CCCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"CCCCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 6:
+				If (FoundArgentCells == 6)
+				{ HudMessage(s:"555555"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 5)
+				{ HudMessage(s:"55555C"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 4)
+				{ HudMessage(s:"5555CC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 3)
+				{ HudMessage(s:"555CCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 2)
+				{ HudMessage(s:"55CCCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else If (FoundArgentCells == 1)
+				{ HudMessage(s:"5CCCCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"CCCCCC"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -401, CR_UNTRANSLATED, 2485.1, 2875.0, 0, 1.0);
+		break;
+				
+		Default:
+			If (FoundArgentCells >= TotalArgentCells)
+			  { HudMessage(s:"5"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -410, CR_UNTRANSLATED, 2680.1, 2875.0, 0, 1.0); }
+			Else
+				HudMessage(s:"C"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -410, CR_UNTRANSLATED, 2680.1, 2875.0, 0, 1.0);
+			ACS_NamedExecuteAlways("TooManyArgentCells",0,0,0,0);
+		break;
+		}
+		Delay(5);
+	}
+}
+Script "TooManyArgentCells" (void)
+{
+	Delay(1);
+	
+	int TotalArgentCells = ThingCountName("EOA_ArgentCell", 0);
+	int FoundArgentCells = TotalArgentCells - ScriptCall("EOA_StaticArchive", "GetArgentCellsSpawned") + ScriptCall("EOA_StaticArchive", "GetArgentCellsClaimed"); //CheckInventory("ArgentHUDToken");
+						   
+	
+	If (FoundArgentCells == TotalArgentCells)
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundArgentCells, s:" / ", d:TotalArgentCells; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -411, CR_ORANGE, 710.1, 710.0, 0, 1.0);
+	}
+	Else
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundArgentCells, s:" / ", d:TotalArgentCells; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -411, CR_GREY, 710.1, 710.0, 0, 0.7);
+	}
+	Delay(3);
+}
+
+/*==============================================================================
+=====================	RUNE ARTIFACT TRACKER (AUTOMAP)	========================
+==============================================================================*/
+Script "RuneStoneCounter" ENTER
+{	
+	Delay(5); //just a small wait for the spawners to do their thing. Just to be sure.
+	
+	int TotalRuneStones = ThingCountName("EOA_RuneTrialStone", 0);
+						   
+	If (TotalRuneStones < 1)
+		Terminate;
+
+	SetHUDSize (4096, 3120, 0); 
+	SetFont	("HUDTOKEN");
+	While (1 /*GetActorProperty(0, APROP_HEALTH) > 0*/)
+	{
+		int FoundRuneStones = TotalRuneStones - ScriptCall("EOA_StaticArchive", "GetRuneTrialStonesSpawned") + ScriptCall("EOA_StaticArchive", "GetRuneTrialStonesClaimed"); //CheckInventory("RuneHUDToken");
+		
+		Delay(10);
+		switch(TotalRuneStones)
+		{
+		case 1:
+				If (FoundRuneStones == 1) 
+				{ HudMessage(s:"4"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else
+				  HudMessage(s:"R"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 2:
+				If (FoundRuneStones == 2)
+				{ HudMessage(s:"44"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 1)
+				{ HudMessage(s:"4R"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"RR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 3:
+				If (FoundRuneStones == 3)
+				{ HudMessage(s:"444"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 2)
+				{ HudMessage(s:"44R"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 1)
+				{ HudMessage(s:"4RR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else
+				    HudMessage(s:"RRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 4:
+				If (FoundRuneStones == 4)
+				{ HudMessage(s:"4444"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 3)
+				{ HudMessage(s:"444R"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 2)
+				{ HudMessage(s:"44RR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 1)
+				{ HudMessage(s:"4RRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"RRRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 5:
+				If (FoundRuneStones == 5)
+				{ HudMessage(s:"44444"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 4)
+				{ HudMessage(s:"4444R"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 3)
+				{ HudMessage(s:"444RR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 2)
+				{ HudMessage(s:"44RRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 1)
+				{ HudMessage(s:"4RRRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"RRRRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);
+		break;
+		
+		case 6:
+				If (FoundRuneStones == 6)
+				{ HudMessage(s:"444444"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 5)
+				{ HudMessage(s:"44444R"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 4)
+				{ HudMessage(s:"4444RR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 3)
+				{ HudMessage(s:"444RRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 2)
+				{ HudMessage(s:"44RRRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else If (FoundRuneStones == 1)
+				{ HudMessage(s:"4RRRRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);}
+				Else
+					HudMessage(s:"RRRRRR"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -501, CR_UNTRANSLATED, 3300.1, 2875.0, 0, 1.0);
+		break;
+		
+		Default:
+			If (FoundRuneStones >= TotalRuneStones)
+			  { HudMessage(s:"4"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -510, CR_UNTRANSLATED, 3500.1, 2875.0, 0, 1.0); }
+			Else
+				HudMessage(s:"R"; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP, -510, CR_UNTRANSLATED, 3500.1, 2875.0, 0, 1.0);
+			ACS_NamedExecuteAlways("TooManyRuneStones",0,0,0,0);
+		break;
+		}
+		Delay(5);
+	}
+}
+Script "TooManyRuneStones" (void)
+{
+	Delay(1);
+	
+	int TotalRuneStones = ThingCountName("EOA_RuneTrialStone", 0);
+	int FoundRuneStones = TotalRuneStones - ScriptCall("EOA_StaticArchive", "GetRuneTrialStonesSpawned") + ScriptCall("EOA_StaticArchive", "GetRuneTrialStonesClaimed"); //CheckInventory("RuneHUDToken");
+						
+
+	If (FoundRuneStones == TotalRuneStones)
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundRuneStones, s:" / ", d:TotalRuneStones; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -511, CR_ORANGE, 915.1, 710.0, 0, 1.0);
+	}
+	Else
+	{
+		SetHUDSize (1024,780,0);
+		SetFont("BIGFONT");
+		HudMessage(d:FoundRuneStones, s:" / ", d:TotalRuneStones; HUDMSG_PLAIN|HUDMSG_NOTWITH3DVIEW|HUDMSG_LAYER_OVERMAP|HUDMSG_Alpha, -511, CR_GREY, 915.1, 710.0, 0, 0.7);
+	}
+	Delay(3);
+}

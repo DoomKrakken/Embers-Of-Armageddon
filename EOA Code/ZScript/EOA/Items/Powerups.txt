@@ -1,0 +1,780 @@
+Class EOA_Item : PowerupGiver
+{
+	Mixin EOA_MapMarkerUser;
+	Double Red, Green, Blue;
+	Sound ActiveSound;
+	Sound WarningSound;
+	Sound ExpireSound;
+	Int WarnTics;
+	Property WarnTics: WarnTics;
+	Property Red: Red;
+	Property Green: Green;
+	Property Blue: Blue;
+	Property ActiveSound: ActiveSound;
+	Property WarningSound: WarningSound;
+	Property ExpireSound: ExpireSound;
+	Default
+	{
+		Inventory.PickupSound "";
+		Inventory.MaxAmount 0;
+		EOA_Item.WarnTics -5;
+		FloatBobStrength 0.3;
+		Scale 0.5;
+		EOA_Item.MarkerType "EOA_PowerupMarker";
+		+BRIGHT
+		+COUNTITEM
+		+DONTGIB
+		+FLOATBOB
+		+FORCEXYBILLBOARD
+		+INVENTORY.AUTOACTIVATE
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.FANCYPICKUPSOUND
+		+INVENTORY.NOSCREENFLASH
+		+INVENTORY.BIGPOWERUP
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		Super.MarkPrecacheSounds();
+		MarkSound(ActiveSound);
+		MarkSound(WarningSound);
+		MarkSound(ExpireSound);
+	}
+	Override Void Touch(Actor Toucher)
+	{
+		Let Player = Toucher.Player;
+
+		// If a voodoo doll touches something, pretend the real player touched it instead.
+		If (Player != Null)
+		{
+			Toucher = Player.Mo;
+		}
+
+		Bool LocalView = Toucher.CheckLocalView(ConsolePlayer);
+
+		Bool Res;
+		[Res, Toucher] = CallTryPickup(Toucher);
+		If (!Res)
+		{
+			Return;
+		}
+
+		// This is the only situation when a pickup flash should ever play.
+		If (PickupFlash != Null && !ShouldStay())
+		{
+			Spawn(PickupFlash, Pos, ALLOW_REPLACE);
+		}
+
+		If (!bQUIET)
+		{
+			PrintPickupMessage(LocalView, PickupMessage());
+
+			// Special check so voodoo dolls picking up items cause the
+			// real player to make noise.
+			If (Player != Null)
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Player.Mo, PickupSound);
+				If (!bNOSCREENFLASH)
+				{
+					Player.BonusCount = BONUSADD;
+				}
+			}
+			Else
+			{
+				EOA_ActorExtensions.SpawnNoiseMaker(Toucher, PickupSound);
+			}
+		}
+
+		// [RH] Execute an attached special (if any)
+		DoPickupSpecial(Toucher);
+
+		If (bCOUNTITEM)
+		{
+			If (Player != Null)
+			{
+				Player.ItemCount++;
+			}
+			Level.Found_Items++;
+		}
+
+		If (bCOUNTSECRET)
+		{
+			Actor ac = Player != Null? Actor(Player.Mo) : Toucher;
+			ac.GiveSecret(True, True);
+		}
+
+		//Added by MC: Check if item taken was the roam destination of any bot
+		For (Int i = 0; i < MAXPLAYERS; i++)
+		{
+			If (Players[i].Bot != Null && Self == Players[i].Bot.dest)
+			{
+				Players[i].Bot.Dest = Null;
+			}
+		}
+	}
+	Override Bool Use(Bool Pickup)
+	{
+		If (!PowerupType || !Owner)
+		{
+			Return True; //Item is useless.
+		}
+		Let Power = EOA_Powerup(Spawn(PowerupType));
+		If (Power)
+		{
+			If (EffectTics)
+			{
+				Power.EffectTics = EffectTics * (1 + 0.5 * Owner.CountInv("PowerExtender"));
+			}
+			If (BlendColor)
+			{
+				If (BlendColor != Powerup.SPECIALCOLORMAP_MASK | 65535)
+				{
+					Power.BlendColor = BlendColor;
+				}
+				Else
+				{
+					Power.BlendColor = 0;
+				}
+			}
+			If (Mode != 'None')
+			{
+				Power.Mode = Mode;
+			}
+			If (Strength)
+			{
+				Power.Strength = Strength;
+			}
+			Power.bALWAYSPICKUP |= bALWAYSPICKUP;
+			Power.bADDITIVETIME |= bADDITIVETIME;
+			Power.bNOTELEPORTFREEZE |= bNOTELEPORTFREEZE;
+			Power.Red = Red;
+			Power.Green = Green;
+			Power.Blue = Blue;
+			Power.ActiveSound = ActiveSound;
+			Power.WarningSound = WarningSound;
+			Power.ExpireSound = ExpireSound;
+			Power.WarnTics = WarnTics;
+			If (Power.CallTryPickup(Owner))
+			{
+				If (Marker)
+				{
+					Marker.ItemClaimed = True;
+				}
+				Return True;
+			}
+			Power.GoAwayAndDie();
+			Return False;
+		}
+		If (Marker)
+		{
+			Marker.ItemClaimed = True;
+		}
+		Return True;
+	}
+	Override Void OnDestroy()
+	{
+		A_StopAllSounds();
+		Super.OnDestroy();
+	}
+}
+
+Class EOA_Powerup : Powerup
+{
+	Bool WarnTimer;
+	Int WarnTics;
+	EOA_PowerupFXBase NoiseMaker;
+	String Overlay;
+	Double Red, Green, Blue;
+	Sound ActiveSound, WarningSound, ExpireSound;
+	Private Int EOA_PowerFlags;
+	Flagdef NoLight: EOA_PowerFlags, 1;
+	Property Overlay: Overlay;
+	Default
+	{
+		+INVENTORY.ALWAYSPICKUP
+	}
+	Override Void AttachToOwner(Actor Other)
+	{
+		Super.AttachToOwner(Other);
+		Other.A_GiveInventory("PowerupEffectiveness"); //Praetor Suit Menu prerequisite...
+		If (Other.CountInv("HealingPower"))
+		{
+			Other.A_GiveInventory("EOA_MegaStim");
+		}
+		If (WarnTics < 0)
+		{
+			WarnTics = abs(WarnTics) * TICRATE;
+		}
+		If (!bNOLIGHT)
+		{
+			Red = clamp(Red, 0, 1.0);
+			Green = clamp(Green, 0, 1.0);
+			Blue = clamp(Blue, 0, 1.0);
+			Int R, G, B;
+			R = Red * 255;
+			G = Green * 255;
+			B = Blue * 255;
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Other, Self.GetClassName(), DynamicLight.PointLight, (R, G, B), 96, 0, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, -1, (0, 0, Owner.Height / 2));
+		}
+	}
+	Override Void Tick()
+	{
+		//Powerups cannot exist outside an inventory.
+		If (!Owner || EffectTics <= 0)
+		{
+			Destroy();
+		}
+		Else If (!(Owner.CountInv("RipAndTear") || Owner.CountInv("ChainsawRipAndTear"))) //[DoomKrakken]: Powerups in EOA do not decrement if the owner is performing a Glory Kill.
+		{
+			EffectTics--;
+		}
+		If (EffectTics % TICRATE) //If it's not evenly divisible by the ticrate, clear the WarnTimer.  This way, if it happens to not decrement whilst being divisible by the ticrate, it won't spam the warning sound.
+		{
+			WarnTimer = False;
+		}
+		//[DoomKrakken]: No call to Super.Tick().  Apparently, this is ALL they do! :D
+	}
+	Override Void DoEffect()
+	{
+		EOA_ActorExtensions.SpawnNoiseMaker(Owner, ActiveSound, 30, CHANF_LOOPING|CHANF_OVERLAP|CHANF_LISTENERZ);
+		If (EffectTics && EffectTics <= WarnTics && !(EffectTics % TICRATE) && !WarnTimer)
+		{
+			EOA_ActorExtensions.SpawnNoiseMaker(Owner, WarningSound, 30, CHANF_OVERLAP|CHANF_LISTENERZ);
+			WarnTimer = True;
+		}
+		Super.DoEffect();
+	}
+	Override Void EndEffect()
+	{
+		If (Owner)
+		{
+			Owner.A_StopSound(30); //[DoomKrakken]: In case the ExpireSound is invalid...
+			EOA_ActorExtensions.SpawnNoiseMaker(Owner, ExpireSound, 30, CHANF_OVERLAP|CHANF_LISTENERZ);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Owner, Self.GetClassName(), Duration: 0);
+			If (Owner.CountInv("PowerSurge"))
+			{
+				Owner.A_SpawnItemEx("PowerSurgeBlast", Flags: SXF_NOCHECKPOSITION|SXF_SETTARGET);
+			}
+		}
+		Super.EndEffect();
+	}
+	Override Bool HandlePickup(Inventory Item)
+	{
+		If (Item.GetClass() == GetClass())
+		{
+			Owner.A_GiveInventory("PowerupEffectiveness"); //Praetor Suit Menu prerequisite...
+			If (Owner.CountInv("HealingPower"))
+			{
+				Owner.A_GiveInventory("EOA_MegaStim");
+			}
+			Let Power = EOA_Powerup(Item);
+			If (!Power.EffectTics)
+			{
+				Power.bPICKUPGOOD = True;
+				Return True;
+			}
+			If (Power.bADDITIVETIME) 
+			{
+				EffectTics += Power.EffectTics;
+				BlendColor = Power.BlendColor;
+			}
+			Else If (EffectTics > BLINKTHRESHOLD && !Power.bALWAYSPICKUP)
+			{
+				Return True;
+			}
+			Else If (Power.EffectTics > EffectTics)
+			{
+				EffectTics = Power.EffectTics;
+				BlendColor = Power.BlendColor;
+			}
+			Power.bPICKUPGOOD = True;
+			If (Owner.CountInv(Power.GetClassName()) && Owner.CountInv("PowerSurge"))
+			{
+				Owner.A_SpawnItemEx("PowerSurgeBlast", Flags: SXF_NOCHECKPOSITION|SXF_SETTARGET);
+			}
+			Return True;
+		}
+		Return False;
+	}
+}
+
+Class PowerHaste : EOA_Powerup
+{
+	Default
+	{
+		Tag "Haste";
+		EOA_Powerup.Overlay "BRHSTE01";
+		Speed 1.4;
+	}
+	Override Double GetSpeedFactor()
+	{
+		Return Speed;
+	}
+}
+
+Class PowerBerserk : EOA_Powerup //[DoomKrakken]: There's no need to define any damage buffs, as the primary effect of Berserk is hardcoded into the weapon itself.  The secondary effect, however, still requires a powerup.  So why not? :D
+{
+	Weapon PrevWeapon;
+	Default
+	{
+		Tag "Berserk";
+		EOA_Powerup.Overlay "BRBSRK01";
+		DamageFactor "Normal", 0.5;
+		+EOA_POWERUP.NOLIGHT
+	}
+	Override Void InitEffect()
+	{
+		If (Owner && Owner.Player && Owner.Player.ReadyWeapon)
+		{
+			Let IW = EOA_InteractWeapon(Owner.Player.ReadyWeapon);
+			If (IW)
+			{
+				PrevWeapon = Weapon(Owner.FindInventory(IW.ReselectWeapon));
+			}
+			Else
+			{
+				PrevWeapon = Owner.Player.ReadyWeapon;
+			}
+		}
+		Owner.A_GiveInventory("EOA_BerserkFist");
+		Super.InitEffect();
+	}
+	Override Void DoEffect()
+	{
+		Let Player = Owner.Player;
+		If (Player)
+		{
+			If (!(Player.ReadyWeapon Is "EOA_InteractWeapon") && !(Player.ReadyWeapon Is "EOA_BerserkFist"))
+			{
+				If (!PrevWeapon)
+				{
+					PrevWeapon = Owner.Player.ReadyWeapon;
+				}
+				If (!(Player.PendingWeapon Is "EOA_BerserkFist"))
+				{
+					Player.PendingWeapon = Weapon(Owner.FindInventory("EOA_BerserkFist"));
+				}
+			}
+		}
+		Super.DoEffect();
+	}
+	Override Void ModifyDamage(Int Damage, Name DamageType, Out Int NewDamage, Bool Passive)
+	{
+		If (Passive && Damage > 0)
+		{
+			NewDamage = max(0, ApplyDamageFactors(GetClass(), DamageType, Damage, Damage / 4));
+		}
+	}
+	Override Double GetSpeedFactor()
+	{
+		Return 1.25;
+	}
+}
+
+Class PowerQDMG : EOA_Powerup
+{
+	Default
+	{
+		Tag "Quad Damage";
+		EOA_Powerup.Overlay "BRQDMG01";
+		DamageFactor 4;
+	}
+	Override Void MarkPrecacheSounds()
+	{
+		Super.MarkPrecacheSounds();
+		MarkSound("Quad/Voice");
+	}
+	Override Void DoEffect()
+	{
+		EOA_ActorExtensions.SpawnNoiseMaker(Owner, "Quad/Voice", 30, CHANF_OVERLAP|CHANF_LOOPING);
+		Super.DoEffect();
+	}
+	Override Void ModifyDamage(Int Damage, Name DamageType, Out Int NewDamage, Bool Passive)
+	{
+		If (!Passive && Damage > 0)
+		{
+			NewDamage = max(1, ApplyDamageFactors(GetClass(), DamageType, Damage, Damage * 4));
+		}
+	}
+}
+
+Class PowerInvulnerability : EOA_Powerup
+{
+	Default
+	{
+		Tag "Invulnerability";
+		EOA_Powerup.Overlay "BRINVL01";
+	}
+	Override Void InitEffect()
+	{
+		If (Owner)
+		{
+			Owner.bRESPAWNINVUL = False;
+			Owner.bINVULNERABLE = True;
+		}
+		Super.InitEffect();
+	}
+	Override Void EndEffect()
+	{
+		If (Owner)
+		{
+			Owner.bRESPAWNINVUL = False;
+			Owner.bINVULNERABLE = False;
+		}
+		Super.EndEffect();
+	}
+}
+
+//Power Surge - Useful for barbecues, birthday parties, and violently dashing your enemies' brains out.
+Class PowerSurgeBlastItem : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0 A_SpawnItemEx("PowerSurgeBlast", Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_SETTARGET);
+		Stop;
+	}
+}
+
+Class PowerSurgeBlast : Actor
+{
+	Default
+	{
+		Projectile;
+		+DONTBLAST
+		+DONTTHRUST
+		+EXTREMEDEATH
+		+FOILINVUL
+		+NODAMAGETHRUST
+		+NOINTERACTION
+		+NOTIMEFREEZE
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay
+		{
+			A_StartSound("Player/PowerSurge");
+			A_Explode(320, 512, 0, 1, 256);
+			A_SpawnItemEx("PowerSurgeBlastOuter", 0, 0, 10, Flags: SXF_CLIENTSIDE);
+			A_SpawnItemEx("PowerSurgeBlastInner", 0, 0, 10, Flags: SXF_CLIENTSIDE);
+		}
+		Stop;
+	}
+}
+
+Class PowerSurgeBlastOuter : Actor
+{
+	Default
+	{
+		Renderstyle "Add";
+		Alpha 0.99;
+		Scale 0.3;
+		+DONTBLAST
+		+DONTTHRUST
+		+FLATSPRITE
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		PSHK A 1 NoDelay
+		{
+			A_FadeOut(0.14);
+			A_SetScale(Scale.X + 0.8);
+		}
+		Wait;
+	}
+}
+
+Class PowerSurgeBlastInner : PowerSurgeBlastOuter
+{
+	States
+	{
+	Spawn:
+		PSHK B 1 NoDelay
+		{
+			A_FadeOut(0.14);
+			A_SetScale(Scale.X + 0.8);
+		}
+		Wait;
+	}
+}
+
+Class EOA_PowerupFXBase : EOA_PersistentNoiseMaker {}
+
+Class EOA_Haste : EOA_Item
+{
+	Default
+	{
+		Powerup.Type "PowerHaste";
+		Powerup.Duration -20;
+		EOA_Item.Red 1.0;
+		EOA_Item.Green 1.0;
+		EOA_Item.Blue 0.1;
+		EOA_Item.ActiveSound "Haste/Loop";
+		EOA_Item.WarningSound "Haste/Warn";
+		EOA_Item.ExpireSound "Haste/End";
+		Inventory.PickupSound "Haste/Pickup";
+		Inventory.PickupMessage "Haste";
+		Tag "Haste";
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_StartSound("Item/Glow", 0, CHAN_LOOP);
+	SpawnLoop:
+		HSTE ABCDEFGH 3 Light("HasteGlow");
+		Loop;
+	}
+}
+
+Class EOA_Berserk : EOA_Item
+{
+	Default
+	{
+		Powerup.Type "PowerBerserk";
+		Powerup.Duration -25;
+		EOA_Item.Red 0.5;
+		EOA_Item.Green 0.25;
+		EOA_Item.Blue 0;
+		EOA_Item.WarningSound "Berserk/Warn";
+		EOA_Item.ExpireSound "Berserk/End";
+		Inventory.PickupSound "Berserk/Pickup";
+		Inventory.PickupMessage "Berserk";
+		Tag "Berserk";
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			A_StartSound("Item/Glow", 0, CHAN_LOOP);
+			A_SpawnItemEx("BerserkFlame", Flags: SXF_SETTARGET|SXF_NOCHECKPOSITION);
+		}
+	SpawnLoop:
+		BSRK ABCDEFGHIJ 3 Light("BerserkGlow");
+		Loop;
+	}
+}
+
+Class EOA_QuadDamage : EOA_Item
+{
+	Default
+	{
+		Powerup.Type "PowerQDMG";
+		Powerup.Duration -20;
+		EOA_Item.Red 0.25;
+		EOA_Item.Green 0;
+		EOA_Item.Blue 0.5;
+		EOA_Item.ActiveSound "Quad/Loop";
+		EOA_Item.WarningSound "Quad/Warn";
+		EOA_Item.ExpireSound "Quad/End";
+		Inventory.PickupSound "Quad/Pickup";
+		Inventory.PickupMessage "Quad Damage";
+		Tag "Quad Damage";
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay 
+		{
+			A_StartSound("Quad/Idle", 0, CHAN_LOOP);
+			A_SpawnItemEx("QuadDamageFlame", Flags: SXF_SETTARGET|SXF_NOCHECKPOSITION);
+		}
+	SpawnLoop:
+		QDMG ABCDEFGHIJ 3 Light("QuadDamageGlow");
+		Loop;
+	}
+}
+
+Class EOA_Invulnerability : EOA_Item
+{
+	Default
+	{
+		Powerup.Type "PowerInvulnerability";
+		Powerup.Duration -15;
+		EOA_Item.Red 0;
+		EOA_Item.Green 1.0;
+		EOA_Item.Blue 0;
+		EOA_Item.ActiveSound "Invul/Loop";
+		EOA_Item.WarningSound "Invul/Warn";
+		EOA_Item.ExpireSound "Invul/End";
+		EOA_Item.WarnTics -2;
+		Inventory.PickupSound "Invul/Pickup";
+		Inventory.PickupMessage "Invulnerability";
+		Tag "Invulnerability";
+	}
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_StartSound("Invul/Hum", 0, CHAN_LOOP);
+	SpawnLoop:
+		INVL ABCDEFGHIJ 3 Light("InvulnerabilityGlow");
+		Loop;
+	}
+}
+
+//[DoomKrakken]: This will be integral for shortening weapon animations influenced by Haste and other weapon speed perks.  Please refer to the weapon code for further information. :)
+Class SpeedCounter : EOA_Token {Default {Inventory.MaxAmount 3;} }
+
+Class BerserkFlame : Actor
+{
+	Default
+	{
+		Scale 0.5;
+		RenderStyle "Add";
+		+BRIGHT
+		+DONTBLAST;
+		+DONTTHRUST;
+		+NOINTERACTION;
+	}
+	States
+	{
+	Spawn:
+		BZFL ABCDEFGHIJKLM 1 
+		{
+			If (Target)
+			{
+				A_Warp(AAPTR_TARGET, 0, 0, 30, 0, WARPF_NOCHECKPOSITION|WARPF_BOB);
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Null");
+		}
+		Loop;
+	}
+}
+
+Class QuadDamageFlame : Actor
+{
+	Default
+	{
+		Scale 0.5;
+		RenderStyle "Add";
+		+BRIGHT
+		+DONTBLAST
+		+DONTTHRUST
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		QDFL ABCDEFGHIJKLM 1 
+		{
+			If (Target)
+			{
+				A_Warp(AAPTR_TARGET, 0, 0, 30, 0, WARPF_NOCHECKPOSITION|WARPF_BOB);
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Null");
+		}
+		Loop;
+	}
+}
+
+Class QuadDamageFX : EOA_PowerupFXBase
+{
+	Default
+	{
+		RenderStyle "Add";
+	}
+	States
+	{
+	Spawn:
+		"####" "#" 1 NoDelay Bright Light("QuadDamageGlow")
+		{
+			If (CountInv("PowerQDMG", AAPTR_TARGET) && !(Target || A_JumpIfHealthLower(2, "Null", AAPTR_TRACER)))
+			{
+				A_SetTranslation("Purple");
+				A_CopySpriteFrame(AAPTR_TRACER, AAPTR_DEFAULT);
+				A_Warp(AAPTR_TRACER, 0, 0, 0, 0, WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE|WARPF_STOP);
+				Return ResolveState(Null);
+			}
+			Return ResolveState("Null");
+		}
+		Wait;
+	}
+}
+
+//Class QuadDamageActive : EOA_Token{}
+
+Class QuadDamageShot : EOA_Manipulator
+{
+	States
+	{
+	Pickup:
+		TNT1 A 0 A_SpawnItemEx("QuadDamageSound", Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION|SXF_SETTARGET);
+		Stop;
+	}
+}
+
+Class QuadDamageSound : EOA_PowerupFXBase
+{
+	States
+	{
+	Spawn:
+		TNT1 A 0 NoDelay A_StartSound("QuadDamage/Shot");
+		Goto Super::Spawn;
+	}
+}
+
+
+Class EOA_QuadHasteSpawner : Actor {}
+Class EOA_RadsuitReplacer : Actor {}
+
+Class EOA_MegaHealth : CustomInventory
+{
+	Default
+	{
+		Inventory.PickupMessage "+200 Health / +200 Armor";
+		Inventory.PickupSound "Health/Mega";
+		Inventory.RespawnTics 2100;
+		Scale 1.15;
+		+BRIGHT
+		+COUNTITEM
+		+INVENTORY.ALWAYSPICKUP
+		+INVENTORY.BIGPOWERUP
+		+INVENTORY.NOSCREENFLASH
+	}
+	States
+	{
+	Spawn:
+		HMGA A 35;
+		HMGA BCDEDCB 2;
+		Loop;
+	Pickup:
+		TNT1 A 0
+		{
+			A_GiveInventory("EOA_MegaArmorBonus");
+			A_GiveInventory("EOA_MegaHealthBonus");
+		}
+		Stop;
+	}
+}
+
+Class EOA_MegaArmorBonus : EOA_Armor
+{
+	Default
+	{
+		Armor.SaveAmount 200;
+		Armor.MaxSaveAmount 200;
+		+INVENTORY.ALWAYSPICKUP
+	}
+}
+
+Class EOA_MegaHealthBonus : EOA_Health
+{
+	Default
+	{
+		Inventory.Amount 200;
+		Inventory.MaxAmount 200;
+		+INVENTORY.ALWAYSPICKUP
+	}
+}
+
+Class SoulsphereReplacer : RandomSpawner
+{
+	Default
+	{
+		DropItem "EOA_MegaHealth";
+	}
+}

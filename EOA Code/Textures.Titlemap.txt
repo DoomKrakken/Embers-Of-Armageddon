@@ -1,0 +1,50 @@
+//FOR RESIZING THE IMAGES
+remap P_NEWGAM	N_NGAME  	//new game
+remap P_EOASET	N_EOASET	//eoa settings
+remap P_OPTION  N_OPTION	//options
+remap P_LOADG   N_LOADG		//load game
+remap P_SAVEG   N_SAVEG		//save game
+remap P_RDTHIS  N_RDTHIS	//read this
+remap P_QUITG   N_QUITG		//exit game
+remap M_DOOM    H_DOOM		//menu title
+remap M_SKILL	SKILL		//difficulty title
+remap M_JKILL	sk01		//i'm too young to die
+remap M_ROUGH	sk02		//hey, not too rough
+remap M_HURT	sk03		//hurt me plenty
+remap M_ULTRA	sk04		//ultra violence
+remap M_NMARE	sk05		//nightmare
+
+remap M_EPI1	N_EPI1      //knee-deep in the dead
+remap M_EPI2	N_EPI2		//the shores of hell
+remap M_EPI3	N_EPI3		//inferno
+remap M_EPI4	N_EPI4		//thy flesh consumed
+remap M_EPI5	N_EPI5		//sigil
+remap P_EPISOD  N_EPISOD	//which episode?
+
+remap P_UPGRDS  N_UPGRDS	//upgrades menu title
+remap P_UPGRD1  N_ARSENL	//arsenal
+remap P_UPGRD2  N_PRAETR	//praetor suit
+remap P_UPGRD3  N_RUNES		//runes
+remap P_UPGRD4  N_CHLENG	//challenges
+
+define UPGSEL01 131 15
+define UPGSEL02 131 15
+define UPGSEL03 131 15
+define UPGSEL04 131 15
+define UPGSEL05 131 15
+define UPGSEL06 131 15
+define UPGSEL07 131 15
+define UPGSEL08 131 15
+define UPGSEL09 131 15
+define UPGSEL10 131 15
+
+Graphic "BACKMENU", 629, 412
+{
+	XScale 3.0
+	YScale 3.0
+	Patch "MENUBACK", 0, 0
+	{
+		Style Add
+	    Alpha 0.7
+	}	
+}

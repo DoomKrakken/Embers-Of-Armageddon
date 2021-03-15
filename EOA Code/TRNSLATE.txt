@@ -1,0 +1,7 @@
+Normal = "0:255=0:255" //What it says on the label.
+Cyan = "0:255=#[0, 178, 255]" //Staggered
+Orange = "0:255=#[255, 85, 0]" //Staggered and in range
+Purple = "0:255=#[113, 0, 252]" //Quad Damage
+Silver = "0:255=#[210, 210, 210]" //Uranium
+Red = "0:255=#[255, 0, 0]" //Siphon Grenade FX
+Yellow = "0:255=%[0, 0, 0]:[2, 1.2, 0.45]" //Rocket Explosion
