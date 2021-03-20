@@ -5,3 +5,6 @@ This repository only contains the code behind the mod.  You will also need to ac
 
 You can download that from here, along with the latest (stable) EOA release:
 https://www.dropbox.com/s/mbjxp3gr774czix/EOA.zip?dl=0
+
+To keep up with the latest updates and news on the mod, and to easily interact with me personally, come and join my Discord server!
+https://discord.gg/wGJsTbt
