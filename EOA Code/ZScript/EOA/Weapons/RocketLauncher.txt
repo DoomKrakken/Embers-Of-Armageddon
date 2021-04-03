@@ -1320,8 +1320,8 @@ Class ExternalPayloadExplosion : Actor
 			{
 				A_StartSound("RLR/Shrapnel", 0, 0, 1.0, ATTN_NORM, 1 + 0.0625 * random(-2, 2));
 			}
-			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAddLight", DynamicLight.PulseLight, (255, 153, 76), 1, 170 * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), DYNAMICLIGHT.LF_ADDITIVE, 14, (0, 0, Height / 2), 0.5);
-			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAttLight", DynamicLight.PulseLight, (255, 153, 76), 1, 170 * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), DYNAMICLIGHT.LF_ATTENUATE, 14, (0, 0, Height / 2), 0.5);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAddLight", DynamicLight.PulseLight, (255, 153, 76), 170 * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ADDITIVE, 14, (0, 0, Height / 2), 0.5);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAttLight", DynamicLight.PulseLight, (255, 153, 76), 170 * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ATTENUATE, 14, (0, 0, Height / 2), 0.5);
 		}
 		TNT1 A 10 A_SpawnItemEx("EOA_RocketExplosion", Flags: SXF_TRANSFERSCALE|SXF_NOCHECKPOSITION);
 		Stop;

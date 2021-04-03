@@ -218,17 +218,17 @@ Class EOA_PlasmaRifle : EOA_Weapon
 		{
 			Actor Mo = It.Thing;
 			//Check for the Heat Blast Wave
-			If (!BlastWave || Mo == Self || !Mo.bSHOOTABLE || !CheckIfCloser(Mo, DistThresh))
-            {
-                Continue;
-            }			
+			If (!BlastWave || !Mo || Mo == Self || !Mo.bSHOOTABLE || !CheckIfCloser(Mo, DistThresh))
+			{
+				Continue;
+			}
 			//Gotta be somewhat in front of you.  Remember, this heat blast isn't a fart... (thank you, Kodi, Xangi, and Gutawer!)
 			Vector3 PosDif = Vec3To(Mo); //Difference in position between inflictor and victim.
 			Double RelAngle = AbsAngle(Angle, atan2(PosDif.Y, PosDif.X)); //Difference in angle between inflictor and victim.
             If (RelAngle >= AngThresh)
-            {
-                Continue;
-            }
+			{
+				Continue;
+			}
 			If (Mo.CurSector.PortalGroup != CurSector.PortalGroup || !CheckSight(Mo) || Mo.bKILLED)
 			{
 				Continue;

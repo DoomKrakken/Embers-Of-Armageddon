@@ -1,8 +1,12 @@
+===== v1.9.1 (Hotfix) =====
+- Removed an erroneous change from the changelog.
+- Switched the "Radius1" and "Radius2" arguments in calls to "SpawnCustomDynamicLight" in the ExternalPayloadExplosion class.
+- Added a null-check to "EOA_HeatBlast".
+
 ===== v1.9 =====
 - Standard rockets fired by the Rocket Launcher now have a full damage radius equal to twice their radius (previously 0).
 - Increased deployed Mobile Turret projectile spread to 3, horizontally and vertically (previously 1, horizontally and vertically).
 - Hazard Protection's fire damage reduction now only applies to environmentally-sourced fire damage (previously environmentally and monster-sourced).
-- Lock-On Burst rockets now have an angular turn threshold of 45 (previously 60).
 - Created an essentials utility that can be edited by an inventory item in each monster's inventory, which defines custom weakpoints, stagger/GK stats, and other utilities.
 - Renamed EOA_Thinker to EOA_Essentials.
 - Monsters now spawn a head hitbox in the top 2/11 of the actor with a radius equal to 4/7 of their own radius and 2/11 of their height (while their "ProjectilePassHeight" property is lowered by 2/11 [this behavior can be disabled in EOA Settings]).
