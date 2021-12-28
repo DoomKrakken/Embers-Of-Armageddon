@@ -48,6 +48,15 @@ Class EOA_FieldDrone : Actor //[DoomKrakken]: Sprites taken from D4T.
 		AmbSoundTimer++;
 		Super.Tick();
 	}
+	Override Void Touch(Actor Toucher)
+	{
+		Let Player = Toucher.Player;
+		If (Player)
+		{
+			Toucher = Player.Mo;
+			A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]); //[DoomKrakken]: Have it called when a player touches the actor, as opposed to when the player is locked in a slow, unskippable animation where the player cannot escape from the possible trap that is triggered by this special.
+		}
+	}
 	Override Bool Used(Actor User) //Thanks again, phantombeta! :D
 	{
 		A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);

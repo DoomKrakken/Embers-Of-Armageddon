@@ -55,11 +55,11 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 		{
 			A_WeaponOffset();
 			A_TakeInventory("ChainsawSelected");
-			If (IsActorPlayingSound((Invoker.SlotNumber + 0.75) * 100 + 1, "Chainsaw/Idle") || IsActorPlayingSound((Invoker.SlotNumber + 0.75) * 100 + 1, "Chainsaw/Fire"))
+			If (IsActorPlayingSound(Int(Invoker.SlotNumber + 0.75 * 100 + 1), "Chainsaw/Idle") || IsActorPlayingSound(Int(Invoker.SlotNumber + 0.75 * 100 + 1), "Chainsaw/Fire"))
 			{
 				EOA_DestroyPersistentNoiseMaker(Invoker.SlotNumber + 0.75);
 			}
-			If (IsActorPlayingSound((Invoker.SlotNumber + 0.5) * 100 + 5, "Chainsaw/MetalLoop") || IsActorPlayingSound((Invoker.SlotNumber + 0.5) * 100 + 6, "Chainsaw/MetalLoop"))
+			If (IsActorPlayingSound(Int(Invoker.SlotNumber + 0.5 * 100 + 5), "Chainsaw/MetalLoop") || IsActorPlayingSound(Int(Invoker.SlotNumber + 0.5 * 100 + 6), "Chainsaw/MetalLoop"))
 			{
 				EOA_DestroyPersistentNoiseMaker(Invoker.SlotNumber + 0.5);
 			}
@@ -241,7 +241,6 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 		{
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 5);
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 6);
-			SetPlayerProperty(0, 1, PROP_TOTALLYFROZEN);
 			bNOTARGET = bNOPAIN = bNODAMAGE = True;
 			bNOGRAVITY = Tracer && Tracer.bNOGRAVITY;
 			If (CountInv("SeekAndDestroySelected"))
@@ -324,7 +323,6 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 		"####" "#" 0
 		{
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "Chainsaw/Down", 3, 0, 0.5);
-			SetPlayerProperty(0, 0, PROP_TOTALLYFROZEN);
 			bNOTARGET = bNOPAIN = bNODAMAGE = bNOGRAVITY = False;
 			A_TakeInventory("ChainsawRipAndTear");
 			A_TakeInventory("DeathFromAbove");
@@ -359,18 +357,10 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 		"####" "#####" 1
 		{
 			A_WeaponOffset(0, 16, WOF_ADD);
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
-			If (CountInv("RipAndTear"))
-			{
-				A_SpawnProjectile("EOA_GKSeeker", 0, 0, 0, 0);
-				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
-				A_GunFlash("Null");
-				Return ResolveState("GloryKill");
-			}
-			Return ResolveState(Null);
 		}
 		"####" "#" 0 A_GunFlash("MeleeAttack", GFF_NOEXTCHANGE);
 		Goto Budge;
@@ -400,18 +390,7 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 			}
 		}
 	Budge:
-		TNT1 AAAAAAAAAAAAAAA 1 
-		{
-			A_WeaponOffset();
-			If (CountInv("RipAndTear"))
-			{
-				A_SpawnProjectile("EOA_GKSeeker", 0, 0, 0, 0);
-				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
-				A_GunFlash("Null");
-				Return ResolveState("GloryKill");
-			}
-			Return ResolveState(Null);
-		}
+		TNT1 AAAAAAAAAAAAAAA 1 A_WeaponOffset();
 		TNT1 A 0 A_WeaponOffset(0, 80);
 		Goto ReRaise;
 	}
@@ -431,7 +410,7 @@ Class ChainsawGloryKillChecker : EOA_NullPuff2
 	XDeath:
 		TNT1 A 1 NoDelay
 		{
-			If (Tracer)
+			If (Tracer && !(Tracer.CountInv("GloryKillCounter") || Tracer.CountInv("ChainsawGloryKillCounter"))) //[DoomKrakken]: Make sure not to target monsters that are currently being Glory Killed.
 			{
 				ThinkerIterator It = ThinkerIterator.Create("EOA_Essentials");
 				EOA_Essentials Essentials;

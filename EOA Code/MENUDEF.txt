@@ -7,6 +7,7 @@ AddOptionMenu "OptionsMenu"
 //Main Menu (modified further by Strongbelly).
 ListMenu "MainMenu"
 {
+	Size "Clean"
 	Selector "N_BOXSEL",-4,0
 	IfGame(Doom, Chex)
 	{
@@ -45,6 +46,7 @@ ListMenu "MainMenu"
 //Custom menu stuff from Strongbelly...
 ListMenu "SkillMenu"
 {
+	Size "Clean"
 	Selector "N_BOXSEL",-4,0
 	StaticPatch 88, 50, "M_SKILL"
 	Position 90, 72
@@ -52,6 +54,7 @@ ListMenu "SkillMenu"
 
 ListMenu "EpisodeMenu"
 {
+	Size "Clean"
 	Selector "N_BOXSEL",-4,0
 	StaticPatch 88, 50, "P_EPISOD"
 	Position 90, 72
@@ -534,6 +537,7 @@ OptionMenu "RunePurchaseMenu"
 //Upgrade Hub Menu
 ListMenu "UpgradeMenu"
 {
+	Size "Clean"
 	StaticPatch 68, 50, "BACKMENU"
 	StaticPatch 88, 70, "P_UPGRDS"
 	Position 122, 90
@@ -547,6 +551,7 @@ ListMenu "UpgradeMenu"
 }
 /*ListMenu "UpgradeMenu"
 {
+	Size "Clean"
 	StaticText 88, 64, "Upgrades", Gold
 	Position 92, 87
 	Selector -, 0, 0

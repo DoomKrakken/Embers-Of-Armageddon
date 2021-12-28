@@ -754,13 +754,13 @@ Class CombatShotgunTracer : EOA_FastProjectile
 					A_GiveInventory("PowerShotFiring");
 				}
 			}
-			Int Dist = Target.Distance3D(Self.Target) - Self.Target.Radius - Target.Radius;
+			Int Dist = Int(Target.Distance3D(Self.Target) - Self.Target.Radius - Target.Radius);
 			Double CloseDMG = clamp((PointBlankDamage - MaxDamage) - (Dist - PBDamageFalloffDistStart) / max(1, PBDamageFalloffDistEnd - PBDamageFalloffDistStart), 0, PointBlankDamage - MaxDamage);
 			Double FarDMG = clamp(MaxDamage - (Dist - DamageFalloffDistStart) / max(1, DamageFalloffDistEnd - DamageFalloffDistStart), Damage, MaxDamage);
-			Damage = CloseDMG + FarDMG;
+			Damage = Int(CloseDMG + FarDMG);
 			If (GetClassName() == "ChargedBurstTracer1" || GetClassName() == "ChargedBurstTracer2" || GetClassName() == "ChargedBurstTracer3")
 			{
-				Damage *= 1 + 0.15 * CountInv("PowerShotFiring");
+				Damage = Int(Damage * (1 + 0.15 * CountInv("PowerShotFiring")));
 			}
 			bEXTREMEDEATH = Default.bEXTREMEDEATH || ((-Damage * (1 + CountProximity(GetClassName(), TrueSpeed, CPXF_CHECKSIGHT)) <= Target.GetGibHealth()) && Dist <= PBDamageFalloffDistEnd && !bNOEXTREMEDEATH && !Headshot);
 			If (Target.Distance3D(Self.Target) > 200 && !bEXTREMEDEATH)
@@ -1308,6 +1308,7 @@ Class EOA_EmptyShotShell : Actor
 		Scale 0.1;
 		BounceType "Doom";
 		BounceSound "Casing/Shell";
+		ReactionTime 400;
 		+BOUNCEONACTORS
 		+FLOORCLIP
 		+FORCEXYBILLBOARD
@@ -1321,7 +1322,14 @@ Class EOA_EmptyShotShell : Actor
 	Spawn:
 		TNT1 A 0 NoDelay A_ChangeVelocity(0, frandom(0.0, 2.0), frandom(0.0, 2.0), CVF_RELATIVE);
 	SpawnLoop:
-		SGCS ABCDEFG 1 A_SetRoll(Roll - 30);
+		SGCS ABCDEFG 1
+		{
+			A_SetRoll(Roll - 30);
+			If (WaterLevel >= 2)
+			{
+				A_CountDown();
+			}
+		}
 		Loop;
 	Death:
 		TNT1 A 0 A_SetRoll(0);

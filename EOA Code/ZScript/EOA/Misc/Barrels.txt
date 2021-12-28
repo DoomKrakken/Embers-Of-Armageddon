@@ -2,6 +2,7 @@ Class EOA_ExplosiveBarrel : ExplosiveBarrel
 {
 	Int CountDownTimer;
 	Bool CountDown;
+	Actor Inflictor, Source;
 	Default
 	{
 		Health 8;
@@ -10,13 +11,18 @@ Class EOA_ExplosiveBarrel : ExplosiveBarrel
 		+NOBLOOD
 		+PUSHABLE
 	}
+	Override Void BeginPlay()
+	{
+		CountDownTimer = 15;	
+		Super.BeginPlay();
+	}
 	Override Void Tick()
 	{
 		If (CountDown)
 		{
-			If (CountDownTimer-- <= 0)
+			If (--CountDownTimer <= 0)
 			{
-				SetState(ResolveState("Death"));
+				DamageMobj(Inflictor, Source, Health, "Normal", DMG_FORCED);
 			}
 		}
 		Super.Tick();
@@ -24,11 +30,13 @@ Class EOA_ExplosiveBarrel : ExplosiveBarrel
 	Override Int DamageMobj(Actor Inflictor, Actor Source, Int Damage, Name MOD, Int Flags, Double Angle)
 	{
 		CountDown = True;
-		If (Inflictor Is "EOA_ExplosiveBarrel")
+		If (Inflictor Is "EOA_ExplosiveBarrel" && Inflictor != Self)
 		{
 			Return 0;
 		}
 		CountDownTimer = 1;
+		Self.Inflictor = Inflictor;
+		Self.Source = Source;
 		Return Super.DamageMobj(Inflictor, Source, Damage, MOD, Flags, Angle);
 	}
 	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
@@ -42,15 +50,15 @@ Class EOA_ExplosiveBarrel : ExplosiveBarrel
 	States
 	{
 	Spawn:
-		EXPB A -1 NoDelay
-		{
-			CountDownTimer = 15;
-		}
+		EXPB A -1;
 		Stop;
 	Death:
-		TNT1 A 1050
+		EXPB A 1
 		{
 			CountDown = False;
+		}
+		TNT1 A 1049
+		{
 			A_Explode(160, 224, 1, 1, 100);
 			A_StartSound("Barrel/Explode", 1, 0, 0.75);
 			A_StartSound("Barrel/Add", 2, 0, 0.75);

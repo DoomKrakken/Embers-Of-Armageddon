@@ -1,3 +1,46 @@
+===== v1.9.2 =====
+- Homing attacks such as the BFG's tracers and Lock-On Burst will lose their victims if the victims become unshootable.
+- Added a null-check to Siege Mode's projectile (thank you, M.I.K.E.whyamistillalive69).
+- While Berserk is active, the right side of the HUD will disappear (thank you, A_D_M_E_R_A_L).
+- Fixed an issue with EOA_Projectile adding an actor to its "AlreadyRipped" array twice if it hit a weakpoint on the monster (thank you, Fat Tony).
+- Changed "PlayerEntered" override in EOA_StaticEventHandler into a "PlayerSpawned" override.
+- Changed EOA_EliteGuardCorpse's Scale to 0.7 (previously 0.6).
+- Changed aiming code for EOA_EliteGuardCorpseWeapon to accommodate for EOA_EliteGuardCorpse's new scale.
+- Interactable items now call any specials set on them upon being touched by a player (previously did so only upon user interaction).
+- Added checks for more flags for EOA_GloryKillIndicator to copy from its Master pointer (thank you, A_D_M_E_R_A_L).
+- Restored original behavior of EOA_InteractWeapon switching directly back to EOA_BerserkFist if PowerBerserk is active.
+- When interacting with interactable items with EOA_BerserkFist selected, the original weapon to which EOA_BerserkFist will switch back is now stored in a separate pointer on EOA_InteractWeapon.  This way, if PowerBerserk is no longer present in the player's inventory by the time the interaction animation is finished, the player will still properly switch back to the weapon he had selected prior to using the Berserk powerup.
+- Shortened "EOA_MeleeDash" threshold from 256 to 192.
+- Added the DONTREFLECT flag to EOA_BFGBall.
+- Fixed potential VM execution abortions occurring due to a 0-tic Death state sequence in both EOA_WeakPoint and ShrapnelDamager.
+- Freezing of the player for custom first-person interaction animations is now handled via the player pawn's CheckFrozen override (previously relied on [un]setting the CF_TOTALLYFROZEN cheat which can interfere with map-scripted freezing).
+- Fixed a bug with Glory Kills potentially causing players and/or monsters to freeze in place when attempting to perform a Glory Kill, without launching into a Glory Kill.
+- Monsters that target a player performing a Glory Kill or in an interaction animation will no longer attack said player during that time.
+- Fixed an erroneous call to "A_SpawnProjectile" in the Chainsaw (should have been "A_FireProjectile").
+- Fixed some null-checks in EOA_GKSeeker.
+- Fixed a bug where the Chainsaw's idle loop continues to play during a non-Chainsaw Glory Kill if executed from the Chainsaw.
+- The Slayer now has snappier, much less slippery movement, more akin to DOOM (2016).
+- Fixed an issue with the Slayer being able to pick up non-homing items well out of his reach.
+- All powerup-based challenges now require at least three powerups to be present in the map in order to be considered for selection.
+- The Overkiller challenge now requires at least three Quad Damage powerups to be present in the map in order to be considered for selection.
+- Fixed a bug that caused stunned monsters getting Chainsawed to have their health set to half of their default health.
+- Removed an erroneous call to set instances of EOA_GKSeeker as their targets' master.
+- Added checks in the Chainsaw and the "EOA_CheckGloryKill" function to not target monsters that already possess the "GloryKillCounter" or "ChainsawGloryKillCounter" items in their inventory.
+- Overhauled "EOA_FireBullets" to be a lot simpler and utilize quaternion rotation for proper projectile spread at any pitch (thank you, Boondorl!).
+- Fixed various floating-point truncations and self-referenced textures.
+- "PowerStunned" no longer causes non-monster actors to deal 100 damage to themselves.  Rather, the Stun Bomb itself now directly damages non-monster actors for correct blame chains.
+- Explosive barrels now correctly blame the actors responsible for destroying them.
+- Explosive barrels' explosions are now delayed by 1 tic to give blame priority to mastery challenge kills.
+- Fixed a rare bug which caused Glory Kills to not trigger properly.
+- Fixed a rare bug that caused monsters to resume moving in the midst of a Chainsaw Glory Kill, if stunned by a Stun Bomb or Chain Stun prior to the Chainsaw interaction and the stun wears off before the monster dies.
+- Glory Kill yaw/pitch/roll adjustments are no longer affected by the Combat Recoil CVar.
+- Damage can now thrust voodoo dolls (they still do not transfer damage to the player).
+- Fixed a bug that didn't allow non-monster actors that fired hitscan attacks to fire plasma balls.
+- Specified "Clean" scaling for all ListMenu items in MENUDEF.
+- Added WaterLevel checks for casing actors so they can disappear even if suspended in fluid.
+- Removed calls to "A_StartSound" in casing actors' Death state sequences.
+- Changed calls to "A_SetOrigin" in any ledge-mantling code to utilize a sequence of function calls to properly translate the player's position without any unintended 3D-floor restriction.
+
 ===== v1.9.1 (Hotfix) =====
 - Removed an erroneous change from the changelog.
 - Switched the "Radius1" and "Radius2" arguments in calls to "SpawnCustomDynamicLight" in the ExternalPayloadExplosion class.

@@ -13,7 +13,7 @@ Class EOA_Essentials : Thinker
 			Destroy();
 			Return;
 		}
-		StaggerThreshold = Owner.GetSpawnHealth() * 0.3 * (1 + (Owner.GetSpawnHealth() <= 50)) / (1 + (Owner.GetSpawnHealth() >= 500)) / (1 + (Owner.GetSpawnHealth() >= 1000)) / (1 + Owner.bBOSS);
+		StaggerThreshold = Int(Owner.GetSpawnHealth() * 0.3 * (1 + (Owner.GetSpawnHealth() <= 50)) / (1 + (Owner.GetSpawnHealth() >= 500)) / (1 + (Owner.GetSpawnHealth() >= 1000)) / (1 + Owner.bBOSS));
 		If (Owner.bISMONSTER && !(Owner.bBOSS && Owner.GetSpawnHealth() >= 3000) && !Owner.bDORMANT)
 		{
 			If (Owner.GetSpawnHealth() >= 1000)
@@ -124,7 +124,7 @@ Class EOA_WeakPoint : Actor
 	}
 	Override Int DamageMobj(Actor Inflictor, Actor Source, Int Damage, Name MOD, Int Flags, Double Angle)
 	{
-		Int OwnerDamage = Damage * OwnerDamageFactor();
+		Int OwnerDamage = Int(Damage * OwnerDamageFactor());
 		If (Inflictor && ((Inflictor == Self)) || (Source && (Source == Owner)) || ((Flags & DMG_EXPLOSION) && Label == "Head"))
 		{
 			If (Inflictor.GetClassName() == "HARMicroMissile" || (!CheckIfCloser(Inflictor, Radius, True) && !CheckIfCloser(Inflictor, Height)))
@@ -137,7 +137,10 @@ Class EOA_WeakPoint : Actor
 			Flags &= ~DMG_EXPLOSION;
 			Owner.RadiusDamageFactor = 0;
 			Owner.DamageMobj(Inflictor, Source, OwnerDamage, MOD, Flags, Angle);
-			Owner.RadiusDamageFactor = Owner.Default.RadiusDamageFactor;
+			If (Owner) //[DoomKrakken]: In case a 0-tic death has been triggered...
+			{
+				Owner.RadiusDamageFactor = Owner.Default.RadiusDamageFactor;
+			}
 		}
 		Return Super.DamageMobj(Inflictor, Source, Damage, MOD, Flags, Angle);
 	}

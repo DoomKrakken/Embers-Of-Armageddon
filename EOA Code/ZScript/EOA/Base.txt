@@ -85,6 +85,32 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 			}
 		}
 	}
+	Override Void WorldUnloaded(WorldEvent e)
+	{
+		If (!e.IsSaveGame)
+		{
+			PlayerInfo Player = Players[ConsolePlayer];
+			If (Player && Player.Mo)
+			{
+				EOA_InteractWeapon W = EOA_InteractWeapon(Player.Mo.FindInventory("EOA_InteractWeapon", True));
+				If (W)
+				{
+					If (W.YieldItem)
+					{
+						Player.Mo.A_GiveInventory(W.YieldItem);
+					}
+					If (W.ActualReselectWeapon)
+					{
+						Player.ReadyWeapon = EOA_Weapon(Player.Mo.FindInventory(W.ActualReselectWeapon));
+					}
+					Player.Mo.bDONTTHRUST = Player.Mo.Default.bDONTTHRUST;
+					W.A_ZoomFactor();
+					W.Destroy();
+					Player.Cheats &= ~CF_INSTANTWEAPSWITCH; //[DoomKrakken]: Revert the instant weapon switch.
+				}
+			}
+		}
+	}
 	Override Void CheckReplacement(ReplaceEvent e)
 	{
 		Static Const Class<Actor> EOA_DoomReplacees[] = {"HealthBonus", "StimPack", "MediKit", "ArmorBonus", "GreenArmor", "BlueArmor", "Pistol", "Shotgun", "SuperShotgun", "Chaingun", "RocketLauncher", "PlasmaRifle", "BFG9000", "Chainsaw", "Clip", "ClipBox", "Shell", "ShellBox", "RocketAmmo", "RocketBox", "Cell", "CellPack", "Megasphere", "Soulsphere", "Blursphere", "InvulnerabilitySphere", "Berserk", "Radsuit", "Backpack", "Infrared", "Allmap", "ExplosiveBarrel"};
@@ -105,9 +131,8 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 	{
 		//[DoomKrakken]:
 		//For the Glory Kill system.  Ported here so that no one tampers with the system in-game.
-		If (e.Thing Is "EOA_PlasmaLauncherPuff" && e.Thing.Target && e.Thing.Target.bISMONSTER)
+		If (e.Thing Is "EOA_PlasmaLauncherPuff" && e.Thing.Target && !e.Thing.Target.Player && !e.Thing.Target.bMISSILE)
 		{
-			//Vector3 AimDir = e.Thing.Target.Vec3To(e.Thing);
 			e.Thing.Target.A_StartSound("PLR/Enemy/Fire", CHAN_WEAPON);
 			Let Proj = e.Thing.Target.A_SpawnProjectile("EOA_EnemyPlasmaBall");
 			If (Proj)
@@ -771,7 +796,7 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 			e.Thing.A_TakeInventory("ChainsawGloryKillCounter");
 		}
 	}
-	Override Void PlayerEntered(PlayerEvent e)
+	Override Void PlayerSpawned(PlayerEvent e)
 	{
 		PlayerInfo ThisPlayer = Players[e.PlayerNumber];
 		For (Int i = 0; i < MAXPLAYERS; i++)
@@ -792,6 +817,38 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 	}
 	Override Void WorldTick()
 	{
+		ThinkerIterator It = ThinkerIterator.Create(Statnum: Thinker.STAT_DEFAULT);
+		Actor Mo;
+		Bool Interact;
+		While (Mo = Actor(It.Next()))
+		{
+			If (Mo && Mo.bISMONSTER && !Mo.bMISSILE && !Mo.bKILLED && Mo.Target) 
+			{
+				Interact = Mo.Target.FindInventory("EOA_InteractWeapon", True);
+				If (Mo.CountInv("RipAndTear", AAPTR_TARGET) || Mo.CountInv("ChainsawRipAndTear", AAPTR_TARGET) || Interact)
+				{
+					If (!(Mo.CountInv("PowerStaggered") || Mo.CountInv("PowerStunned") || Mo.CountInv("GloryKillCounter") || Mo.CountInv("ChainsawGloryKillCounter")))
+					{
+						If (Mo.ReactionTime >= -1) //[DoomKrakken]: Discourage any spamming refiring monsters from attacking... but do this only once, else they'll walk in place if done constantly.
+						{
+							Mo.SetState(Mo.ResolveState("See"));
+						}
+						Mo.ReactionTime = -2; //[DoomKrakken]: This works if it's less than 0.  A value of -1 (or lower) indicates that a monster can only toss projectiles after being attacked.
+						Mo.bJUSTATTACKED = Mo.bNEVERFAST = True; //[DoomKrakken]: Add these flags to make sure the monster doesn't respond with an attack and disable the fast behavior if SV_FastMonsters is enabled.
+						Mo.bALWAYSFAST = False; //[DoomKrakken]: Disable this because ditto. ;)
+						Mo.bFRIGHTENED = (Level.Time % 35 > 17); //[DoomKrakken]: This will help make it so that monsters don't crowd you while they're busy not attacking you.
+					}
+				}
+				Else If (Mo.ReactionTime < -1) //[DoomKrakken]: Switch it back afterward.
+				{
+					//[DoomKrakken]: Reset the properties/flags.
+					Mo.ReactionTime = Mo.Default.ReactionTime;
+					Mo.bNEVERFAST = Mo.Default.bNEVERFAST;
+					Mo.bALWAYSFAST = Mo.Default.bALWAYSFAST;
+					Mo.bFRIGHTENED = Mo.Default.bFRIGHTENED;
+				}
+			}
+		}
 		If (EOA_MinLightLevel)
 		{
 			For (Int i = 0; i < Level.Sectors.Size(); i++)

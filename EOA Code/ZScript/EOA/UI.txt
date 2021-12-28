@@ -1,9 +1,29 @@
 Class EOA_UI : BaseStatusBar
 {
 	//KillMilestoneData KMD;
+	InventoryBarState DipArms;
+	Override Void Init()
+	{
+		Super.Init();
+		DipArms = InventoryBarState.Create();
+	}
 	Override Void Draw(Int State, Double TicFrac)
 	{
 		Super.Draw(State, TicFrac);
+		If (State == HUD_StatusBar)
+		{
+			If (IsInventoryBarVisible())
+			{
+				DrawInventoryBar(DipArms, (48, 169), 7, DI_ITEM_LEFT_TOP);
+			}
+		}
+		Else If (State == HUD_Fullscreen)
+		{
+			If (IsInventoryBarVisible())
+			{
+				DrawInventoryBar(DipArms, (0, 0), 7, DI_SCREEN_CENTER_BOTTOM, HX_SHADOW);
+			}
+		}
 		EOA_Powerup Power = EOA_Powerup(CPlayer.Mo.FindInventory("EOA_Powerup", True));
 		If (Power && !AutomapActive)
 		{

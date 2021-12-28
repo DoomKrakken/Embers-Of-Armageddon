@@ -548,7 +548,7 @@ Graphic "RLLOCK", 102, 102
 {
 	XScale 1.050
 	YScale 1.050
-	Patch "RLLOCK", 0, 0
+	Patch "RLLOCK0", 0, 0
 }
 
 Graphic "SGXHRCF", 8, 18
@@ -764,17 +764,17 @@ Graphic "HARMXL6", 256, 256
 
 Graphic "HARTSBA2", 360, 360
 {
-	Patch "HARTSBA2", 0, 0
+	Patch "HARTSBAA", 0, 0
 	{
 		FlipX
 	}
-	Patch "HARTSBA2", 180, 0
-	Patch "HARTSBA2", 0, 180
+	Patch "HARTSBAA", 180, 0
+	Patch "HARTSBAA", 0, 180
 	{
 		FlipX
 		FlipY
 	}
-	Patch "HARTSBA2", 180, 180
+	Patch "HARTSBAA", 180, 180
 	{
 		FlipY
 	}
@@ -782,16 +782,16 @@ Graphic "HARTSBA2", 360, 360
 
 Graphic "HARTSBA3", 256, 256
 {
-	Patch "HARTSBA3", 0, 0
-	Patch "HARTSBA3", 128, 0
+	Patch "HARTSBAB", 0, 0
+	Patch "HARTSBAB", 128, 0
 	{
 		FlipX
 	}
-	Patch "HARTSBA3", 0, 128
+	Patch "HARTSBAB", 0, 128
 	{
 		FlipY
 	}
-	Patch "HARTSBA3", 128, 128
+	Patch "HARTSBAB", 128, 128
 	{
 		FlipX
 		FlipY

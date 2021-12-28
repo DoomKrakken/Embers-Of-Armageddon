@@ -24,7 +24,7 @@ Class LightningBeamBase : Actor //Based on D4D's lightning effect.
 		{
 			If (Tracer)
 			{
-				Dist[1] = Distance3D(Tracer);
+				Dist[1] = Int(Distance3D(Tracer));
 				Stats[0] = 64;
 				Stats[1] = 1200;
 				Stats[2] = 8;

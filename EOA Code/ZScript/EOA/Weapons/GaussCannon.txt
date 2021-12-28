@@ -928,7 +928,7 @@ Class PrecisionBoltProjectile : GaussCannonProjectile
 		{
 			PBCharge = CountInv("PrecisionBoltChargeCounter", AAPTR_TARGET) * 120 / 105;
 		}
-		Damage += 3 * PBCharge;
+		Damage += Int(3 * PBCharge);
 		Return Super.DoSpecialDamage(Target, Damage, DamageType);
 	}
 	Override Void Tick()
@@ -994,7 +994,7 @@ Class SiegeModeProjectile : GaussCannonProjectile
 			While (It.Next())
 			{
 				Actor Mo = It.Thing;
-				If (Mo == Self || Mo == Target || !Mo.bSHOOTABLE || !CheckIfCloser(Mo, 8 * (1 + 7 * CountInv("OuterBeam", AAPTR_TARGET))) || Mo.CurSector.PortalGroup != CurSector.PortalGroup || !CheckSight(Mo))
+				If (!Mo || Mo == Self || Mo == Target || !Mo.bSHOOTABLE || !CheckIfCloser(Mo, 8 * (1 + 7 * CountInv("OuterBeam", AAPTR_TARGET))) || Mo.CurSector.PortalGroup != CurSector.PortalGroup || !CheckSight(Mo))
 				{
 					Continue;
 				}

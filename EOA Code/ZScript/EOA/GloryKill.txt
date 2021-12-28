@@ -79,6 +79,14 @@ Class GloryKillIndicator : Actor
 				A_Warp(AAPTR_MASTER, 0, 0, 5 * !bNOGRAVITY, 0, WARPF_NOCHECKPOSITION|WARPF_INTERPOLATE);
 				//[DoomKrakken]: Because grounded actors have it clip through the floor some, for whatever retarded reason.
 				bFORCEXYBILLBOARD = Master ? Master.bFORCEXYBILLBOARD : Default.bFORCEXYBILLBOARD;
+				bYFLIP = Master ? Master.bYFLIP : Default.bYFLIP;
+				bSPRITEFLIP = Master ? Master.bSPRITEFLIP : Default.bSPRITEFLIP;
+				bROLLCENTER = Master ? Master.bROLLCENTER : Default.bROLLCENTER;
+				bROLLSPRITE = Master ? Master.bROLLSPRITE : Default.bROLLSPRITE;
+				If (Master)
+				{
+					A_SetRoll(Master.Roll);
+				}
 				If (EOA_CheckPlayerInRange(192))
 				{
 					A_SetTranslation("Orange");
@@ -189,11 +197,10 @@ Class EOA_GKSeeker : FastProjectile //[DoomKrakken]: Concept was taken from ZION
 	}
 	Override Void PostBeginPlay()
 	{
-		PlayerInfo Player = Players[ConsolePlayer];
-		If (Player && Player.Mo && Player.Mo == Target && Target)
+		If (Target && Target.Player && Target.Player.Mo && Target.Player.Mo == Target)
 		{
+			SetOrigin((Target.Pos.X, Target.Pos.Y, Target.Pos.Z + Target.Height / 4), False);
 			A_SetSize(Target.Radius * 1.25, Target.Height / 2); //[DoomKrakken]: Give us a little room to stretch. :D
-			SetOrigin((Pos.X, Pos.Y, Target.Pos.Z + Target.Height / 4), False);
 			Target.Master = Self;
 			If (Target.Tracer)
 			{
@@ -232,12 +239,10 @@ Class EOA_GKSeeker : FastProjectile //[DoomKrakken]: Concept was taken from ZION
 	}
 	Override Void OnDestroy()
 	{
-		PlayerInfo Player = Players[ConsolePlayer];
-		If (Player && Player.Mo && Player.Mo == Target && Target)
+		If (Target && Target.Player && Target.Player.Mo && Target.Player.Mo == Target)
 		{
+			SetOrigin((Target.Pos.X, Target.Pos.Y, Target.Pos.Z + Target.Height / 4), False);
 			A_SetSize(Target.Radius * 1.25, Target.Height / 2); //[DoomKrakken]: Give us a little room to stretch. :D
-			SetOrigin((Pos.X, Pos.Y, Target.Pos.Z + Target.Height / 4), False);
-			Target.Master = Self;
 			If (Target.Tracer)
 			{
 				Tracer = Target.Tracer;
@@ -263,17 +268,17 @@ Class EOA_GKSeeker : FastProjectile //[DoomKrakken]: Concept was taken from ZION
 		{
 			Target.Master = Self;
 			Tracer = Target.Tracer;
-			A_SetSpeed(50 * (1 + CountInv("SeekAndDestroySelected", AAPTR_TARGET)) * (1 + (CountInv("SeekAndDestroySelected", AAPTR_TARGET) * CountInv("SeekAndDestroyII", AAPTR_TARGET))));
+			A_SetSpeed(Default.Speed * (1 + CountInv("SeekAndDestroySelected", AAPTR_TARGET)) * (1 + (CountInv("SeekAndDestroySelected", AAPTR_TARGET) * CountInv("SeekAndDestroyII", AAPTR_TARGET))));
 			A_SeekerMissile(90, 90, SMF_PRECISE);
 			A_FaceTracer(90, 90, 0, 0, FAF_MIDDLE);
-			Target.A_Warp(AAPTR_MASTER, 0, 0, -Target.Height / 4, 0, WARPF_INTERPOLATE|WARPF_WARPINTERPOLATION);
+			Target.A_Warp(AAPTR_MASTER, 0, 0, -Target.Height / 8, 0, WARPF_INTERPOLATE|WARPF_WARPINTERPOLATION);
 		}
 		Super.Effect();
 	}
 	States
 	{
 	Spawn:
-		TNT1 A -1;
+		MISL A -1;
 		Stop;
 	}
 }
@@ -338,7 +343,7 @@ Class PowerStaggered : Powerup
 	Override Void Tick() {} //[DoomKrakken]: Do nothing here.
 	Override Void DoEffect()
 	{
-		If (!Owner || Owner.bKILLED || (EffectTics <= 0 && !(Owner.CountInv("GloryKillCounter") || Owner.CountInv("ChainsawGloryKillCounter"))) || Owner.CountInv("PowerStunned"))
+		If (!Owner || Owner.bKILLED || ((EffectTics <= 0 || Owner.CountInv("PowerStunned")) && !(Owner.CountInv("GloryKillCounter") || Owner.CountInv("ChainsawGloryKillCounter"))))
 		{
 			Destroy();
 			Return;
@@ -402,10 +407,10 @@ Class PowerStaggered : Powerup
 			Switch (GetIntimacyIsBest())
 			{
 			Case 1:
-				NewDamage = Damage * 0.2;
+				NewDamage = Int(Damage * 0.2);
 				Break;
 			Case 2:
-				NewDamage = Damage * 0.34;
+				NewDamage = Int(Damage * 0.34);
 				Break;
 			}
 		}
@@ -425,7 +430,7 @@ Class PowerStaggered : Powerup
 			Owner.bFORCEPAIN = Owner.Default.bFORCEPAIN;
 			Owner.bFLOAT = Owner.Default.bFLOAT;
 			Owner.A_SetSpeed(Owner.Default.Speed);
-			If (!OwnerDead) //[DoomKrakken]: Replenish health only if the owner is not dead.  Else, if the monster died, it'll become a "phantom" monster.
+			If (!OwnerDead && !Owner.CountInv("PowerStunned")) //[DoomKrakken]: Replenish health only if the owner is not dead.  Else, if the monster died, it'll become a "phantom" monster.
 			{
 				RecoverHealth(Owner, GetIntimacyIsBest() == 2);
 			}
@@ -438,15 +443,15 @@ Class PowerStaggered : Powerup
 			Int SpawnHealth = Recoverer.GetSpawnHealth();
 			If (Recoverer.bBOSS && SpawnHealth >= 3000)
 			{
-				Recoverer.A_SetHealth(SpawnHealth / 5 * (1 + 0.75 * IntimacyIsBestII));
+				Recoverer.A_SetHealth(SpawnHealth / 5 * Int(1 + 0.75 * IntimacyIsBestII));
 			}
 			Else If (SpawnHealth > 50)
 			{
-				Recoverer.A_SetHealth(SpawnHealth / 2 * (1 + 0.75 * IntimacyIsBestII));
+				Recoverer.A_SetHealth(SpawnHealth / 2 * Int(1 + 0.75 * IntimacyIsBestII));
 			}
 			Else
 			{
-				Recoverer.A_SetHealth(SpawnHealth / 1.25);
+				Recoverer.A_SetHealth(Int(SpawnHealth / 1.25));
 			}
 		}
 	}

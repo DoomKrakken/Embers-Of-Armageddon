@@ -25,117 +25,117 @@ Graphic "SCRT100", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT100", 0, 0
+	Patch "SCRTP100", 0, 0
 }
 
 Graphic "SCRT00", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT00", 0, 0
+	Patch "SCRTP00", 0, 0
 }
 
 Graphic "SCRT25", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT25", 0, 0
+	Patch "SCRTP25", 0, 0
 }
 
 Graphic "SCRT50", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT50", 0, 0
+	Patch "SCRTP50", 0, 0
 }
 
 Graphic "SCRT75", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT75", 0, 0
+	Patch "SCRTP75", 0, 0
 }
 
 Graphic "SCRT66", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT66", 0, 0
+	Patch "SCRTP66", 0, 0
 }
 
 Graphic "SCRT33", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT33", 0, 0
+	Patch "SCRTP33", 0, 0
 }
 
 Graphic "SCRT40", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT40", 0, 0
+	Patch "SCRTP40", 0, 0
 }
 
 Graphic "SCRT80", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT80", 0, 0
+	Patch "SCRTP80", 0, 0
 }
 
 Graphic "SCRT20", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT20", 0, 0
+	Patch "SCRTP20", 0, 0
 }
 
 Graphic "SCRT60", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT60", 0, 0
+	Patch "SCRTP60", 0, 0
 }
 
 Graphic "SCRT28", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT28", 0, 0
+	Patch "SCRTP28", 0, 0
 }
 
 Graphic "SCRT57", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT57", 0, 0
+	Patch "SCRTP57", 0, 0
 }
 
 Graphic "SCRT85", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT85", 0, 0
+	Patch "SCRTP85", 0, 0
 }
 
 Graphic "SCRT14", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT14", 0, 0
+	Patch "SCRTP14", 0, 0
 }
 
 Graphic "SCRT42", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT42", 0, 0
+	Patch "SCRTP42", 0, 0
 }
 
 Graphic "SCRT71", 278, 89
 {
 	XScale 1.54
 	YScale 1.54
-	Patch "SCRT71", 0, 0
+	Patch "SCRTP71", 0, 0
 }

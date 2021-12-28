@@ -484,7 +484,7 @@ Class EOA_FragGrenadeProjectile : EOA_Projectile
 	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
 	{
 		Headshot = False;
-		Damage *= (1 + 0.5 * EquipmentPowerLevel);
+		Damage = Int(Damage * (1 + 0.5 * EquipmentPowerLevel));
 		Return Damage;
 	}
 	Action Bool EOA_FragDetect(Int Dist)

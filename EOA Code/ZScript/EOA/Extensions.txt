@@ -158,9 +158,9 @@ Class EOA_ActorExtensions : Actor
 		}
 		If (DLT)
 		{
-			Int R = RGB.X;
-			Int G = RGB.Y;
-			Int B = RGB.Z;
+			Int R = Int(RGB.X);
+			Int G = Int(RGB.Y);
+			Int B = Int(RGB.Z);
 			DLT.Owner = Owner;
 			DLT.ID = LightID;
 			DLT.Type = Type;
@@ -195,7 +195,7 @@ Class EOA_CustomDynamicLight : DynamicLight
 			Duration = 0x7FFFFFFF;
 			PowerLight = True;
 		}
-		SpawnAngle = TICRATE * Param;
+		SpawnAngle = Int(TICRATE * Param);
 		A_SetSpecial(0, R, G, B, max(0, Radius1), max(0, Radius2));
 		bSUBTRACTIVE = Flags & LF_SUBTRACTIVE;
 		bADDITIVE = Flags & LF_ADDITIVE;

@@ -259,7 +259,7 @@ Class EOA_Projectile : FastProjectile
 			{
 				Return Damage;
 			}
-			Damage *= 3 * (1 + (Target.Default.Health <= 50)) - (Target.Default.Health >= 300) - 0.5 * (Target.Default.Health >= 1000);
+			Damage *= Int(3 * (1 + (Target.Default.Health <= 50)) - (Target.Default.Health >= 300) - 0.5 * (Target.Default.Health >= 1000));
 		}
 		Return Damage;
 	}
@@ -377,10 +377,10 @@ Class EOA_Projectile : FastProjectile
 		Int PFlags = 0;
 		If (Flags & XF_HURTSOURCE && Target && Target.Player && CheckSight(Target, SF_IGNOREVISIBILITY|SF_IGNOREWATERBOUNDARY))
 		{
-			Int Thrust = Damage * 0.125 / Target.Mass; //[DoomKrakken]: Calculate thrust with limited self-thrust.
+			Int Thrust = Int(Damage * 0.125 / Target.Mass); //[DoomKrakken]: Calculate thrust with limited self-thrust.
 			Target.Thrust(Thrust, AngleTo(Target)); //[DoomKrakken]: Apply thrust.
 			Target.Vel.Z += (Target.Pos.Z + Target.Height / 2 - Self.Pos.Z) * Thrust * 0.5; //[DoomKrakken]: Calculate and apply Z-thrust.
-			Target.DamageMobj(Self, Target, GetRadiusDamage(Target, Damage * PlayerDamageFactor, Distance, FullDamageDistance), DamageType, DMG_EXPLOSION); //[DoomKrakken]: Calculate damage, taking lessened damage into account.
+			Target.DamageMobj(Self, Target, GetRadiusDamage(Target, Int(Damage * PlayerDamageFactor), Distance, FullDamageDistance), DamageType, DMG_EXPLOSION); //[DoomKrakken]: Calculate damage, taking lessened damage into account.
 			//PFlags |= RADF_HURTSOURCE; //[DoomKrakken]: No need for this, since we already damaged the player up there.
 		}
 		If (Flags & XF_NOTMISSILE)
@@ -417,10 +417,9 @@ Class EOA_Projectile : FastProjectile
 						{
 							If (AlreadyRipped.Find(WP.Owner) != AlreadyRipped.Size())
 							{
-								AlreadyRipped.Push(Other);
+								AlreadyRipped.Push(WP.Owner);
 								Return False;
 							}
-							AlreadyRipped.Push(WP.Owner);
 						}
 					}
 					AlreadyRipped.Push(Other);

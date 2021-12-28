@@ -365,7 +365,7 @@ Class EMGTracer : EOA_FastProjectile
 	{
 		If (Headshot)
 		{
-			Damage *= 1.2 + (4.8 * (Target.Default.Health <= 50));
+			Damage = Int(Damage * (1.2 + (4.8 * (Target.Default.Health <= 50))));
 		}
 		Return Damage;
 	}
@@ -413,18 +413,18 @@ Class EMGChargeTracer : EMGTracer
 		{
 			EMGCharge = CountInv("EMGChargeCounter", AAPTR_TARGET); //[DoomKrakken]: In case the projectile collides before PostBeginPlay finishes.
 		}
-		Damage += max(4 * CountInv("IncreasedPower", AAPTR_TARGET), Damage * (4 + 3 * CountInv("IncreasedPower", AAPTR_TARGET)) * EMGCharge / 88.0);
+		Damage += Int(max(4 * CountInv("IncreasedPower", AAPTR_TARGET), Damage * (4 + 3 * CountInv("IncreasedPower", AAPTR_TARGET)) * EMGCharge / 88.0));
 		If (Target Is "DoomImp")
 		{
-			Damage *= 0.83;
+			Damage = Int(Damage * 0.83);
 		}
 		Else If (Target Is "HellKnight" || Target Is "Revenant")
 		{
-			Damage *= 0.8;
+			Damage = Int(Damage * 0.8);
 		}
 		Else If (Target Is "Fatso")
 		{
-			Damage *= 0.7;
+			Damage = Int(Damage * 0.7);
 		}
 		Return Super.DoSpecialDamage(Target, Damage, DamageType);
 	}
@@ -598,6 +598,7 @@ Class EMGCasing : Actor
 		Scale 0.15;
 		BounceType "Doom";
 		BounceSound "Casing/Brass";
+		ReactionTime 400;
 		+BOUNCEONACTORS
 		+FLOORCLIP
 		+FORCEXYBILLBOARD
@@ -611,7 +612,14 @@ Class EMGCasing : Actor
 	Spawn:
 		TNT1 A 0 NoDelay A_ChangeVelocity(0, frandom(0.0, 2.0), frandom(0.0, 2.0), CVF_RELATIVE);
 	SpawnLoop:
-		PBCS ABCDEFGH 1 A_SetRoll(Roll - 30);
+		PBCS ABCDEFGH 1
+		{
+			A_SetRoll(Roll - 30);
+			If (WaterLevel >= 2)
+			{
+				A_CountDown();
+			}
+		}
 		Loop;
 	Death:
 		TNT1 A 0 
@@ -621,7 +629,7 @@ Class EMGCasing : Actor
 		}
 		PBCS DH 0 A_Jump(256, "SetSprite");
 	SetSprite:
-		"####" "#" 400 A_StartSound("Casing/Brass");
+		"####" "#" 400;
 		"####" "##########" 1 A_FadeOut(0.1);
 		Stop;
 	}

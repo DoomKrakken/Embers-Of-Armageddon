@@ -286,7 +286,7 @@ Class EOA_ChallengeEventHandler : StaticEventHandler //Thank you, phantombeta an
 				Challenges.PowerupsSpawned++;
 				If (e.Thing Is "EOA_QuadDamage")
 				{
-					Challenges.QuadDamageSpawned = True;
+					Challenges.QuadDamageSpawned++;
 				}
 			}
 			If (e.Thing Is "EOA_AutomapStation")
@@ -744,13 +744,13 @@ Class EOA_ChallengeEventHandler : StaticEventHandler //Thank you, phantombeta an
 			{
 				Challenges.QuiteTheCollector.Selected = True;
 			}
-			If (Challenges.PowerupsSpawned)
+			If (Challenges.PowerupsSpawned >= 3)
 			{
-				If (Level.Total_Monsters >= 20 && Challenges.PowerupsSpawned >= 3)
+				If (Level.Total_Monsters >= 20)
 				{
 					Challenges.Dominator.Selected = True;
 				}
-				Else If (Level.Total_Monsters >= 15 && Challenges.QuadDamageSpawned)
+				Else If (Level.Total_Monsters >= 15 && Challenges.QuadDamageSpawned >= 3)
 				{
 					Challenges.Overkiller.Selected = True;
 				}
@@ -873,7 +873,7 @@ Class EOA_ChallengeArchive : Thinker
 	Int CompletedChallenges;
 	Int ChallengeMilestone;
 	Int PowerupsSpawned;
-	Bool QuadDamageSpawned;
+	Int QuadDamageSpawned;
 	Bool QueueGK;
 	Array<String> UnselectedChallenges;
 	Array<String> SelectedChallenges;

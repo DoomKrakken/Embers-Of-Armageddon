@@ -177,7 +177,7 @@ Class ZSTracerRetriever : Actor
 		{
 			Tracer = Null;
 			A_CopyFriendliness(AAPTR_MASTER);
-			If (Invoker.Index < BFGOwner.BFGTracerTargets.Size() && BFGOwner.BFGTracerTargets[Invoker.Index] && !BFGOwner.BFGTracerTargets[Invoker.Index].bKILLED && BFGOwner.BFGTracerTargets[Invoker.Index].Distance3D(Invoker) <= Dist)
+			If (Invoker.Index < BFGOwner.BFGTracerTargets.Size() && BFGOwner.BFGTracerTargets[Invoker.Index] && !BFGOwner.BFGTracerTargets[Invoker.Index].bKILLED && BFGOwner.BFGTracerTargets[Invoker.Index].bSHOOTABLE && BFGOwner.BFGTracerTargets[Invoker.Index].Distance3D(Invoker) <= Dist)
 			{
 				Tracer = BFGOwner.BFGTracerTargets[Invoker.Index];
 				If (Tracer && CheckIfTargetInLOS(Ang, JLOSF_ALLYNOJUMP|JLOSF_CHECKTRACER, Dist))
@@ -244,6 +244,7 @@ Class EOA_BFGBall : EOA_Projectile
 		Alpha 0.99;
 		Scale 0.67;
 		+BRIGHT
+		+DONTREFLECT
 		+EXTREMEDEATH
 		+FORCEXYBILLBOARD
 		+NODAMAGETHRUST
@@ -417,7 +418,7 @@ Class BFGLightningTracer : LightningBeamBase
 		{
 			If (Tracer)
 			{
-				Dist[1] = Distance3D(Tracer);
+				Dist[1] = Int(Distance3D(Tracer));
 				Stats[0] = 64;
 				Stats[1] = 900;
 				Stats[2] = 12;

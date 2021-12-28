@@ -958,7 +958,7 @@ Class EOA_Rocket : EOA_Projectile
 				A_GiveInventory("RemoteDetonationTrigger"); //Give this counter to the rocket itself.
 				If (CountInv("ExternalPayload", AAPTR_TARGET))
 				{
-					EOA_Explode(140, (160 + 10 * CountInv("RemoteDetonationTrigger")) * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), XF_HURTSOURCE, 1, Radius * 2/*72 * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET))*/, 0.5);
+					EOA_Explode(140, (160 + 10 * CountInv("RemoteDetonationTrigger")) * Int(1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), XF_HURTSOURCE, 1, Int(Radius * 2), 0.5);
 					A_SpawnItemEx("ExternalPayloadExplosion", Flags: SXF_TRANSFERPOINTERS|SXF_NOCHECKPOSITION);
 					Return ResolveState("ContinueFlight");
 				}
@@ -1001,13 +1001,13 @@ Class EOA_Rocket : EOA_Projectile
 			{
 				A_StartSound("Rocket/Add", 0);
 			}
-			EOA_Explode(140, (160 + 10 * CountInv("RemoteDetonationTrigger")) * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), XF_HURTSOURCE, 1, Radius * 2, 0.5);
+			EOA_Explode(140, (160 + 10 * CountInv("RemoteDetonationTrigger")) * Int(1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), XF_HURTSOURCE, 1, Int(Radius * 2), 0.5);
 			If (CountInv("JaggedShrapnel", AAPTR_TARGET) && CountInv("RemoteDetonationTrigger"))
 			{
 				A_StartSound("RLR/Shrapnel", 0, 0, 1.0, ATTN_NORM, 1 + 0.0625 * random(-2, 2));
 			}
-			EOA_SpawnCustomDynamicLight("RLRAddLight", DynamicLight.PulseLight, (255, 153, 76), (160 + 10 * CountInv("RemoteDetonationTrigger")) * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ADDITIVE, 12, (0, 0, Height / 2), 0.5);
-			EOA_SpawnCustomDynamicLight("RLRAttLight", DynamicLight.PulseLight, (255, 153, 76), (160 + 10 * CountInv("RemoteDetonationTrigger")) * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ATTENUATE, 12, (0, 0, Height / 2), 0.5);
+			EOA_SpawnCustomDynamicLight("RLRAddLight", DynamicLight.PulseLight, (255, 153, 76), (160 + 10 * CountInv("RemoteDetonationTrigger")) * Int(1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ADDITIVE, 12, (0, 0, Height / 2), 0.5);
+			EOA_SpawnCustomDynamicLight("RLRAttLight", DynamicLight.PulseLight, (255, 153, 76), (160 + 10 * CountInv("RemoteDetonationTrigger")) * Int(1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ATTENUATE, 12, (0, 0, Height / 2), 0.5);
 		}
 		TNT1 A 100 A_SetHealth(0); //The remainder of 100 tics, after the first 10 passed...
 		Stop;
@@ -1320,8 +1320,8 @@ Class ExternalPayloadExplosion : Actor
 			{
 				A_StartSound("RLR/Shrapnel", 0, 0, 1.0, ATTN_NORM, 1 + 0.0625 * random(-2, 2));
 			}
-			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAddLight", DynamicLight.PulseLight, (255, 153, 76), 170 * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ADDITIVE, 14, (0, 0, Height / 2), 0.5);
-			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAttLight", DynamicLight.PulseLight, (255, 153, 76), 170 * (1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ATTENUATE, 14, (0, 0, Height / 2), 0.5);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAddLight", DynamicLight.PulseLight, (255, 153, 76), 170 * Int(1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ADDITIVE, 14, (0, 0, Height / 2), 0.5);
+			EOA_ActorExtensions.SpawnCustomDynamicLight(Self, "RLRAttLight", DynamicLight.PulseLight, (255, 153, 76), 170 * Int(1 + 0.2 * CountInv("ImprovedWarhead", AAPTR_TARGET)), 1, DYNAMICLIGHT.LF_ATTENUATE, 14, (0, 0, Height / 2), 0.5);
 		}
 		TNT1 A 10 A_SpawnItemEx("EOA_RocketExplosion", Flags: SXF_TRANSFERSCALE|SXF_NOCHECKPOSITION);
 		Stop;
@@ -1367,9 +1367,9 @@ Class ShrapnelDamager : Actor
 		}
 		If (!Level.IsFrozen() && !(ReactionTime-- % 4))
 		{
-			Tracer.DamageMobj(Self, Target, 8, "Normal");
 			Warp(Tracer, Flags: WARPF_NOCHECKPOSITION);
 			A_SpawnItemEx("Blood", Tracer.Radius * frandom(-0.8, 0.8), Tracer.Radius * frandom(-0.8, 0.8), Tracer.Height * frandom(0.2, 0.8), Flags: SXF_TRANSFERTRANSLATION);
+			Tracer.DamageMobj(Self, Target, 8, "Normal");
 		}
 		Super.Tick();
 	}
@@ -1405,12 +1405,13 @@ Class EOA_LockTag : Actor
 	}
 	Override Void Tick()
 	{
-		Super.Tick();
-		If (!Tracer || Tracer.bKILLED || !Target || Target.bKILLED) //[DoomKrakken]: If this actor isn't attached to any monsters, or has no one targeting it, or if the attached monster or active targeter is dead, destroy this actor.
+		//Super.Tick();
+		If (!Tracer || Tracer.bKILLED || !Tracer.bSHOOTABLE || !Target || Target.bKILLED) //[DoomKrakken]: If this actor isn't attached to any monsters, or has no one targeting it, or the tracer isn't shootable, or if the attached monster or active targeter is dead, destroy this actor.
 		{
 			Destroy();
+			Return;
 		}
-		If (!Target.Player)
+		Else If (!Target.Player)
 		{
 			Let RLPtrs = EOA_RocketLauncher(Target.FindInventory("EOA_RocketLauncher"));
 			If (RLPtrs && (!RLPtrs.Ptr1Tag || RLPtrs.Ptr1Tag != Self) && (!RLPtrs.Ptr2Tag || RLPtrs.Ptr2Tag != Self) && (!RLPtrs.Ptr3Tag || RLPtrs.Ptr3Tag != Self)) //[DoomKrakken]: If the actor is no longer stored in any of the active targeter's stored pointers, check to see if there are any rockets that are seeking it out.  If their aren't, clear the target.  It will get destroyed the next time this Tick override is called.

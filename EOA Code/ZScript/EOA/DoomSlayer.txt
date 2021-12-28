@@ -32,7 +32,7 @@ Class DoomSlayer : DoomPlayer
 		Player.StartItem "CycleEquipmentRight";
 		Player.StartItem "StunBombReady";
 		Player.MaxHealth 100; //Default, but I think it's actually 0, which is then interpreted as being 100, which is why it keeps returning 0 if left unmodified...
-		Player.WeaponSlot 1, "EOA_Pistol";
+		Player.WeaponSlot 1, "EOA_Chainsaw", "EOA_Pistol";
 		Player.WeaponSlot 2, "EOA_CombatShotgun";
 		Player.WeaponSlot 3, "EOA_SuperShotgun";
 		Player.WeaponSlot 4, "EOA_HeavyAssaultRifle";
@@ -183,38 +183,67 @@ Class DoomSlayer : DoomPlayer
 			A_TakeInventory("FragGrenadeSelected");
 			A_TakeInventory("HologramSelected");
 		}
-		//SecretFinderTimer--;
+
+		//[DoomKrakken]: Inspired by Nashmove.
+		Double Friction, MoveFactor;
+		[Friction, MoveFactor] = GetFriction();
+		A_SetSpeed(Default.Speed * (1.0 + 1.5 * Player.OnGround * (Friction <= ORIG_FRICTION) * !InPain())); //[DoomKrakken]: Call before Super.Tick() so that the speed compensation can be factored in.
+
 		Super.Tick();
+
+		//[DoomKrakken]: Call after Super.Tick() so that the deceleration can be finalized.
+		//[Nash]: decelerate the player, if not in pain
+		If (Player.OnGround && !InPain())
+		{
+			//[DoomKrakken]: Lower friction factors means increased friction.  Sounds counter-intuitive, I know...
+			If (Friction <= ORIG_FRICTION)
+			{
+				Vel.XY *= 0.8;
+			}
+		}
+		ViewBob = (Player.OnGround && Friction <= ORIG_FRICTION) ? 0.8 : Default.ViewBob;
+	}
+	Bool InPain()
+	{
+		State PainState = FindState('Pain');
+		If (PainState && InStateSequence(CurState, PainState))
+		{
+			Return True;
+		}
+		Return False;
 	}
 	Override Void MovePlayer() //[DoomKrakken]: Written by Gutawer. :D
 	{
-		// this is mostly new code because to be completely honest, the way doom does it is dumb
+		//[Gutawer]: this is mostly new code because to be completely honest, the way doom does it is dumb
 		Let Player = Self.Player;
-		UserCmd cmd = Player.cmd;
+		UserCMD CMD = Player.CMD;
 
-		// [RH] 180-degree turn overrides all other yaws
+		// [Rachael]: 180-degree turn overrides all other yaws
 		If (Player.TurnTicks)
 		{
 			Player.TurnTicks--;
-			// made this interpolate, looks way nicer
+			//[Gutawer]: made this interpolate, looks way nicer
 			A_SetAngle(Angle + (180.0 / TURN180_TICKS), SPF_INTERPOLATE);
 		}
-		Else Angle += cmd.Yaw * (360.0 / 65536.0);
-		
+		Else
+		{
+			Angle += CMD.Yaw * (360.0 / 65536.0);
+		}
 		Player.OnGround = (Pos.Z <= FloorZ) || bONMOBJ || bMBFBOUNCER || (Player.Cheats & CF_NOCLIP2);
 		
-		// base movement vector
+		//[Gutawer]: base movement vector
 		Vector2 MoveVec = (0, 0);
-		// dear whoever designed the way doom's movement works: ([DoomKrakken]: SHUT YO' MOUTH.) you. :)
+		
+		//[Gutawer]: dear whoever designed the way doom's movement works: ([DoomKrakken]: SHUT YO' MOUTH.) you. :)
 		Double TweakedSideMove;
-		Bool Sprint = (Player.cmd.Buttons & BT_SPEED) != 0;
+		Bool Sprint = (Player.CMD.Buttons & BT_SPEED) != 0;
 		If (Run && Run.GetBool())
 		{
 			Sprint = !Sprint;
 		}
 		Sprint = Sprint && Health > RunHealth;
-		TweakedSideMove = Clamp(cmd.SideMove / (Sprint ? 0.8 : 0.96), -0x3200, 0x3200);
-		MoveVec = (TweakedSideMove, cmd.ForwardMove);
+		TweakedSideMove = Clamp(CMD.SideMove / (Sprint ? 0.8 : 0.96), -0x3200, 0x3200);
+		MoveVec = (TweakedSideMove, CMD.ForwardMove);
 		If (MoveVec != (0, 0))
 		{
 			Double MaxSpeed = (Sprint ? 12800 : 6400);
@@ -223,40 +252,36 @@ Class DoomSlayer : DoomPlayer
 			{
 				MoveVec *= MaxSpeed / MoveLength;
 			}
-		
 			Vector2 OrigMoveVec = MoveVec;
 			MoveVec.Y *= !Sprint ? ForwardMove1 : ForwardMove2;
 			MoveVec.X *= !Sprint ? SideMove1 : SideMove2;
-			
 			Double BobFactor;
 			Double Friction, MoveFactor;
 			Double AirControl, AirFriction;
 			[Friction, MoveFactor] = GetFriction();
 			BobFactor = Friction < ORIG_FRICTION ? MoveFactor : ORIG_FRICTION_FACTOR;
-			
 			If (!Player.OnGround && !bNOGRAVITY && WaterLevel == 0)
 			{
-				// [RH] allow very limited movement if not on ground.
+				//[Rachael]: allow very limited movement if not on ground.
 				//[DoomKrakken]: Eeeeehhhhh, no.
 				Level.AirFriction = 1;
 				Level.AirControl = 0.2 + (0.8 * (CountInv("InFlightMobilitySelected") && (CountInv("InFlightMobilityII") || !CountInv("DoubleJumpCounter"))));
 				MoveVec *= Level.AirControl;
 				BobFactor *= Level.AirControl;
-				AirFriction = Level.AirControl * -0.0941 + 1.0004;
+				AirFriction = (Level.AirControl * -0.0941 + 1.0004) * (0.9975 - 0.045 * (CountInv("InFlightMobilitySelected") && (CountInv("InFlightMobilityII") || !CountInv("DoubleJumpCounter"))));
 				If (Player && Player.Mo && Player.Mo == Self && AirFriction != 1.0)
 				{
-					// Apply only to players, not voodoo dolls.
+					//[Gutawer]: Apply only to players, not voodoo dolls.
 					Vel.XY *= AirFriction;
 				}
 			}
 			
-			// When crouching, speed and bobbing have to be reduced
+			//[Gutawer]: When crouching, speed and bobbing have to be reduced
 			If (CanCrouch() && Player.CrouchFactor != 1)
 			{
 				MoveVec *= Player.CrouchFactor;
 				BobFactor *= Player.CrouchFactor;
-			}
-			
+			}			
 			If (Player.MorphTics == 0)
 			{
 				Double Factor = 1;
@@ -266,9 +291,7 @@ Class DoomSlayer : DoomPlayer
 				}
 				MoveVec *= Factor;
 			}
-			
 			MoveVec *= MoveFactor * Speed / 256;
-			
 			If (OrigMoveVec.Y != 0)
 			{
 				Bob(Angle, OrigMoveVec.Y * BobFactor / 256.0, True);
@@ -277,7 +300,6 @@ Class DoomSlayer : DoomPlayer
 			{
 				Bob(Angle - 90, OrigMoveVec.X * BobFactor / 256.0, False);
 			}
-			
 			If ((WaterLevel > 0 || bNOGRAVITY) && Pitch != 0 && !Player.GetClassicFlight())
 			{
 				Double ZPush = MoveVec.Y * sin(-Pitch);
@@ -287,14 +309,13 @@ Class DoomSlayer : DoomPlayer
 				}
 				MoveVec.Y *= cos(Pitch);
 			}
-			
 			Vel.XY += RotateVector(MoveVec, Angle - 90) / ((!Player.OnGround && !bNOGRAVITY && WaterLevel == 0) ? AirFriction : 1);
 			
+			//[Gutawer]: make the view bobbing match the player's movement
 			If (Player.Cheats & CF_PREDICTING == 0 && (MoveVec.Y != 0 || MoveVec.X != 0))
 			{
 				PlayRunning();
 			}
-			
 			If (Player.Cheats & CF_REVERTPLEASE != 0)
 			{
 				Player.Cheats &= ~CF_REVERTPLEASE;
@@ -302,30 +323,106 @@ Class DoomSlayer : DoomPlayer
 			}
 		}
 	}
+	
+	Override Void CheckCrouch(Bool TotallyFrozen)
+	{
+		Let Player = Self.Player;
+		UserCMD CMD = Player.CMD;
+		If (CMD.Buttons & BT_JUMP)
+		{
+			CMD.Buttons &= ~BT_CROUCH;
+		}
+		If (CanCrouch() && Player.Health > 0) //[DoomKrakken]: DOOMGUY KNOWS NO BOUNDS.
+		{
+			If (!TotallyFrozen)
+			{
+				Int CrouchDir = Player.Crouching;
+
+				If (CrouchDir == 0)
+				{
+					CrouchDir = (CMD.Buttons & BT_CROUCH) ? -1 : 1;
+				}
+				Else If (CMD.Buttons & BT_CROUCH)
+				{
+					Player.Crouching = 0;
+				}
+				If (CrouchDir == 1 && Player.CrouchFactor < 1 && Pos.Z + Height < CeilingZ)
+				{
+					CrouchMove(1);
+				}
+				Else If (CrouchDir == -1 && Player.CrouchFactor > 0.5)
+				{
+					CrouchMove(-1);
+				}
+			}
+		}
+		Else
+		{
+			Player.Uncrouch();
+		}
+		Player.CrouchOffset = -(ViewHeight) * (1 - Player.CrouchFactor);
+	}
+
+	Override Bool CheckFrozen()
+	{
+		Let Player = Self.Player;
+		UserCMD CMD = Player.CMD;
+		Bool Immobile = (Player.ReadyWeapon && (Player.ReadyWeapon.GetClass() Is "EOA_InteractWeapon")) || CountInv("RipAndTear") || CountInv("ChainsawRipAndTear") || CountInv("Grabbing_A_Ledge");
+		Bool TotallyFrozen = Player.IsTotallyFrozen() || Immobile;
+
+		// [RH] Being totally frozen zeros out most input parameters.
+		// [DoomKrakken]: So do specific first-person interactions. ;)
+		If (TotallyFrozen)
+		{
+			If (GameState == GS_TITLELEVEL || Immobile)
+			{
+				CMD.Buttons = 0;
+			}
+			Else
+			{
+				CMD.Buttons &= BT_USE;
+			}
+			CMD.Pitch = 0;
+			CMD.Yaw = 0;
+			CMD.Roll = 0;
+			CMD.ForwardMove = 0;
+			CMD.SideMove = 0;
+			CMD.UpMove = 0;
+			Player.TurnTicks = 0;
+		}
+		Else If (Player.Cheats & CF_FROZEN)
+		{
+			CMD.ForwardMove = 0;
+			CMD.SideMove = 0;
+			CMD.UpMove = 0;
+		}
+		Return TotallyFrozen;
+	}
+	
 	Override Void CheckJump()
 	{
 		If (!((Player.Cheats & CF_FROZEN) && CountInv("SiegeModeChargeCounter")))
 		{
 			Let Player = Self.Player;
 			// [RH] check for jump
-			If (Player.cmd.Buttons & BT_JUMP)
+			If (Player.CMD.Buttons & BT_JUMP)
 			{
 				If (Player.CrouchOffset != 0)
 				{
 					// Jumping while crouching will force an un-crouch but not jump
 					Player.Crouching = 1;
 				}
-				Else If (waterlevel >= 2)
+				Else If (WaterLevel >= 2)
 				{
 					Vel.Z = 4 * Speed;
 				}
-				Else If (bNoGravity)
+				Else If (bNOGRAVITY)
 				{
 					Vel.Z = 3.0;
 				}
 				Else If (!(GetPlayerInput(INPUT_OLDBUTTONS) & BT_JUMP))
 				{
-					If (/*Level.IsJumpingAllowed() &&*/ Player.OnGround /*&& Player.JumpTics == 0*/) //[DoomKrakken]: DOOMGUY KNOWS NO BOUNDS.
+					If (Player.OnGround) //[DoomKrakken]: DOOMGUY KNOWS NO BOUNDS.
 					{
 						Double JumpVelZ = JumpZ * 35 / TICRATE;
 						Double JumpFac = 0;
@@ -378,46 +475,6 @@ Class DoomSlayer : DoomPlayer
 			}
 		}
 	}
-	Override Void CheckCrouch(Bool TotallyFrozen)
-	{
-		Let Player = Self.Player;
-		UserCmd cmd = Player.cmd;
-
-		If (cmd.Buttons & BT_JUMP)
-		{
-			cmd.Buttons &= ~BT_CROUCH;
-		}
-		If (CanCrouch() && Player.Health > 0 && !(CountInv("RipAndTear") || CountInv("ChainsawRipAndTear"))/*&& Level.IsCrouchingAllowed()*/) //[DoomKrakken]: DOOMGUY KNOWS NO BOUNDS.
-		{
-			If (!TotallyFrozen)
-			{
-				Int CrouchDir = Player.Crouching;
-
-				If (CrouchDir == 0)
-				{
-					CrouchDir = (cmd.Buttons & BT_CROUCH) ? -1 : 1;
-				}
-				Else If (cmd.Buttons & BT_CROUCH)
-				{
-					Player.Crouching = 0;
-				}
-				If (CrouchDir == 1 && Player.CrouchFactor < 1 && Pos.Z + Height < CeilingZ)
-				{
-					CrouchMove(1);
-				}
-				Else If (CrouchDir == -1 && Player.CrouchFactor > 0.5)
-				{
-					CrouchMove(-1);
-				}
-			}
-		}
-		Else
-		{
-			Player.Uncrouch();
-		}
-
-		Player.CrouchOffset = -(ViewHeight) * (1 - Player.CrouchFactor);
-	}
 
 	Override Int DamageMobj(Actor Inflictor, Actor Source, Int Damage, Name Mod, Int Flags, Double Angle) //"Environmental Resistance" code...
 	{
@@ -425,6 +482,10 @@ Class DoomSlayer : DoomPlayer
 		//[DoomKrakken]: Take no damage from "Voodoo Dolls".  Because screw those in particular. }:)
 		If (!Player || !Player.Mo || Player.Mo != Self) 
 		{
+			If (Self && Inflictor)
+			{
+				Thrust(Damage / (Mass * 1.0), Inflictor.AngleTo(Self)); //[DoomKrakken]: Apply thrust to voodoo dolls since some maps use explosive barrels to move voodoo dolls.
+			}
 			Return 0;
 		}
 		If (Mod == "Slime" || (Mod == "Fire" && !(Source && Source.bISMONSTER)) || Mod == "Crush" || Inflictor Is "ExplosiveBarrel")
@@ -690,29 +751,10 @@ Class PowerMsg3Active : Powerup
 Class EOA_HandlerItem : CustomInventory
 {
 	Transient CVar NumSavingThrows, RS1, RS2, RS3;
-	Weapon LastWeapon;
-	Weapon CurrentWeapon;
-	Weapon TransitionWeapon;
-	String UpgradeChallenge1;
-	String UpgradeChallenge2;
-	String UpgradeChallenge3;
-	String UpgradeType1;
-	String UpgradeType2;
-	String UpgradeType3;
-	String UpgradeMsg1;
-	String UpgradeMsg2;
-	String UpgradeMsg3;
-	String UpgradeItem1;
-	String UpgradeItem2;
-	String UpgradeItem3;
-	Bool Challenge1Complete;
-	Bool Challenge2Complete;
-	Bool Challenge3Complete;
-	Int RuneSlot1;
-	Int RuneSlot2;
-	Int RuneSlot3;
-	Bool SwitchWeapon;
-	Int SavingThrows;
+	Weapon LastWeapon, CurrentWeapon, TransitionWeapon;
+	String UpgradeChallenge1, UpgradeChallenge2, UpgradeChallenge3, UpgradeType1, UpgradeType2, UpgradeType3, UpgradeMsg1, UpgradeMsg2, UpgradeMsg3, UpgradeItem1, UpgradeItem2, UpgradeItem3;
+	Bool Challenge1Complete, Challenge2Complete, Challenge3Complete, SwitchWeapon;
+	Int RuneSlot1, RuneSlot2, RuneSlot3, SavingThrows;
 	Default
 	{
 		Inventory.MaxAmount 1;

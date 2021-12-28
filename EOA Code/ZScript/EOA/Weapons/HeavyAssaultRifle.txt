@@ -1253,7 +1253,7 @@ Class HARMicroMissile : EOA_Projectile
 	Spawn:
 		MMSL A 1 NoDelay
 		{
-			A_Weave(WeaveFactor[0], WeaveFactor[1], WeaveFactor[2], WeaveFactor[3]);
+			A_Weave(Int(WeaveFactor[0]), Int(WeaveFactor[1]), Int(WeaveFactor[2]), Int(WeaveFactor[3]));
 			If (Tracer && CheckIfCloser(Tracer, 128))
 			{
 				A_SeekerMissile(90, 90, SMF_PRECISE);
@@ -1338,6 +1338,7 @@ Class EOA_EmptyBrass : Actor
 		Scale 0.1;
 		BounceType "Doom";
 		BounceSound "Casing/Brass";
+		ReactionTime 400;
 		+BOUNCEONACTORS
 		+FLOORCLIP
 		+FORCEXYBILLBOARD
@@ -1351,14 +1352,21 @@ Class EOA_EmptyBrass : Actor
 	Spawn:
 		TNT1 A 0 NoDelay A_ChangeVelocity(0, frandom(0.0, 2.0), frandom(0.0, 2.0), CVF_RELATIVE);
 	SpawnLoop:
-		BRSS ABCDEF 1 A_SetRoll(Roll - 30);
+		BRSS ABCDEF 1
+		{
+			A_SetRoll(Roll - 30);
+			If (WaterLevel >= 2)
+			{
+				A_CountDown();
+			}
+		}
 		Loop;
 	Death:
 		TNT1 A 0 A_SetRoll(0);
 		TNT1 A 0 A_Jump(256, random(1, 3));
 		BRSS ABF 0 A_Jump(256, "SetSprite");
 	SetSprite:
-		"####" "#" 400 A_StartSound("Casing/Brass");
+		"####" "#" 400;
 		"####" "##########" 1 A_FadeOut(0.1);
 		Stop;
 	}

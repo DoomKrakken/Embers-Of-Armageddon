@@ -525,322 +525,325 @@ Script "EOA HUD" Enter ClientSide
 		/*-------------------------
 				RIGHT BAR
 		--------------------------*/
-		Int HudRXOffset = HUDBaseWidth - FixedDiv(330, Scale) + (210 - U_XOffset);
-		/*
-		Str AmmoInfo = StrParam(s:"Ammo: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_Ammo)
-		,s:"\nMax Ammo2: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_MaxAmmo2)
-		,s:"\nMax Ammo: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_MaxAmmo)
-		,s:"\nWeapon Number: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_Number)
-		,s:"\nLow ammo: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_LowAmmo)
-		,s:"\nAmmo Type Number: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_AmmoType));
-		DrawHUDStuff("BIGFONT",AmmoInfo,0,192,CR_WHITE,0,0.5,1.0);
-		*/
+		If (!CheckInventory("PowerBerserk"))
+		{
+			Int HudRXOffset = HUDBaseWidth - FixedDiv(330, Scale) + (210 - U_XOffset);
+			/*
+			Str AmmoInfo = StrParam(s:"Ammo: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_Ammo)
+			,s:"\nMax Ammo2: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_MaxAmmo2)
+			,s:"\nMax Ammo: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_MaxAmmo)
+			,s:"\nWeapon Number: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_Number)
+			,s:"\nLow ammo: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_LowAmmo)
+			,s:"\nAmmo Type Number: ",d:GetWeaponInfo(GetWeapon(),WeapInfo_AmmoType));
+			DrawHUDStuff("BIGFONT",AmmoInfo,0,192,CR_WHITE,0,0.5,1.0);
+			*/
 
-		Int WeapNum = GetWeaponInfo(GetWeapon(), 0);
-		Str WeaponIcon = ScriptCall("EOA_Weapon", "GetWeaponIcon");
-		Int Ammo = ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoAmount);//GetWeaponInfo(GetWeapon(), WeapInfo_Ammo);
-		Str AmmoType = ScriptCall("EOA_Weapon", "GetWeaponAmmoType");//GetWeaponInfo(GetWeapon(), WeapInfo_Ammo);
-		Int MaxAmmo = ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoMaxAmount);//GetWeaponInfo(GetWeapon(), WeapInfo_MaxAmmo);
-		Int WarnAmmo = MaxAmmo / 3; //ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoWarnAmount);
-		Int LowAmmo = ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoLowAmount);//GetWeaponInfo(GetWeapon(), WeapInfo_LowAmmo);
-		If (Ammo > MaxAmmo)
-		{
-			Ammo = MaxAmmo;
-		}
-		If (MaxAmmo == 0) //[DoomKrakken]: Debugging...
-		{
-			Ammo = 1;
-			MaxAmmo = 1;
-		}
-		Bool InfiniteAmmo = ScriptCall("EOA_Weapon", "CheckInfiniteAmmoFunction") || AmmoType == "None";
-		If (InfiniteAmmo)
-		{
-			Ammo = 1;
-			MaxAmmo = 1;
-		}
-		
-		/*If (WeapNum == -1 || Ammo == -2)
-		{
-			InfiniteAmmo = True;
-			Ammo = 1;
-			MaxAmmo = 1;
-		}
-		If (WeapNum >= 0)
-		{
-			WeaponIcon = HUDWeaponIcons[WeapNum];
-		}
-		Else
-		{
-			WeaponIcon = "TNT1A0";
-		}*/
-		If (Ammo <= WarnAmmo && !InfiniteAmmo)
-		{
-			Int LowAmmoAlpha;
-			Str LowAmmoPic = "HUDRBAR5";
-			If (Ammo <= LowAmmo) //(LowAmmo == 1)
+			Int WeapNum = GetWeaponInfo(GetWeapon(), 0);
+			Str WeaponIcon = ScriptCall("EOA_Weapon", "GetWeaponIcon");
+			Int Ammo = ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoAmount);//GetWeaponInfo(GetWeapon(), WeapInfo_Ammo);
+			Str AmmoType = ScriptCall("EOA_Weapon", "GetWeaponAmmoType");//GetWeaponInfo(GetWeapon(), WeapInfo_Ammo);
+			Int MaxAmmo = ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoMaxAmount);//GetWeaponInfo(GetWeapon(), WeapInfo_MaxAmmo);
+			Int WarnAmmo = MaxAmmo / 3; //ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoWarnAmount);
+			Int LowAmmo = ScriptCall("EOA_Weapon", "GetWeaponAmmoInfo", WeapInfo_AmmoLowAmount);//GetWeaponInfo(GetWeapon(), WeapInfo_LowAmmo);
+			If (Ammo > MaxAmmo)
 			{
-				LowAmmoPic = "HUDRBAR6";
+				Ammo = MaxAmmo;
 			}
-			DrawHUDStuff(LowAmmoPic, "A", HudRXOffset, HudYOffset - 24, 0, HUDMSG_ADDBLEND, Scale, LowAmmoAlpha);
-			If (LowAmmoAlpha <= 0)
+			If (MaxAmmo == 0) //[DoomKrakken]: Debugging...
 			{
-				LowAmmoAlpha = 1.0;
+				Ammo = 1;
+				MaxAmmo = 1;
 			}
-			LowAmmoAlpha -= 0.05;
-		}
-		DrawHUDStuff("HUDABAR2", "A", HudRXOffset + FixedDiv(25, Scale), HudYOffset - 18 + FixedDiv(-35, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0); // Ammo bar meter
-		Str AmmoNumber = StrParam(d:Ammo);
-		DrawHUDStuff("HUDHBAR4", "A", HudRXOffset + FixedDiv(142 - (142 * Ammo / MaxAmmo) + 25, Scale), HudYOffset - 18 + FixedDiv(-32 - (10 * Ammo / MaxAmmo), Scale), 0, 0, Scale, 1.0); //Palito
-		SetHUDClipRect(FixedMul(HudRXOffset, Scale) + 25 - (142 * Ammo / MaxAmmo) + 142, FixedMul(HudYOffset - 18, Scale) - 150, 142, 120);
-		Str AmmoBarPic;
-		If (Ammo <= WarnAmmo && Ammo > LowAmmo && !InfiniteAmmo) //(LowAmmo == 2)
-		{
-			AmmoBarPic = "HUDABAR3";
-		}
-		Else If (Ammo <= LowAmmo && !InfiniteAmmo) //(LowAmmo == 1)
-		{
-			AmmoBarPic = "HUDABAR4";
-		}
-		Else
-		{
-			AmmoBarPic = "HUDABAR";
-		}
-		DrawHUDStuff(AmmoBarPic, "A", HudRXOffset + FixedDiv(25, Scale),HudYOffset - 18 + FixedDiv(-35, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0); // Ammo bar
-		SetHUDClipRect(0, 0, 0, 0);
-		If (!InfiniteAmmo)
-		{
-			DrawHUDStuff("SUPERMOL", AmmoNumber, HudRXOffset + FixedDiv(145 - (12 * StrLen(AmmoNumber)), Scale), HudYOffset - 18 - FixedDiv(68, Scale), CR_WHITE, HUDMSG_ADDBLEND, FixedMul(Scale, 0.7), 1.0); //Ammo number
-		}
-		Else
-		{
-			DrawHUDStuff("HUDAINF", "A", HudRXOffset + FixedDiv(100, Scale), HudYOffset - 18 + FixedDiv(-68, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);//Infinite
-		}
-		DrawHUDStuff(WeaponIcon, "A", HudRXOffset + FixedDiv(170, Scale), HudYOffset - 18 - FixedDiv(20, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);//Weapon Icon
-
-		If (WeapNum >= 0)
-		{
-			DrawHUDStuff(GetWeaponModInfo(WeapNum, 1), "A", HudRXOffset + FixedDiv(14, Scale), HudYOffset - 18 - FixedDiv(68, Scale), 0, 0, FixedMul(Scale, 3.5), 1.0); //Mod icon
-		}
-		If (CheckInventory("EOA_BFG") && GetMaxInventory(0, "EOA_BFGAmmo") == 3) // BFG bar
-		{
-			DrawHUDStuff("HUDBFGAB", "A", HudRXOffset + FixedDiv(1, Scale), HudYOffset - 18 - FixedDiv(6, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.87);
-			If (CheckInventory("EOA_BFGAmmo"))
+			Bool InfiniteAmmo = ScriptCall("EOA_Weapon", "CheckInfiniteAmmoFunction") || AmmoType == "None";
+			If (InfiniteAmmo)
 			{
-				Str BFGAmmoPic = StrParam(s:"HUDBFGA", d:CheckInventory("EOA_BFGAmmo"));
-				DrawHUDStuff(BFGAmmoPic, "A", HudRXOffset + FixedDiv(1, Scale), HudYOffset - 18 - FixedDiv(6, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
+				Ammo = 1;
+				MaxAmmo = 1;
 			}
-			DrawHUDStuff("HUDRBAR2", "A", HudRXOffset, HudYOffset - 18, 0, 0, Scale, 1.0);
-		}
-
-		If (CheckInventory("EOA_Chainsaw") && GetMaxInventory(0, "EOA_FuelAmmo") <= 7 && GetMaxInventory(0, "EOA_FuelAmmo") >= 3) // Chainsaw bar
-		{
-			Str SawBarPic = StrParam(s:"HUDSAWB", d:CheckInventory("EOA_ArgentAmmoBonusCounter"));
-			DrawHUDStuff(SawBarPic, "A", HudRXOffset + FixedDiv(158, Scale), HudYOffset - 14, 0, HUDMSG_ADDBLEND, Scale, 0.87);
-			If (CheckInventory("EOA_FuelAmmo"))
+			
+			/*If (WeapNum == -1 || Ammo == -2)
 			{
-				Str SawFuelPic = StrParam(s:FunnyChainsawPics[CheckInventory("EOA_ArgentAmmoBonusCounter")][CheckInventory("EOA_FuelAmmo")]);
-				DrawHUDStuff(SawFuelPic, "A", HudRXOffset + FixedDiv(158, Scale), HudYOffset - 14, 0, HUDMSG_ADDBLEND, Scale, 0.87);
+				InfiniteAmmo = True;
+				Ammo = 1;
+				MaxAmmo = 1;
 			}
-			DrawHUDStuff("HUDRBAR3", "A", HudRXOffset + FixedDiv(160, Scale), HudYOffset - 7, 0, 0, Scale, 1.0);
-		}
-
-		DrawHUDStuff("HUDRBAR", "A", HudRXOffset, HudYOffset - 18, 0, 0, Scale, 1.0);
-		DrawHUDStuff("HUDRBAR4", "A", HudRXOffset - FixedDiv(20, Scale), HudYOffset, 0, HUDMSG_ADDBLEND, Scale, 1.0);
-
-
-		/*-------------------------
-				EQUIPMENT
-		--------------------------*/
-
-		If (CheckInventory("FragGrenadeSelected") || CheckInventory("HologramSelected") || CheckInventory("SiphonGrenadeSelected"))
-		{
-			Int GrenadeCharge = 32 * CheckInventory("EquipmentChargeCounter") / GetAmmoCapacity("EquipmentChargeCounter");
-			Int NadeAmount = CheckInventory("EquipmentChargeCounter") / 2100;
-			If (GetAmmoCapacity("EquipmentCharge") > 1)
+			If (WeapNum >= 0)
 			{
-				DrawHUDStuff("SUPERMOL", StrParam(d:CheckInventory("EquipmentCharge")), HudRXOffset - FixedDiv(22, Scale), HudYOffset - 18 - FixedDiv(33, Scale), CR_WHITE, 0, FixedMul(Scale, 1.65), 1.0);
-			}
-			If (CheckInventory("EquipmentChargeCounter") < GetAmmoCapacity("EquipmentChargeCounter") && CheckInventory("EquipmentCharge") < GetAmmoCapacity("EquipmentCharge"))
-			{
-				DrawHUDStuff("HUDGRMET", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25 + GrenadeCharge, Scale) + Random(-1, 0), 0, HUDMSG_ADDBLEND, Scale, 0.5);
-				If (CheckInventory("FragGrenadeSelected"))
-				{
-					DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
-					If (CheckInventory("EOA_Hologram"))
-					{
-						DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-					}
-					If (CheckInventory("EOA_SiphonGrenade"))
-					{
-						If (CheckInventory("EOA_Hologram"))
-						{
-							DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						}
-						Else
-						{
-							DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-						}
-					}
-				}
-				Else If (CheckInventory("HologramSelected"))
-				{
-					DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
-					If (CheckInventory("EOA_SiphonGrenade"))
-					{
-						DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-					}
-					If (CheckInventory("EOA_FragGrenade"))
-					{
-						If (CheckInventory("EOA_SiphonGrenade"))
-						{
-							DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						}
-						Else
-						{
-							DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-						}
-					}
-				}
-				Else If (CheckInventory("SiphonGrenadeSelected"))
-				{
-					DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
-					If (CheckInventory("EOA_FragGrenade"))
-					{
-						DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-					}
-					If (CheckInventory("EOA_Hologram"))
-					{
-						If (CheckInventory("EOA_FragGrenade"))
-						{
-							DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						}
-						Else
-						{
-							DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-						}
-					}
-				}
-
-				Int GrenChargeGlowAlpha;
-				If(GrenChargeGlowAlpha <= 0)
-				{
-					GrenChargeGlowAlpha = 0.75;
-				}
-				GrenChargeGlowAlpha -= 0.01;
-				If (GrenChargeGlowAlpha > 0)
-				{
-					DrawHUDStuff("HUDGRGLO", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, GrenChargeGlowAlpha);
-				}
-
-				DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
+				WeaponIcon = HUDWeaponIcons[WeapNum];
 			}
 			Else
 			{
-				If (CheckInventory("FragGrenadeSelected"))
+				WeaponIcon = "TNT1A0";
+			}*/
+			If (Ammo <= WarnAmmo && !InfiniteAmmo)
+			{
+				Int LowAmmoAlpha;
+				Str LowAmmoPic = "HUDRBAR5";
+				If (Ammo <= LowAmmo) //(LowAmmo == 1)
 				{
-					DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
-					If (CheckInventory("EOA_Hologram"))
+					LowAmmoPic = "HUDRBAR6";
+				}
+				DrawHUDStuff(LowAmmoPic, "A", HudRXOffset, HudYOffset - 24, 0, HUDMSG_ADDBLEND, Scale, LowAmmoAlpha);
+				If (LowAmmoAlpha <= 0)
+				{
+					LowAmmoAlpha = 1.0;
+				}
+				LowAmmoAlpha -= 0.05;
+			}
+			DrawHUDStuff("HUDABAR2", "A", HudRXOffset + FixedDiv(25, Scale), HudYOffset - 18 + FixedDiv(-35, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0); // Ammo bar meter
+			Str AmmoNumber = StrParam(d:Ammo);
+			DrawHUDStuff("HUDHBAR4", "A", HudRXOffset + FixedDiv(142 - (142 * Ammo / MaxAmmo) + 25, Scale), HudYOffset - 18 + FixedDiv(-32 - (10 * Ammo / MaxAmmo), Scale), 0, 0, Scale, 1.0); //Palito
+			SetHUDClipRect(FixedMul(HudRXOffset, Scale) + 25 - (142 * Ammo / MaxAmmo) + 142, FixedMul(HudYOffset - 18, Scale) - 150, 142, 120);
+			Str AmmoBarPic;
+			If (Ammo <= WarnAmmo && Ammo > LowAmmo && !InfiniteAmmo) //(LowAmmo == 2)
+			{
+				AmmoBarPic = "HUDABAR3";
+			}
+			Else If (Ammo <= LowAmmo && !InfiniteAmmo) //(LowAmmo == 1)
+			{
+				AmmoBarPic = "HUDABAR4";
+			}
+			Else
+			{
+				AmmoBarPic = "HUDABAR";
+			}
+			DrawHUDStuff(AmmoBarPic, "A", HudRXOffset + FixedDiv(25, Scale),HudYOffset - 18 + FixedDiv(-35, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0); // Ammo bar
+			SetHUDClipRect(0, 0, 0, 0);
+			If (!InfiniteAmmo)
+			{
+				DrawHUDStuff("SUPERMOL", AmmoNumber, HudRXOffset + FixedDiv(145 - (12 * StrLen(AmmoNumber)), Scale), HudYOffset - 18 - FixedDiv(68, Scale), CR_WHITE, HUDMSG_ADDBLEND, FixedMul(Scale, 0.7), 1.0); //Ammo number
+			}
+			Else
+			{
+				DrawHUDStuff("HUDAINF", "A", HudRXOffset + FixedDiv(100, Scale), HudYOffset - 18 + FixedDiv(-68, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);//Infinite
+			}
+			DrawHUDStuff(WeaponIcon, "A", HudRXOffset + FixedDiv(170, Scale), HudYOffset - 18 - FixedDiv(20, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);//Weapon Icon
+
+			If (WeapNum >= 0)
+			{
+				DrawHUDStuff(GetWeaponModInfo(WeapNum, 1), "A", HudRXOffset + FixedDiv(14, Scale), HudYOffset - 18 - FixedDiv(68, Scale), 0, 0, FixedMul(Scale, 3.5), 1.0); //Mod icon
+			}
+			If (CheckInventory("EOA_BFG") && GetMaxInventory(0, "EOA_BFGAmmo") == 3) // BFG bar
+			{
+				DrawHUDStuff("HUDBFGAB", "A", HudRXOffset + FixedDiv(1, Scale), HudYOffset - 18 - FixedDiv(6, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.87);
+				If (CheckInventory("EOA_BFGAmmo"))
+				{
+					Str BFGAmmoPic = StrParam(s:"HUDBFGA", d:CheckInventory("EOA_BFGAmmo"));
+					DrawHUDStuff(BFGAmmoPic, "A", HudRXOffset + FixedDiv(1, Scale), HudYOffset - 18 - FixedDiv(6, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
+				}
+				DrawHUDStuff("HUDRBAR2", "A", HudRXOffset, HudYOffset - 18, 0, 0, Scale, 1.0);
+			}
+
+			If (CheckInventory("EOA_Chainsaw") && GetMaxInventory(0, "EOA_FuelAmmo") <= 7 && GetMaxInventory(0, "EOA_FuelAmmo") >= 3) // Chainsaw bar
+			{
+				Str SawBarPic = StrParam(s:"HUDSAWB", d:CheckInventory("EOA_ArgentAmmoBonusCounter"));
+				DrawHUDStuff(SawBarPic, "A", HudRXOffset + FixedDiv(158, Scale), HudYOffset - 14, 0, HUDMSG_ADDBLEND, Scale, 0.87);
+				If (CheckInventory("EOA_FuelAmmo"))
+				{
+					Str SawFuelPic = StrParam(s:FunnyChainsawPics[CheckInventory("EOA_ArgentAmmoBonusCounter")][CheckInventory("EOA_FuelAmmo")]);
+					DrawHUDStuff(SawFuelPic, "A", HudRXOffset + FixedDiv(158, Scale), HudYOffset - 14, 0, HUDMSG_ADDBLEND, Scale, 0.87);
+				}
+				DrawHUDStuff("HUDRBAR3", "A", HudRXOffset + FixedDiv(160, Scale), HudYOffset - 7, 0, 0, Scale, 1.0);
+			}
+
+			DrawHUDStuff("HUDRBAR", "A", HudRXOffset, HudYOffset - 18, 0, 0, Scale, 1.0);
+			DrawHUDStuff("HUDRBAR4", "A", HudRXOffset - FixedDiv(20, Scale), HudYOffset, 0, HUDMSG_ADDBLEND, Scale, 1.0);
+
+
+			/*-------------------------
+					EQUIPMENT
+			--------------------------*/
+
+			If (CheckInventory("FragGrenadeSelected") || CheckInventory("HologramSelected") || CheckInventory("SiphonGrenadeSelected"))
+			{
+				Int GrenadeCharge = 32 * CheckInventory("EquipmentChargeCounter") / GetAmmoCapacity("EquipmentChargeCounter");
+				Int NadeAmount = CheckInventory("EquipmentChargeCounter") / 2100;
+				If (GetAmmoCapacity("EquipmentCharge") > 1)
+				{
+					DrawHUDStuff("SUPERMOL", StrParam(d:CheckInventory("EquipmentCharge")), HudRXOffset - FixedDiv(22, Scale), HudYOffset - 18 - FixedDiv(33, Scale), CR_WHITE, 0, FixedMul(Scale, 1.65), 1.0);
+				}
+				If (CheckInventory("EquipmentChargeCounter") < GetAmmoCapacity("EquipmentChargeCounter") && CheckInventory("EquipmentCharge") < GetAmmoCapacity("EquipmentCharge"))
+				{
+					DrawHUDStuff("HUDGRMET", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25 + GrenadeCharge, Scale) + Random(-1, 0), 0, HUDMSG_ADDBLEND, Scale, 0.5);
+					If (CheckInventory("FragGrenadeSelected"))
 					{
-						DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-					}
-					If (CheckInventory("EOA_SiphonGrenade"))
-					{
+						DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
 						If (CheckInventory("EOA_Hologram"))
-						{
-							DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						}
-						Else
-						{
-							DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-						}
-					}
-				}
-				Else If (CheckInventory("HologramSelected"))
-				{
-					DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
-					If (CheckInventory("EOA_SiphonGrenade"))
-					{
-						DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-					}
-					If (CheckInventory("EOA_FragGrenade"))
-					{
-						If (CheckInventory("EOA_SiphonGrenade"))
-						{
-							DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						}
-						Else
-						{
-							DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-						}
-					}
-				}
-				Else If (CheckInventory("SiphonGrenadeSelected"))
-				{
-					DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
-					If (CheckInventory("EOA_FragGrenade"))
-					{
-						DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
-					}
-					If (CheckInventory("EOA_Hologram"))
-					{
-						If (CheckInventory("EOA_FragGrenade"))
-						{
-							DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
-						}
-						Else
 						{
 							DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
 							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
 						}
+						If (CheckInventory("EOA_SiphonGrenade"))
+						{
+							If (CheckInventory("EOA_Hologram"))
+							{
+								DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							}
+							Else
+							{
+								DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+							}
+						}
 					}
-				}
-				DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(80,Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
-				DrawHUDStuff("HUDGREN", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25,Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
-			}
+					Else If (CheckInventory("HologramSelected"))
+					{
+						DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
+						If (CheckInventory("EOA_SiphonGrenade"))
+						{
+							DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+						}
+						If (CheckInventory("EOA_FragGrenade"))
+						{
+							If (CheckInventory("EOA_SiphonGrenade"))
+							{
+								DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							}
+							Else
+							{
+								DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+							}
+						}
+					}
+					Else If (CheckInventory("SiphonGrenadeSelected"))
+					{
+						DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
+						If (CheckInventory("EOA_FragGrenade"))
+						{
+							DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+						}
+						If (CheckInventory("EOA_Hologram"))
+						{
+							If (CheckInventory("EOA_FragGrenade"))
+							{
+								DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							}
+							Else
+							{
+								DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+							}
+						}
+					}
 
-			Int GrenFlashyAlpha;
-			If ((CheckInventory("EquipmentChargeCounter") == GetAmmoCapacity("EquipmentChargeCounter") || CheckInventory("EquipmentChargeFlash")) && !ChargedGrenade)
-			{
-				ChargedGrenade = True;
-				//LocalAmbientSound("Weapons/GrenadeRegen",256);
-				GrenFlashyAlpha = 1.0;
-				TakeInventory("EquipmentChargeFlash", 1);
-			}
-			Else If (CheckInventory("EquipmentChargeCounter") < GetAmmoCapacity("EquipmentChargeCounter") && ChargedGrenade)
-			{
-				ChargedGrenade = False;
-			}
-			If (NadeAmount >= 1 && GetActorProperty(0, APROP_HEALTH) > 0 && !FlashedGrenadeIcon && CheckInventory("StockUp"))
-			{
-				FlashedGrenadeIcon = True;
-				GrenFlashyAlpha = 1.0;
-			}
-			Else If (NadeAmount < 1 && FlashedGrenadeIcon && GetAmmoCapacity("EquipmentCharge") >= 2)
-			{
-				FlashedGrenadeIcon = False;
-			}
-			If (GrenFlashyAlpha > 0)
-			{
-				DrawHUDStuff("HUDGREN3", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, GrenFlashyAlpha);
+					Int GrenChargeGlowAlpha;
+					If(GrenChargeGlowAlpha <= 0)
+					{
+						GrenChargeGlowAlpha = 0.75;
+					}
+					GrenChargeGlowAlpha -= 0.01;
+					If (GrenChargeGlowAlpha > 0)
+					{
+						DrawHUDStuff("HUDGRGLO", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, GrenChargeGlowAlpha);
+					}
+
+					DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
+				}
+				Else
 				{
-					GrenFlashyAlpha -= 0.1;
+					If (CheckInventory("FragGrenadeSelected"))
+					{
+						DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
+						If (CheckInventory("EOA_Hologram"))
+						{
+							DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+						}
+						If (CheckInventory("EOA_SiphonGrenade"))
+						{
+							If (CheckInventory("EOA_Hologram"))
+							{
+								DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							}
+							Else
+							{
+								DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+							}
+						}
+					}
+					Else If (CheckInventory("HologramSelected"))
+					{
+						DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
+						If (CheckInventory("EOA_SiphonGrenade"))
+						{
+							DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+						}
+						If (CheckInventory("EOA_FragGrenade"))
+						{
+							If (CheckInventory("EOA_SiphonGrenade"))
+							{
+								DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							}
+							Else
+							{
+								DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+							}
+						}
+					}
+					Else If (CheckInventory("SiphonGrenadeSelected"))
+					{
+						DrawHUDStuff("HUDGRENS", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
+						If (CheckInventory("EOA_FragGrenade"))
+						{
+							DrawHUDStuff("HUDGRENG", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+						}
+						If (CheckInventory("EOA_Hologram"))
+						{
+							If (CheckInventory("EOA_FragGrenade"))
+							{
+								DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(180, Scale), HudYOffset - 18 - FixedDiv(40, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+							}
+							Else
+							{
+								DrawHUDStuff("HUDGRENH", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);
+								DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(130, Scale), HudYOffset - 18 - FixedDiv(35, Scale), 0, HUDMSG_ADDBLEND, FixedMul(1.25, Scale), 0.5);						
+							}
+						}
+					}
+					DrawHUDStuff("HUDGREN2", "A", HudRXOffset - FixedDiv(80,Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, 0.5);
+					DrawHUDStuff("HUDGREN", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25,Scale), 0, HUDMSG_ADDBLEND, Scale, 1.0);
+				}
+
+				Int GrenFlashyAlpha;
+				If ((CheckInventory("EquipmentChargeCounter") == GetAmmoCapacity("EquipmentChargeCounter") || CheckInventory("EquipmentChargeFlash")) && !ChargedGrenade)
+				{
+					ChargedGrenade = True;
+					//LocalAmbientSound("Weapons/GrenadeRegen",256);
+					GrenFlashyAlpha = 1.0;
+					TakeInventory("EquipmentChargeFlash", 1);
+				}
+				Else If (CheckInventory("EquipmentChargeCounter") < GetAmmoCapacity("EquipmentChargeCounter") && ChargedGrenade)
+				{
+					ChargedGrenade = False;
+				}
+				If (NadeAmount >= 1 && GetActorProperty(0, APROP_HEALTH) > 0 && !FlashedGrenadeIcon && CheckInventory("StockUp"))
+				{
+					FlashedGrenadeIcon = True;
+					GrenFlashyAlpha = 1.0;
+				}
+				Else If (NadeAmount < 1 && FlashedGrenadeIcon && GetAmmoCapacity("EquipmentCharge") >= 2)
+				{
+					FlashedGrenadeIcon = False;
+				}
+				If (GrenFlashyAlpha > 0)
+				{
+					DrawHUDStuff("HUDGREN3", "A", HudRXOffset - FixedDiv(80, Scale), HudYOffset - 18 - FixedDiv(25, Scale), 0, HUDMSG_ADDBLEND, Scale, GrenFlashyAlpha);
+					{
+						GrenFlashyAlpha -= 0.1;
+					}
 				}
 			}
 		}

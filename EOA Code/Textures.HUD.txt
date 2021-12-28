@@ -2,7 +2,7 @@ Define WUP0 40 40
 Define WUP1 40 40
 Define WUPGLOW 80 80
 Graphic "HUDHBAR6", 176, 49 {Patch "HUDHBAR", 0, 0 {Blend "#FF0000", 1.0}}
-Graphic "HUDLBAR4", 360, 138 { Offset 15, 0 Patch "HUDLBAR4", 0, 0 { Blend "#000000", 0.9 } }
+Graphic "HUDLBAR4", 360, 138 { Offset 15, 0 Patch "HUDLBAR0", 0, 0 { Blend "#000000", 0.9 } }
 Graphic "HUDRBAR4", 360, 138 { Patch "HUDLBAR4", 0, 0 { FlipX Blend "#000000", 0.9 } }
 Graphic "HUDRBAR6", 321, 106 { Patch "HUDLBAR3", 0, 0 { FlipX } }
 

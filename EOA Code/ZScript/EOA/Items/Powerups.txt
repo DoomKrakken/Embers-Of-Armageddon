@@ -122,7 +122,7 @@ Class EOA_Item : PowerupGiver
 		{
 			If (EffectTics)
 			{
-				Power.EffectTics = EffectTics * (1 + 0.5 * Owner.CountInv("PowerExtender"));
+				Power.EffectTics = EffectTics * Int(1 + 0.5 * Owner.CountInv("PowerExtender"));
 			}
 			If (BlendColor)
 			{
@@ -210,9 +210,9 @@ Class EOA_Powerup : Powerup
 			Green = clamp(Green, 0, 1.0);
 			Blue = clamp(Blue, 0, 1.0);
 			Int R, G, B;
-			R = Red * 255;
-			G = Green * 255;
-			B = Blue * 255;
+			R = Int(Red * 255);
+			G = Int(Green * 255);
+			B = Int(Blue * 255);
 			EOA_ActorExtensions.SpawnCustomDynamicLight(Other, Self.GetClassName(), DynamicLight.PointLight, (R, G, B), 96, 0, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, -1, (0, 0, Owner.Height / 2));
 		}
 	}

@@ -100,7 +100,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		BFSR DCBA 1
 		{
 			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_DISABLESWITCH * CountInv("PowerBerserk"));
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM))
+			If (((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM)) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
@@ -121,7 +121,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		FIST NP 1
 		{
 			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_DISABLESWITCH * CountInv("PowerBerserk"));
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM))
+			If (((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM)) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
@@ -151,7 +151,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		FIST RSTUW 1
 		{
 			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_DISABLESWITCH * CountInv("PowerBerserk"));
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM))
+			If (((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) || (GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM)) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
@@ -186,7 +186,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		BFSR DCBA 1
 		{
 			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_DISABLESWITCH * CountInv("PowerBerserk"));
-			If (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK)
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
@@ -207,7 +207,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		FIST BD 1
 		{
 			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_DISABLESWITCH * CountInv("PowerBerserk"));
-			If (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK)
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
@@ -237,7 +237,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		FIST FGHIK 1
 		{
 			EOA_WeaponReady(WRF_NOBOB|WRF_NOFIRE|WRF_DISABLESWITCH * CountInv("PowerBerserk"));
-			If (GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK)
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
@@ -271,7 +271,6 @@ Class EOA_BerserkFist : EOA_Weapon
 	BerserkGloryKillLaunch:
 		TNT1 A 0
 		{
-			SetPlayerProperty(0, 1, PROP_TOTALLYFROZEN);
 			bNOTARGET = bNOPAIN = bNODAMAGE = True;
 			bNOGRAVITY = Tracer && Tracer.bNOGRAVITY;
 			If (CountInv("SeekAndDestroySelected"))
@@ -365,7 +364,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		}
 		GKFS CDEFGH 1 EOA_SetGKRecoilOffset(-4, 2, 0, 2);
 		TNT1 A 2 A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 1);
-		TNT1 A 8 A_SetTics(8 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+		TNT1 A 8 A_SetTics(8 * Int(1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
 		GKFS AB 1 EOA_SetGKRecoilOffset(10, 6, -6, 2);
 		TNT1 A 0
 		{
@@ -388,7 +387,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		}
 		GKFS CDEFGH 1 EOA_SetGKRecoilOffset(4, 2, 0, 2);
 		TNT1 A 2 A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 0);
-		TNT1 A 8 A_SetTics(8 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+		TNT1 A 8 A_SetTics(8 * Int(1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
 		GKFS AB 1 EOA_SetGKRecoilOffset(-10, 6, 6, 2);
 		TNT1 A 0 
 		{
@@ -440,8 +439,7 @@ Class EOA_BerserkFist : EOA_Weapon
 		TNT1 A 10 
 		{
 			A_OverlayFlags(1, PSPF_FLIP|PSPF_MIRROR, 0);
-			SetPlayerProperty(0, 0, PROP_TOTALLYFROZEN);
-			A_SetTics(10 * (1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
+			A_SetTics(10 * Int(1 - (0.5 * CountInv("SavagerySelected") + 0.5 * (CountInv("SavagerySelected") && (CountInv("SavageryII"))))));
 			bNOTARGET = bNOPAIN = bNODAMAGE = bNOGRAVITY = False;
 			A_TakeInventory("RipAndTear");
 			A_TakeInventory("DeathFromAbove");

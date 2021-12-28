@@ -376,63 +376,32 @@ Class EOA_SuperShotgun : EOA_Weapon
 		"####" "#" 0 A_TakeInventory("SSGReloadCounter");
 		"####" AB 1
 		{
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
-			}
-			If (CountInv("RipAndTear"))
-			{
-				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
-				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
-				Return ResolveState("GloryKill");
-			}
-			Else
-			{
-				Return ResolveState(Null);
 			}
 		}
 		"####" C 1
 		{
 			EOA_SpawnNoiseMaker("SSG/Close", 0, 0.5);
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
-			If (CountInv("RipAndTear"))
-			{
-				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
-				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
-				Return ResolveState("GloryKill");
-			}
-			Return ResolveState(Null);
 		}
 		"####" D 1
 		{
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
-			If (CountInv("RipAndTear"))
-			{
-				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
-				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
-				Return ResolveState("GloryKill");
-			}
-			Return ResolveState(Null);
 		}
 		SSGT E 1
 		{
-			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM))
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ZOOM) && !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM) && !CountInv("RipAndTear"))
 			{
 				EOA_CheckGloryKill();
 			}
-			If (CountInv("RipAndTear"))
-			{
-				A_FireProjectile("EOA_GKSeeker", 0, 0, 0, 0);
-				A_CustomPunch(0, 1, 0, "EOA_NullPuff2", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
-				Return ResolveState("GloryKill");
-			}
-			Return ResolveState(Null);
 		}
 		Goto Super::Melee+2;
 	MeleeContinue:

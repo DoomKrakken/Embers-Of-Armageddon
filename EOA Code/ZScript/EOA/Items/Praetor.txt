@@ -7,7 +7,7 @@ Class EOA_EliteGuardCorpse : Actor //[DoomKrakken]: Sprites taken from D4DHF.
 	{
 		Radius 10;
 		Height 20;
-		Scale 0.6;
+		Scale 0.7;
 		EOA_EliteGuardCorpse.MarkerType "EOA_EliteGuardCorpseMarker";
 		+BRIGHT
 		+DONTBLAST
@@ -18,12 +18,21 @@ Class EOA_EliteGuardCorpse : Actor //[DoomKrakken]: Sprites taken from D4DHF.
 		+NODAMAGE
 		+RELATIVETOFLOOR
 	}
+	Override Void Touch(Actor Toucher)
+	{
+		Let Player = Toucher.Player;
+		If (Player)
+		{
+			Toucher = Player.Mo;
+			A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]); //[DoomKrakken]: Have it called when a player touches the actor, as opposed to when the player is locked in a slow, unskippable animation where the player cannot escape from the possible trap that is triggered by this special.
+		}
+	}
 	Override Bool Used(Actor User)
 	{
 		PlayerInfo Player = User.Player;
 		If (Player && Player.Mo && Player.Mo == User && !TokenClaimed && !User.FindInventory("EOA_InteractWeapon", True) && Distance3D(User) <= Player.Mo.UseRange && Distance3D(User) >= Radius)
 		{
-			A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]);
+			A_CallSpecial(Special, Args[0], Args[1], Args[2], Args[3], Args[4]); 
 			Let Challenges = EOA_ChallengeArchive.Get();
 			If (Challenges)
 			{
@@ -101,7 +110,7 @@ Class EOA_EliteGuardCorpseWeapon : EOA_InteractWeapon
 				A_Face(Invoker.Giver);
 				Vector2 Dist = Vec2To(Invoker.Giver);
 				Double GiverZ = Invoker.Giver.Pos.Z + Invoker.Giver.GetBobOffset();
-				Double SourceZ = Pos.Z + 32 + GetBobOffset();
+				Double SourceZ = Pos.Z + 26 + GetBobOffset();
 				Double DistZ = GiverZ - SourceZ;
 				Double DDist = sqrt(Dist.X * Dist.X + Dist.Y * Dist.Y + DistZ * DistZ);
 				Double NewPitch = -Normalize180(asin(DistZ / DDist));
@@ -123,14 +132,14 @@ Class EOA_EliteGuardCorpseWeapon : EOA_InteractWeapon
 		{
 			If (Invoker.Giver)
 			{
-				A_Face(Invoker.Giver, Max_Pitch: 90, Flags: FAF_BOTTOM);
+				A_Face(Invoker.Giver, Max_Pitch: 90, Pitch_Offset: 5, Flags: FAF_MIDDLE);
 			}
 		}
 		PTLH RQPONMLKJIHGFEDCBA 1
 		{
 			If (Invoker.Giver)
 			{
-				A_Face(Invoker.Giver, Max_Pitch: 90, Flags: FAF_BOTTOM);
+				A_Face(Invoker.Giver, Max_Pitch: 90, Pitch_Offset: 5, Flags: FAF_MIDDLE);
 			}
 		}
 		Goto Deselect;
