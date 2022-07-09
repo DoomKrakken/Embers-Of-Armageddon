@@ -862,51 +862,11 @@ Class EOA_ChallengeEventHandler : StaticEventHandler //Thank you, phantombeta an
 
 Class EOA_ChallengeArchive : Thinker
 {
-	Int FodderSpawned;
-	Int BarrelsSpawned;
-	Int HeaviesSpawned;
-	Int ImpsSpawned;
-	Int KnightsSpawned;
-	Int CacosSpawned;
-	Int BaronsSpawned;
-	Int Tier1Spawned;
-	Int CompletedChallenges;
-	Int ChallengeMilestone;
-	Int PowerupsSpawned;
-	Int QuadDamageSpawned;
+	Int FodderSpawned, BarrelsSpawned, HeaviesSpawned, ImpsSpawned, KnightsSpawned, CacosSpawned, BaronsSpawned, Tier1Spawned, CompletedChallenges, ChallengeMilestone, PowerupsSpawned, QuadDamageSpawned;
 	Bool QueueGK;
-	Array<String> UnselectedChallenges;
-	Array<String> SelectedChallenges;
+	Array<String> UnselectedChallenges, SelectedChallenges;
 	Array<EOA_ChallengeData> ChallengeData;
-	EOA_ChallengeData TwoFer;
-	EOA_ChallengeData VarietyIsTheSpiceOfDeathI;
-	EOA_ChallengeData QuiteTheExplorer;
-	EOA_ChallengeData ThreeZombiesOneBarrel;
-	EOA_ChallengeData CurbStomp;
-	EOA_ChallengeData QuiteTheCollector;
-	EOA_ChallengeData WalkThePath;
-	EOA_ChallengeData BirdsEyeView;
-	EOA_ChallengeData ToBeKnighted;
-	EOA_ChallengeData Chiropractor;
-	EOA_ChallengeData SearchingHighAndLow;
-	EOA_ChallengeData Overkiller;
-	EOA_ChallengeData DeadManStalking;
-	EOA_ChallengeData MomentumSwing;
-	EOA_ChallengeData CloseEncounters;
-	EOA_ChallengeData DoubleTake;
-	EOA_ChallengeData HideAndSeek;
-	EOA_ChallengeData VarietyIsTheSpiceOfDeathII;
-	EOA_ChallengeData ThreadTheNeedle;
-	EOA_ChallengeData AtopTheMountain;
-	EOA_ChallengeData Dominator;
-	EOA_ChallengeData APinPopsABalloon;
-	EOA_ChallengeData TwoMouthsToFeed;
-	EOA_ChallengeData WaitForIt;
-	EOA_ChallengeData VarietyIsTheSpiceOfDeathIII;
-	EOA_ChallengeData GorePinata;
-	EOA_ChallengeData MyTeethAreSharper;
-	EOA_ChallengeData HoldStill;
-	EOA_ChallengeData BigREDACTEDGun;
+	EOA_ChallengeData TwoFer, VarietyIsTheSpiceOfDeathI, QuiteTheExplorer, ThreeZombiesOneBarrel, CurbStomp, QuiteTheCollector, WalkThePath, BirdsEyeView, ToBeKnighted, Chiropractor, SearchingHighAndLow, Overkiller, DeadManStalking, MomentumSwing, CloseEncounters, DoubleTake, HideAndSeek, VarietyIsTheSpiceOfDeathII, ThreadTheNeedle, AtopTheMountain, Dominator, APinPopsABalloon, TwoMouthsToFeed, WaitForIt, VarietyIsTheSpiceOfDeathIII, GorePinata, MyTeethAreSharper, HoldStill, BigREDACTEDGun;
 	EOA_ChallengeArchive Init()
 	{
 		//[DoomKrakken]: Initialize these as new EOA_ChallengeData instances.
@@ -1187,15 +1147,10 @@ Class EOA_ChallengeArchive : Thinker
 
 Class EOA_ChallengeData
 {
-	Bool Selected;
-	Bool Active;
-	Int OldAmount;
-	Int Amount;
-	Int MaxAmount;
+	Bool Selected, Active;
+	Int OldAmount, Amount, MaxAmount;
 	Int ChallengeNum;
-	String MapName;
-	String Name;
-	String Desc;
+	String MapName, Name, Desc;
 	Array<SavageryArray> GloryKills; //[DoomKrakken]: This array type used in the Savagery Upgrade Challenge for recording information on different Glory Kills performed.  It's PERFECT for any other Glory Kill-related challenges!
 }
 

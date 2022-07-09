@@ -1,3 +1,8 @@
+===== v1.9.3 (Hotfix) =====
+- Granted slight AirFriction factor to the Slayer (to decrease midair velocity).
+- Condensed variable declarations in challenge-related code, Glory Kill Drop code, global variable archive code, and Doom Slayer player pawn code.
+- "Doom Slayer's True Speed" option now toggles between "modern" and "classic" modes of movement.  While enabled, the Doom Slayer will move more similarly to how he does in DOOM (2016).  While disabled, the Doom Slayer will move more similarly to how he does in classic Doom.
+
 ===== v1.9.2 =====
 - Homing attacks such as the BFG's tracers and Lock-On Burst will lose their victims if the victims become unshootable.
 - Added a null-check to Siege Mode's projectile (thank you, M.I.K.E.whyamistillalive69).

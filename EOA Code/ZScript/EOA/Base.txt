@@ -1128,27 +1128,21 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 Class EOA_KillCounter : EOA_Token
 {
 	//[DoomKrakken]: These same variables will be present in the reward fountain this item spawns, and will be passed one way or another to said actor.
+	/*
+	Guide:
+	DelayTics - Number of tics to delay before yielding rewards.  Only used for Chainsaw kills.
+	HealthDrops - Number of health stims to drop.  Dependant on how the monster was killed (Glory Killed or not) and by how much health the killer has.
+	ArmorDrops - Number of armor shards to drop.  Only used for Armored Offensive.
+	AmmoDrops - Number of ammo items to drop.  This will be greater than 1 if it's done via Chainsaw.
+	Drop<AmmoType> - Check if <AmmoType> should be dropped.  DropBFGCell is only used for Ammo Boost II.
+	Drop<AmmoType>Chance[Min/Max] - [Minimum/Maximum] chance of <AmmoType> dropping.
+	GK - Check if the monster was killed via standard Glory Kill.
+	CSGK - Check if the monster was killed via Chainsaw Glory Kill.
+	NeedsHealth - Check if the killer has critical (<=40) health.
+	*/
 	PlayerPawn Killer; //Not to be passed.
-	Int DelayTics; //Number of tics to delay before yielding rewards.  Only used for Chainsaw kills.
-	Int HealthDrops; //Number of health stims to drop.  Dependant on how the monster was killed (Glory Killed or not) and by how much health the killer has.
-	Int ArmorDrops; //Number of armor shards to drop.  Only used for Armored Offensive.
-	Int AmmoDrops; //Number of ammo items to drop.  This will be greater than 1 if it's done via Chainsaw.
-	Bool DropBullets; //Check if bullet ammo should be dropped.
-	Bool DropShells; //Check if shell ammo should be dropped.
-	Bool DropRockets; //Check if rocket ammo should be dropped.
-	Bool DropCells; //Check if cell ammo should be dropped.
-	Int DropBulletsChanceMin; //Minimum chance of bullet ammo dropping.
-	Int DropShellsChanceMin; //Minimum chance of shell ammo dropping.
-	Int DropRocketsChanceMin; //Minimum chance of rocket ammo dropping.
-	Int DropCellsChanceMin; //Minimum chance of cell ammo dropping.
-	Int DropBulletsChanceMax; //Maximum chance of bullet ammo dropping.
-	Int DropShellsChanceMax; //Maximum chance of shell ammo dropping.
-	Int DropRocketsChanceMax; //Maximum chance of rocket ammo dropping.
-	Int DropCellsChanceMax; //Maximum chance of cell ammo dropping.
-	Bool DropBFGCell; //Check if BFG cell ammo should be dropped.  Only used for Ammo Boost II.
-	Bool GK; //Check if the monster was killed via standard Glory Kill.
-	Bool CSGK; //Check if the monster was killed via Chainsaw Glory Kill.
-	Bool NeedsHealth; //Check if the killer has critical (<=40) health.
+	Int DelayTics, HealthDrops, ArmorDrops, AmmoDrops, DropBulletsChanceMin, DropShellsChanceMin, DropRocketsChanceMin, DropCellsChanceMin, DropBulletsChanceMax, DropShellsChanceMax, DropRocketsChanceMax, DropCellsChanceMax;
+	Bool DropBullets, DropShells, DropRockets, DropCells, DropBFGCell, GK, CSGK, NeedsHealth;
 	Vector3 LastPos; //Last known position of the killed monster, so that it spawns the reward fountain in the correct place (should the killed monster somehow... disappear... before that happens).
 	Override Void AttachToOwner(Actor Other)
 	{
@@ -1371,19 +1365,8 @@ Class EOA_KillCounter : EOA_Token
 Class EOA_KillRewardDropper : Actor
 {
 	Actor Owner;
-	Int DelayTics;
-	Int HealthDrops;
-	Int ArmorDrops;
-	Int AmmoDrops;
-	Bool DropBullets;
-	Bool DropShells;
-	Bool DropRockets;
-	Bool DropCells;
-	Bool DropBFGCell;
-	Bool GK;
-	Bool CSGK;
-	Bool NeedsHealth;
-	Bool Boss;
+	Int DelayTics, HealthDrops, ArmorDrops, AmmoDrops;
+	Bool DropBullets, DropShells, DropRockets, DropCells, DropBFGCell, GK, CSGK, NeedsHealth, Boss;
 	Default
 	{
 		Radius 0;
@@ -1471,52 +1454,19 @@ Class EOA_KillRewardDropper : Actor
 Class SectorDefaults
 {
 	String MapName;
-	Int DefLightLevel;
-	Int DefDamageAmount;
-	Int DefDamageInterval;
+	Int DefLightLevel, DefDamageAmount, DefDamageInterval;
 }
 
 /*Class KillMilestoneData
 {
 	String MapName;
-	Int PointsAwarded;
-	Int KillThreshold;
-	Int CurrentKillThreshold;
+	Int PointsAwarded, KillThreshold, CurrentKillThreshold;
 }*/
 
 Class EOA_StaticArchive : Thinker
 {
-	Bool ShotgunSpawned;
-	Bool ShotgunNeeded;
-	Bool ChaingunSpawned;
-	Bool ChaingunNeeded;
-	Bool ChainsawSpawned;
-	Bool ChainsawSpawnedInLevel;
-	Bool BFGSpawned;
-	Bool PowerCycle;
-	Bool ThrustBootsEquipped;
-	Bool ThrustBootsSpawned;
-	Bool AutomapSpawned;
-	Int ShotgunsSpawned;
-	Int ChaingunsSpawned;
-	Int PlasmaRiflesSpawned;
-	Int ArmorCycle;
-	Int AmmoCycle;
-	Int BackpackCycle;
-	Int UpgradeCycle;
-	Int PraetorTokensSpawned;
-	Int PraetorTokensClaimed;
-	Int FieldDronesSpawned;
-	Int FieldDronesClaimed;
-	Int ArgentCellsSpawned;
-	Int ArgentCellsClaimed;
-	Int RuneTrialStonesSpawned;
-	Int RuneTrialStonesClaimed;
-	Int EquipmentSpawned;
-	Int CellAmmoSpawned;
-	Int FuelAmmoSpawned;
-	Int FuelAmmoSpawnedInLevel;
-	Int MonsterKills;
+	Bool ShotgunSpawned, ShotgunNeeded, ChaingunSpawned, ChaingunNeeded, ChainsawSpawned, ChainsawSpawnedInLevel, BFGSpawned, PowerCycle, ThrustBootsEquipped, ThrustBootsSpawned, AutomapSpawned;
+	Int ShotgunsSpawned, ChaingunsSpawned, PlasmaRiflesSpawned, ArmorCycle, AmmoCycle, BackpackCycle, UpgradeCycle, PraetorTokensSpawned, PraetorTokensClaimed, FieldDronesSpawned, FieldDronesClaimed, ArgentCellsSpawned, ArgentCellsClaimed, RuneTrialStonesSpawned, RuneTrialStonesClaimed, EquipmentSpawned, CellAmmoSpawned, FuelAmmoSpawned, FuelAmmoSpawnedInLevel, MonsterKills;
 	//Array<KillMilestoneData> KillMilestone;
 	Array<SectorDefaults> SecDefaults;
 	EOA_StaticArchive Init()

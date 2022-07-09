@@ -3,9 +3,8 @@ Class DoomSlayer : DoomPlayer
 	Transient CVar NumSavingThrows, Run, TrueSpeed, Z_View;
 	EOA_FieldDrone LastDroneSelected;
 	EOA_RuneTrialStone LastStoneSelected;
-	Bool NearSecret;
+	Bool NearSecret, FirstStep;
 	Int AirTime;
-	Bool FirstStep;
 	Double OldVelZ;
 	Default
 	{
@@ -13,8 +12,8 @@ Class DoomSlayer : DoomPlayer
 		Player.CrouchSprite "DSCR";
 		Player.DisplayName "Doom Marine";
 		Player.JumpZ 7;
-		Player.ForwardMove 1.5, 0.75; //[DoomKrakken]: We're disabling walking.  Move at top speed AT ALL TIMES. >:D
-		Player.SideMove 1.5, 0.75;
+		Player.ForwardMove 2, 1; //[DoomKrakken]: We're disabling walking.  Move at top speed AT ALL TIMES. >:D
+		Player.SideMove 2, 1;	
 		Player.GruntSpeed 24;
 		Player.TeleportFreezeTime 0;
 		Player.SoundClass "DoomSlayer";
@@ -91,10 +90,9 @@ Class DoomSlayer : DoomPlayer
 		//[DoomKrakken]: Maintenance
 		
 		//[DoomKrakken]: Adjust player speed to be the original player's speed, or DOOM's player's speed, based on personal preferences.
-		ForwardMove1 = TrueSpeed.GetBool() ? 1.5 : 2;
-		SideMove1 =TrueSpeed.GetBool() ? 1.5 : 2;
-		ForwardMove2 = TrueSpeed.GetBool() ? 0.75 : 1;
-		SideMove2 = TrueSpeed.GetBool() ? 0.75 : 1;
+		
+		ForwardMove1 = TrueSpeed.GetBool() ? 2 : 1;
+		SideMove1 = TrueSpeed.GetBool() ? 2 : 1;
 		
 		//[DoomKrakken]: Let's nullify view-bobbing altogether, without affecting weapon-bobbing! :D
 		If (Z_View.GetBool())
@@ -187,21 +185,22 @@ Class DoomSlayer : DoomPlayer
 		//[DoomKrakken]: Inspired by Nashmove.
 		Double Friction, MoveFactor;
 		[Friction, MoveFactor] = GetFriction();
-		A_SetSpeed(Default.Speed * (1.0 + 1.5 * Player.OnGround * (Friction <= ORIG_FRICTION) * !InPain())); //[DoomKrakken]: Call before Super.Tick() so that the speed compensation can be factored in.
-
+		A_SetSpeed(Default.Speed * (1.0 + 1.5 * Player.OnGround * (Friction <= ORIG_FRICTION) * !InPain() * TrueSpeed.GetBool())); //[DoomKrakken]: Call before Super.Tick() so that the speed compensation can be factored in.
 		Super.Tick();
-
-		//[DoomKrakken]: Call after Super.Tick() so that the deceleration can be finalized.
-		//[Nash]: decelerate the player, if not in pain
-		If (Player.OnGround && !InPain())
+		If (TrueSpeed.GetBool())
 		{
-			//[DoomKrakken]: Lower friction factors means increased friction.  Sounds counter-intuitive, I know...
-			If (Friction <= ORIG_FRICTION)
+			//[DoomKrakken]: Call after Super.Tick() so that the deceleration can be finalized.
+			//[Nash]: decelerate the player, if not in pain
+			If (Player.OnGround && !InPain())
 			{
-				Vel.XY *= 0.8;
+				//[DoomKrakken]: Lower friction factors means increased friction.  Sounds counter-intuitive, I know...
+				If (Friction <= ORIG_FRICTION)
+				{
+					Vel.XY *= 0.8;
+				}
 			}
+			ViewBob = (Player.OnGround && Friction <= ORIG_FRICTION) ? 0.8 : Default.ViewBob;
 		}
-		ViewBob = (Player.OnGround && Friction <= ORIG_FRICTION) ? 0.8 : Default.ViewBob;
 	}
 	Bool InPain()
 	{
@@ -268,7 +267,7 @@ Class DoomSlayer : DoomPlayer
 				Level.AirControl = 0.2 + (0.8 * (CountInv("InFlightMobilitySelected") && (CountInv("InFlightMobilityII") || !CountInv("DoubleJumpCounter"))));
 				MoveVec *= Level.AirControl;
 				BobFactor *= Level.AirControl;
-				AirFriction = (Level.AirControl * -0.0941 + 1.0004) * (0.9975 - 0.045 * (CountInv("InFlightMobilitySelected") && (CountInv("InFlightMobilityII") || !CountInv("DoubleJumpCounter"))));
+				AirFriction = (Level.AirControl * -0.0941 + 1.0004) * 1.005; /* (0.9975 - 0.045 * (CountInv("InFlightMobilitySelected") && (CountInv("InFlightMobilityII") || !CountInv("DoubleJumpCounter"))))*/
 				If (Player && Player.Mo && Player.Mo == Self && AirFriction != 1.0)
 				{
 					//[Gutawer]: Apply only to players, not voodoo dolls.
