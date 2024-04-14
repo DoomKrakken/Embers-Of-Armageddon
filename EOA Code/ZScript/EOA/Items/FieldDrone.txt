@@ -2,9 +2,7 @@
 Class EOA_FieldDrone : Actor //[DoomKrakken]: Sprites taken from D4T.
 {
 	Mixin EOA_MapMarkerUser;
-	Bool DroneUsed;
-	Bool DroneBeingUsed;
-	Bool Punched;
+	Bool DroneUsed, DroneBeingUsed, Punched;
 	Int AmbSoundTimer;
 	Default
 	{

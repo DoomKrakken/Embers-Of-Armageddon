@@ -397,7 +397,7 @@ Class EOA_GaussCannon : EOA_Weapon
 				A_ChangeVelocity(0, 0, 10.5 * sin(Pitch), CVF_RELATIVE);
 			}
 			A_AlertMonsters();
-			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "GaussCannonProjectile", -5 + GetViewZ(), 12 + GetRelVelY() / 4);
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "GaussCannonProjectile", -5, 12 + GetRelVelY() / 4 + 2 * GetRelYaw(), 10 + GetRelVelX() / 2 + 2 * GetRelPitch());
 			EOA_SetWeaponRecoilOffset(0, -6, 0, 0.5);
 			EOA_SpawnCustomDynamicLight("GCNLight", DynamicLight.PulseLight, (25, 204, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 8, (0, 0, Height / 2), 0.2);
 			EOA_SpawnNoiseMaker("Gauss/Fire");
@@ -485,7 +485,7 @@ Class EOA_GaussCannon : EOA_Weapon
 		TNT1 A 0
 		{
 			A_AlertMonsters();
-			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "PrecisionBoltProjectile", -5 + GetViewZ(), 0 + GetRelVelY() / 3);
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "PrecisionBoltProjectile", -5, 0 + GetRelVelY() / 3 + 2 * GetRelYaw(), 10 + GetRelVelX() / 2 + 2 * GetRelPitch());
 			EOA_SetWeaponRecoilOffset(0, -7, 0, 0.5);
 			EOA_SpawnCustomDynamicLight("GCNLight", DynamicLight.PulseLight, (25, 204, 255), 64, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 8, (0, 0, Height / 2), 0.2);
 			A_TakeInventory("EOA_CellAmmo", 15, TIF_NOTAKEINFINITE);
@@ -763,7 +763,7 @@ Class EOA_GaussCannon : EOA_Weapon
 				A_ChangeVelocity(0, 0, 10.5 * sin(Pitch));
 			}
 			A_AlertMonsters();
-			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "SiegeModeProjectile", -5 + GetViewZ(), 12 + GetRelVelY() / 4);
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "SiegeModeProjectile", -5, 12 + GetRelVelY() / 4 + 2 * GetRelYaw(), 10 + GetRelVelX() / 2 + 2 * GetRelPitch());
 			EOA_SetWeaponRecoilOffset(0, 0, 7, 0.5);
 			EOA_SetWeaponRecoilOffset(0, -7);
 			If (GetCVar("EOA_APRRecoil"))

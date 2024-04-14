@@ -1,4 +1,4 @@
-//[DoomKrakken]: Written entirely by phantombeta.
+//[DoomKrakken]: Written by phantombeta, edited much further by me.
 Class EOA_ActorExtensions : Actor
 {
     /* Summary:

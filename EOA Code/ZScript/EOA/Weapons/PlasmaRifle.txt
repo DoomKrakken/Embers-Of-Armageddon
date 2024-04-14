@@ -234,7 +234,7 @@ Class EOA_PlasmaRifle : EOA_Weapon
 				Continue;
 			}
 			Mo.DamageMobj(BlastWave, Self, CountInv("HeatBlastChargeCounter"), "Normal", DMG_EXPLOSION);
-			If (Mo.bKILLED && Mo.bISMONSTER)
+			If (!Mo || (Mo.bKILLED && Mo.bISMONSTER)) //[DoomKrakken]: Compensate also for those monsters with 0-tic Death state sequences.
 			{
 				A_GiveInventory("HeatedCoreKillCounter");
 			}
@@ -361,7 +361,7 @@ Class EOA_PlasmaRifle : EOA_Weapon
 		PRNF A 0;
 		"####" "#" 0 
 		{
-			EOA_FireBullets(0, 0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "EOA_PlasmaBall", random(-6, -4) + GetViewZ(), random(7, 10) + GetRelVelY() / 4);
+			EOA_FireBullets(0, 0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "EOA_PlasmaBall", random(-6, -4), random(7, 10) + GetRelVelY() / 4 + 2 * GetRelYaw(), 10 + GetRelVelX() / 2 + 2 * GetRelPitch());
 			EOA_SetWeaponRecoilOffset(frandompick(-0.5, 0.5), frandompick(-0.5, 0.5), 0, 0.25);
 			EOA_SpawnCustomDynamicLight("PLR_Light", DynamicLight.PulseLight, (25, 204, 255), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 3, (0, 0, Height / 2), 0.1);
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "PLR/Fire1", 1, 0, 0.5);
@@ -553,13 +553,13 @@ Class EOA_PlasmaBall : EOA_Projectile //Many sources use these sprites... my sou
 		+ROLLCENTER
 		+ROLLSPRITE
 	}
-	Override Void PostBeginPlay()
+	Override Void BeginPlay()
 	{
 		A_SetRoll(random(0, 359));
 		A_StartSound("PlasmaBall/Fly", 1, CHAN_LOOP, 0.5);
 		A_StartSound("PlasmaBall/Add1", 2, CHAN_LOOP, 0.25);
 		A_StartSound("PlasmaBall/Add2", 3, CHAN_LOOP, 0.25);
-		Super.PostBeginPlay();
+		Super.BeginPlay();
 	}
 	States
 	{
@@ -591,7 +591,7 @@ Class DecoyPlasmaBall : EOA_PlasmaBall
 	}
 }
 
-Class EOA_PlasmaPuff : Actor//Graphics taken from D4T and ZION. :D
+Class EOA_PlasmaPuff : Actor //Graphics taken from D4T and ZION. :D
 {
 	Default
 	{
@@ -849,7 +849,7 @@ Class StunBombProjectile : EOA_Projectile
 	Override Int DoSpecialDamage(Actor Target, Int Damage, Name DamageType)
 	{
 		//[DoomKrakken]: Tanky monsters such as Barons burn through this stuff twice as fast... so the effect tics will be halved.
-		If (!Target.bISMONSTER || (Target.bBOSS && Target.Default.Health >= 3000))
+		If (!(Target Is "EOA_WeakPoint") && (!Target.bISMONSTER || (Target.bBOSS && Target.Default.Health >= 3000)))
 		{
 			If (!Target.bISMONSTER)
 			{

@@ -277,6 +277,10 @@ Class EOA_Chaingun : EOA_Weapon
 				EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 6);
 			}
 		}
+		Else If (Owner.IsActorPlayingSound(SlotNumber * 100 + 6, "CGN/Rotor") || Owner.IsActorPlayingSound(SlotNumber * 100 + 6, "CGN/Spin"))
+		{
+			EOA_SpawnPersistentNoiseMaker(SlotNumber, "", 6);
+		}
 		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon != Self)
 		{
 			If (Owner.CountInv("ChaingunSelected"))
@@ -433,11 +437,11 @@ Class EOA_Chaingun : EOA_Weapon
 			A_GiveInventory("ChaingunFireCounter");
 			If (CountInv("IncendiaryRounds") && CountInv("ChaingunSpinCounter") >= 36 && CountInv("GatlingRotatorSelected"))
 			{
-				EOA_FireBullets(CountInv("ChaingunSpinCounter") / 12.0, CountInv("ChaingunSpinCounter") / 12.0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "ChaingunIncendiarySlug", -3 + GetViewZ(), 5 + GetRelVelY() / 3);
+				EOA_FireBullets(CountInv("ChaingunSpinCounter") / 12.0, CountInv("ChaingunSpinCounter") / 12.0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "ChaingunIncendiarySlug", -3, 5 + GetRelVelY() / 3 + 2 * GetRelYaw(), 5 + GetRelVelX() / 2 + 2 * GetRelPitch());
 			}
 			Else
 			{
-				EOA_FireBullets(CountInv("ChaingunSpinCounter") / 12.0, CountInv("ChaingunSpinCounter") / 12.0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "ChaingunSlug", -3 + GetViewZ(), 5 + GetRelVelY() / 3);
+				EOA_FireBullets(CountInv("ChaingunSpinCounter") / 12.0, CountInv("ChaingunSpinCounter") / 12.0, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "ChaingunSlug", -3, 5 + GetRelVelY() / 3 + 2 * GetRelYaw(), 5 + GetRelVelX() / 2 + 2 * GetRelPitch());
 			}
 			If (GetCVar("EOA_APRRecoil"))
 			{
@@ -489,12 +493,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" C 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" D 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim2;
@@ -513,12 +517,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" F 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" G 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim3;
@@ -537,12 +541,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" A 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" B 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim4;
@@ -561,12 +565,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" D 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" E 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim5;
@@ -585,12 +589,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" G 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" H 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim6;
@@ -609,12 +613,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" B 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" C 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim7;
@@ -633,12 +637,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" E 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" F 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim8;
@@ -657,12 +661,12 @@ Class EOA_Chaingun : EOA_Weapon
 		"####" H 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(4 - CountInv("PowerHaste") - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(5 - CountInv("PowerHaste") - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" A 1
 		{
 			EOA_WeaponReady(WRF_NOPRIMARY|WRF_NOSECONDARY * !(CountInv("MobileTurretSelected") && !CountInv("MobileTurretOverheatCounter"))|WRF_ALLOWZOOM * !(GetPlayerInput(INPUT_OLDBUTTONS) & BT_ZOOM), EOA_ALLOWMANTLE|EOA_DISABLEHASTE);
-			A_SetTics(3 - CountInv("ChaingunSpinCounter") / 12);
+			A_SetTics(4 - 4 * CountInv("ChaingunSpinCounter") / 36);
 		}
 		"####" "#" 0 A_ReFire();
 		Goto SpinAnim1;
@@ -1075,16 +1079,13 @@ Class EOA_Chaingun : EOA_Weapon
 			{
 				Return ResolveState("TurretClose");
 			}
-			Else
+			Else If (CountInv("MobileTurretHeatCounter") && CountInv("MobileTurretHeatCounter") % 3 == 0)
 			{
-				If (CountInv("MobileTurretHeatCounter") && CountInv("MobileTurretHeatCounter") % 3 == 0)
-				{
-					A_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
-					A_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
-					A_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
-				}
-				Return ResolveState(Null);
+				EOA_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
 			}
+			Return ResolveState(Null);
 		}
 		Wait;
 	TurretFire:
@@ -1097,17 +1098,17 @@ Class EOA_Chaingun : EOA_Weapon
 				A_TakeInventory("MobileTurretBarrelCounter");
 			}
 			A_GiveInventory("MobileTurretBarrelCounter");
-			If (CountInv("MobileTurretBarrelCounter") == 1)
+			Switch (CountInv("MobileTurretBarrelCounter"))
 			{
-				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), -4 + GetRelVelY() / 3, 2.5);
-			}
-			Else If (CountInv("MobileTurretBarrelCounter") == 2)
-			{
-				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", -5 + GetViewZ(), 0 + GetRelVelY() / 3, 2.5);
-			}
-			Else If (CountInv("MobileTurretBarrelCounter") == 3)
-			{
-				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), 4 + GetRelVelY() / 3, 2.5);
+			Case 1:
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", 0, -5.5 + GetRelVelY() / 3 + 2 * GetRelYaw(), 2.5 + GetRelVelX() / 5 + 2 * GetRelPitch());
+				Break;
+			Case 2:
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", -5, GetRelVelY() / 3 + 2 * GetRelYaw(), 2.5 + GetRelVelX() / 5 + 2 * GetRelPitch());
+				Break;
+			Case 3:
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", 0, 5.5 + GetRelVelY() / 3 + 2 * GetRelYaw(), 2.5 + GetRelVelX() / 5 + 2 * GetRelPitch());
+				Break;
 			}
 			If (CountInv("MobileTurretSelected") && CountInv("MTUraniumCoating"))
 			{
@@ -1167,17 +1168,17 @@ Class EOA_Chaingun : EOA_Weapon
 				A_TakeInventory("MobileTurretBarrelCounter");
 			}
 			A_GiveInventory("MobileTurretBarrelCounter");
-			If (CountInv("MobileTurretBarrelCounter") == 1)
+			Switch (CountInv("MobileTurretBarrelCounter"))
 			{
-				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), -4 + GetRelVelY() / 3, 2.5);
-			}
-			Else If (CountInv("MobileTurretBarrelCounter") == 2)
-			{
-				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", -5 + GetViewZ(), 0 + GetRelVelY() / 3, 2.5);
-			}
-			Else If (CountInv("MobileTurretBarrelCounter") == 3)
-			{
-				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", GetViewZ(), 4 + GetRelVelY() / 3, 2.5);
+			Case 1:
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", 0, -5.5 + GetRelVelY() / 3 + 2 * GetRelYaw(), 2.5 + GetRelVelX() / 5 + 2 * GetRelPitch());
+				Break;
+			Case 2:
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", -5, GetRelVelY() / 3 + 2 * GetRelYaw(), 2.5 + GetRelVelX() / 5 + 2 * GetRelPitch());
+				Break;
+			Case 3:
+				EOA_FireBullets(3, 3, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "ChaingunSlug", 0, 5.5 + GetRelVelY() / 3 + 2 * GetRelYaw(), 2.5 + GetRelVelX() / 5 + 2 * GetRelPitch());
+				Break;
 			}
 			If (CountInv("MobileTurretSelected") && CountInv("MTUraniumCoating"))
 			{
@@ -1234,9 +1235,9 @@ Class EOA_Chaingun : EOA_Weapon
 			EOA_WeaponReady(WRF_NOFIRE);
 			If (CountInv("MobileTurretHeatCounter") && CountInv("MobileTurretHeatCounter") % 3 == 0)
 			{
-				A_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
-				A_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
-				A_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
 			}
 			If (CountInv("Grabbing_A_Ledge") || CountInv("EquipmentTrigger") && CountInv("EquipmentCharge"))
 			{
@@ -1257,9 +1258,9 @@ Class EOA_Chaingun : EOA_Weapon
 			EOA_WeaponReady(WRF_NOFIRE);
 			If (CountInv("MobileTurretHeatCounter") && CountInv("MobileTurretHeatCounter") % 3 == 0)
 			{
-				A_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
-				A_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
-				A_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(0, 10, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
+				EOA_FireBullets(-18, 0, -1, 0, "MobileTurretSmokeSpawner", FBF_NORANDOMPUFFZ|FBF_EXPLICITANGLE|FBF_NOFLASH, 60);
 			}
 			If (CountInv("Grabbing_A_Ledge"))
 			{

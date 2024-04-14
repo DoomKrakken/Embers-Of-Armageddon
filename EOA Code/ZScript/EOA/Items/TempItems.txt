@@ -1,7 +1,6 @@
 Mixin Class EOA_TempItem
 {
-	Int SpawnDelay;
-	Int AngleOfsDir;
+	Int SpawnDelay, AngleOfsDir;
 	Default
 	{
 		Radius 5;

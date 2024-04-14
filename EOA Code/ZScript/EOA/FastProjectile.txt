@@ -453,6 +453,7 @@ Class EOA_Projectile : FastProjectile
 
 	Override Void Tick()
 	{
+		//InterpFastProj = False;
 		Switch(MoveMode)
 		{
 		Case Normal:
@@ -462,6 +463,7 @@ Class EOA_Projectile : FastProjectile
 		Case FastProjectile:
 			If (GetAge() == 1 && !(InStateSequence(CurState, ResolveState("Death")) || InStateSequence(CurState, ResolveState("XDeath")) || InStateSequence(CurState, ResolveState("Crash")))) //This occurs only once, after the first tic has passed.  This way, we can see the projectile "exiting" the muzzle.
 			{
+				//InterpFastProj = Default.InterpFastProj;
 				Vel = Vel.Unit() * TrueSpeed;
 			}
 			NewFastProjTick();

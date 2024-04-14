@@ -163,6 +163,15 @@ Class EOA_Weapon : DoomWeapon
 		}
 		Return 0;
 	}
+	Action Double GetRelVelX()
+	{
+		Let Player = Invoker.Owner.Player;
+		If (Player && Player.Mo)
+		{
+			Return Vel.XY Dot AngleToVector(Angle);
+		}
+		Return 0;
+	}
 	Action Double GetRelVelY()
 	{
 		Let Player = Invoker.Owner.Player;
@@ -172,13 +181,46 @@ Class EOA_Weapon : DoomWeapon
 		}
 		Return 0;
 	}
+	Action Double GetRelVelZ()
+	{
+		Let Player = Invoker.Owner.Player;
+		If (Player && Player.Mo)
+		{
+			Return Vel.Z;
+		}
+		Return 0;
+	}
+	Action Double GetRelYaw()
+	{
+		Let Player = Invoker.Owner.Player;
+		If (Player && Player.Mo)
+		{
+			Return cos(Player.CMD.Yaw * (360.0 / 65536.0)) * Player.CMD.Yaw / max(abs(Player.CMD.Yaw), 1);
+		}
+		Return 0;
+	}
+	Action Double GetRelPitch()
+	{
+		Let Player = Invoker.Owner.Player;
+		If (Player && Player.Mo)
+		{
+			Return cos(Player.CMD.Pitch * (360.0 / 65536.0)) * Player.CMD.Pitch / max(abs(Player.CMD.Pitch), 1);
+		}
+		Return 0;
+	}
 	Static Vector3 GetLedgeOffset(Actor Activator)
 	{
 		PlayerInfo Player = Activator.Player;
 		Bool PlayerOnGround = Player && Player.Mo && Player.Mo == Activator && Player.OnGround;
+		If (PlayerOnGround)
+		{
+			Return (0, 0, 0);
+		}
 		Vector3 OldPos = Activator.Pos;
-		Vector3 LedgePos = (0, 0, 0); //[DoomKrakken]: Returns the closest mantleable ledge.
-		Int MaxHeight = 72 / (1 + PlayerOnGround); //[DoomKrakken]: The maximum height to check for mantling.  Mantling while not in the air will result in a shorter check, since the Slayer can auto-mantle shorter ledges, but must be midair in order to mantle taller ledges.
+		Vector3 LedgePos = (0, 0, 0), ActorPos = (0, 0, 0); //[DoomKrakken]: Returns the closest mantleable ledge.
+		Actor ClosestActor;
+		Double ClosestDist = Activator.Radius * 2;
+		Int MaxHeight = 72; //[DoomKrakken]: The maximum height to check for mantling.
 		Int i; //[DoomKrakken]: Radius Check
 		For (i = 0; i <= Activator.Radius; i++) //[DoomKrakken]: Let's have some elbow room.
 		{
@@ -192,31 +234,96 @@ Class EOA_Weapon : DoomWeapon
 		}
 		Activator.bPICKUP = False; //[DoomKrakken]: Has to be disabled before SetXYZ is called, else he'll pick up items that'd otherwise be out of his reach.
 		Activator.SetXYZ(OldPos + (0, 0, MaxHeight)); //[DoomKrakken]: Use SetXYZ to change the actor's position for testing purposes, without actually moving him.  This way he can detect 3D floors using GetZAt (since it can only be used to detect 3D floors beneath the player).
+		BlockThingsIterator It = BlockThingsIterator.Create(Activator, ClosestDist);
+		While (It.Next())
+		{
+			Actor Mo = It.Thing;
+			//Check if the actor is compatible.
+			If (!Mo || Mo == Activator || !Mo.bSOLID || !Mo.bACTLIKEBRIDGE || Mo.CurSector.PortalGroup != Activator.CurSector.PortalGroup || !Activator.CheckSight(Mo))
+			{
+				Continue;
+			}
+			//Gotta be somewhat in front of you.
+			Vector3 PosDif = Activator.Vec3To(Mo); //Difference in position between inflictor and victim.
+			Double DeltaAng = Activator.DeltaAngle(Activator.Angle, atan2(PosDif.Y, PosDif.X)); //Difference in angle between inflictor and victim.
+			Double RelAngle = abs(DeltaAng);
+			If (RelAngle > 45)
+			{
+				Continue;
+			}
+			Double ActorTopZ = Mo.Pos.Z + Mo.Height;
+			If (ActorTopZ - OldPos.Z > Activator.MaxStepHeight && ActorTopZ - OldPos.Z <= MaxHeight && Activator.Distance2D(Mo) - Mo.Radius < ClosestDist) //[DoomKrakken]: This is only the beginning of the checks to implement for valid actor-mantling checks.
+			{
+				Bool Cont;
+				For (i = Int(Activator.Radius); i <= Int(Activator.Radius) * 2; i++)
+				{
+					For (Int j = 0; j < 360; j += 15)
+					{
+						//[DoomKrakken]: Sweep from side to side to see if the other points on this ledge are conducive for mantling.
+						Vector2 np = Activator.Vec2Angle(i, j);
+						If (!Activator.CheckPosition(np))
+						{
+							Cont = True;
+							Break;
+						}
+					}
+					If (Cont)
+					{
+						Break;
+					}
+				}
+				If (Cont)
+				{
+					Continue;
+				}
+				ClosestActor = Mo;
+				ClosestDist = Activator.Distance2D(Mo) - Mo.Radius;
+			}
+		}
+		If (ClosestActor)
+		{
+			ActorPos = (ClosestDist, 0, min(abs(ClosestActor.Pos.Z + ClosestActor.Height - OldPos.Z), Activator.Height));
+		}
+		//[DoomKrakken]: Actor Check
 		For (i = Int(Activator.Radius); i <= Int(Activator.Radius * 2); i++) //[DoomKrakken]: If attempting to mantle at an angle to the ledge, the check may fall short and yield a negative result.  This'll make sure that it won't happen.
 		{
 			Vector3 np = Activator.Vec3Angle(i, Activator.Angle, 0);
-			Int LedgeFloorZ = Int(Activator.GetZAt(i, 0, 0));
-			Int LedgeCeilingZ = Int(Activator.GetZAt(i, 0, 0, GZF_CEILING));
 			If (!Activator.CheckPosition(np.XY))
 			{
 				Activator.SetXYZ(OldPos);
 				Activator.bPICKUP = Activator.Default.bPICKUP;
 				Return (0, 0, 0);
 			}
-			If (LedgeFloorZ - OldPos.Z > Activator.MaxStepHeight && LedgeFloorZ - OldPos.Z <= MaxHeight && LedgeCeilingZ - LedgeFloorZ >= Activator.Height)
+			Double LedgeFloorZ = Activator.GetZAt(i, 0, 0);
+			Double LedgeCeilingZ = Activator.GetZAt(i, 0, 0, GZF_CEILING);
+			If (LedgeFloorZ - OldPos.Z > Activator.MaxStepHeight && LedgeFloorZ - OldPos.Z <= MaxHeight && LedgeCeilingZ - LedgeFloorZ >= Activator.Height && (LedgePos.Z < min(LedgeFloorZ - OldPos.Z, Activator.Height))) //[DoomKrakken]: Find the closest mantleable ledge.
 			{
-				If (LedgePos.Z < min(LedgeFloorZ - OldPos.Z, Activator.Height)) //[DoomKrakken]: Find the closest mantleable ledge.
+				Bool Cont;
+				For (Int j = -Int(Activator.Radius); j <= Int(Activator.Radius); j++)
 				{
-					LedgePos = (i, 0, min(LedgeFloorZ - OldPos.Z, Activator.Height));
-					Activator.SetXYZ(OldPos);
-					Activator.bPICKUP = Activator.Default.bPICKUP;
-					Return LedgePos;
+					//[DoomKrakken]: Sweep from side to side to see if the other points on this ledge are conducive for mantling.
+					Double LedgeMustHitActorZ = Activator.GetZAt(i, j, 0);
+					Double LedgeCeilingCheckZ = Activator.GetZAt(i, j, 0, GZF_CEILING);
+					If (LedgeMustHitActorZ - OldPos.Z > MaxHeight && LedgeCeilingCheckZ - LedgeMustHitActorZ < Activator.Height && (LedgePos.Z >= min(LedgeMustHitActorZ - OldPos.Z, Activator.Height)))
+					{
+						Cont = True;
+						Break;
+					}
+					LedgeFloorZ = max(LedgeFloorZ, LedgeMustHitActorZ);
 				}
+				If (Cont)
+				{
+					Continue;
+				}
+				LedgePos = (i, 0, min(LedgeFloorZ - OldPos.Z, Activator.Height));
+				Activator.SetXYZ(OldPos);
+				Activator.bPICKUP = Activator.Default.bPICKUP;
+				Return (LedgePos.Z > ActorPos.Z) ? LedgePos : ActorPos;
 			}
 		}
 		Activator.SetXYZ(OldPos);
 		Activator.bPICKUP = Activator.Default.bPICKUP;
-		Return LedgePos;
+		Return (LedgePos.Z > ActorPos.Z) ? LedgePos : ActorPos;
 	}
 	Static String GetWeaponIcon(Actor Activator)
 	{
@@ -314,8 +421,11 @@ Class EOA_Weapon : DoomWeapon
 		{
 			A_StartSound(Weapon.AttackSound, CHAN_WEAPON);
 		}
-		For (i = 0; i < abs(NumBullets); i++)
+		SpawnHeight -= GetRelVelZ() / 1.25;
+		SpawnHeight += !(SpawnHeight ~== 0) ? GetViewZ() - SpawnHeight * sin(abs(Pitch)) : GetViewZ() * sin(abs(Pitch));
+		For (i = 0; i <= abs(NumBullets); i++)
 		{
+			i += (i == 0);
 			EOA_Quaternion Dir, Aim;
 			Vector3 AimDir;
 			//[DoomKrakken]: Necessary redundancy, so that the spread factors are rarely (if ever) identical.
@@ -329,16 +439,19 @@ Class EOA_Weapon : DoomWeapon
 			{
 				Damage *= random[CABullet](1, 3);
 			}
-			Let ProjSpawner = LineAttack(Angle, Radius * 2 * cos(Pitch), Pitch, 0, 'Hitscan', "EOA_NullPuff", LAFlags);
+			Let ProjSpawner = LineAttack(Angle, Radius * (1 + cos(Pitch) ** 2), Pitch, 0, 'Hitscan', "EOA_NullPuff", LAFlags);
 			If (ProjSpawner)
 			{
 				ProjSpawner.A_SetSize(0.5, 1);
-				Let Puff = ProjSpawner.LineAttack(AimDir.X, Range, AimDir.Y, Damage, 'Hitscan', PuffType, LAFlags|LAF_ABSOFFSET, T, -8);
-				If (Puff && ProjSpawner.CheckIfCloser(Puff, Radius * 2))
+				ProjSpawner.LineAttack(AimDir.X, Range, AimDir.Y, 0, 'Hitscan', PuffType, LAFlags|LAF_ABSOFFSET, T, -8); //[DoomKrakken]: Keeping this for checking unlinked portals.
+				FLineTraceData LT;
+				ProjSpawner.LineTrace(AimDir.X, Range, AimDir.Y, TRF_THRUACTORS|TRF_THRUBLOCK|TRF_THRUHITSCAN, Data: LT);
+				Let Puff = Spawn(PuffType, LT.HitLocation);
+				/*If (Puff && ProjSpawner.CheckIfCloser(Puff, Radius * 1.25))
 				{
 					ProjSpawner.SetOrigin((Pos.X, Pos.Y, ProjSpawner.Pos.Z), False);
-				}
-				If (Missile != Null)
+				}*/
+				If (Missile)
 				{
 					Bool Temp = False;
 					Double Ang = Angle - 90;
@@ -351,11 +464,16 @@ Class EOA_Weapon : DoomWeapon
 						Proj.Angle = BAngle;
 						Proj.Pitch = BSlope;
 						Proj.Target = Self;
+						//Proj.Vel += Vel; //[DoomKrakken]: I REALLY WISH I could do this, but it'd break all faithfulness to the original source because they didn't seem to account for that.
 						Proj.SetFriendPlayer(Self.Player);
 						If (!Puff)
 						{
 							Temp = True;
 							Puff = ProjSpawner.LineAttack(BAngle, Range, BSlope, 0, 'Hitscan', PuffType, LAFlags|LAF_NOINTERACT, T, -8);
+						}
+						If (Puff && ProjSpawner.CheckIfCloser(Puff, Radius * 2))
+						{
+							Proj.SetOrigin((Pos.X, Pos.Y, ProjSpawner.Pos.Z), False);
 						}
 						AimBulletMissile(Proj, Puff, Flags, Temp, False);
 						If (T.Unlinked)
@@ -474,8 +592,16 @@ Class EOA_Weapon : DoomWeapon
 				}
 			}
 			Vector3 OldPos = Owner.Pos; //[DoomKrakken]: Store the old position of the player...
-			Owner.SetXYZ(OldPos + (0, 0, 72 / (1 + Player.OnGround))); //[DoomKrakken]: ... and then set his XYZ so that 3D floors above him can be detected.
-			If (MantleTics > 0 && OldPos.Z < Owner.GetZAt(LedgeOffset.X, 0, 0) + Player.Mo.MaxStepHeight) //[DoomKrakken]: Do this while we still have MantleTics and the player's actual position is still below the desired ledge.
+			Owner.SetXYZ(OldPos + (0, 0, 72)); //[DoomKrakken]: ... and then set his XYZ so that 3D floors above him can be detected.
+			Double HighestLedgeZ;
+			For (Int i = Int(Owner.Radius); i <= Int(Owner.Radius) * 2; i++)
+			{
+				For (Int j = -Int(Owner.Radius); j <= Int(Owner.Radius); j++)
+				{
+					HighestLedgeZ = max(HighestLedgeZ, Owner.GetZAt(i, j));
+				}
+			}
+			If (MantleTics > 0 && OldPos.Z < HighestLedgeZ) //[DoomKrakken]: Do this while we still have MantleTics and the player's actual position is still below the desired ledge.
 			{
 				Prev = OldPos;
 				Owner.SetXYZ(Prev); //[DoomKrakken]: Reset the XYZ back to its original position.
@@ -516,10 +642,10 @@ Class EOA_Weapon : DoomWeapon
 	}
 	Action Int GetFrame()
 	{
-		PlayerInfo Player = Players[ConsolePlayer];
-		If (Player && Player.Mo && Player.Mo == Invoker.Owner && Invoker.Owner && Player.ReadyWeapon == Invoker && Player.FindPSprite(PSP_WEAPON))
+		Let PSP = Player.FindPSprite(OverlayID());
+		If (PSP)
 		{
-			Return Player.FindPSprite(PSP_WEAPON).Frame;
+			Return PSP.Frame;
 		}
 		Return -1;
 	}

@@ -1,3 +1,6 @@
+//[DoomKrakken]: This version of the rocket launcher features a more robust locking system, opting to first acquire a target, and then prime the lock-on system.  It doesn't require aiming directly at the target to continue locking onto it.
+//- Overhauled Lock-On Burst module's lock-on capabilities.  The Slayer no longer needs to keep his reticle trained on the intended target... the lock-on will happen immediately, and wait until fully charged.
+
 Class RocketLauncherSelected : EOA_Token {}
 
 //Lock-On Burst - Fire a three-round burst.  If pointed in the general direction of an enemy for long enough, they will home in on it.
@@ -178,70 +181,66 @@ Class EOA_RocketLauncher : EOA_Weapon
 		//Mod management
 		EOA_CheckDetonatorActive(); //[DoomKrakken]: For the Remote Detonation module's "active" state. :D
 		EOA_CheckRLModulesActive(); //[DoomKrakken]: For the Rocket Launcher, in case we've prematurely removed the currently equipped module and there are still some sprites left to cycle through.
-		If (Owner.CountInv("LockTarget1") || Owner.CountInv("LockTarget2") || Owner.CountInv("LockTarget3")) //Comment out this check for Eternal-styled locking.
+		If (Owner.CountInv("LockTarget1") && !Ptr1Tag)
 		{
-			//Uncomment these checks for the "LockTargetX" items for Eternal-styled locking.
-			If (/*Owner.CountInv("LockTarget1") &&*/ !Ptr1Tag)
+			Ptr1 = Ptr3;
+			Ptr3 = Ptr2;
+			Ptr1Tag = Ptr3Tag;
+			Ptr3Tag = Ptr2Tag;
+			If (Owner.CountInv("LockTarget3"))
 			{
-				Ptr1 = Ptr3;
-				Ptr3 = Ptr2;
-				Ptr1Tag = Ptr3Tag;
-				Ptr3Tag = Ptr2Tag;
-				If (Owner.CountInv("LockTarget3"))
-				{
-					Owner.A_TakeInventory("LockTarget3");
-				}
-				Else If (Owner.CountInv("LockTarget2"))
-				{
-					Owner.A_TakeInventory("LockTarget2");
-				}
-				Else
-				{
-					Owner.A_TakeInventory("LockTarget1");
-				}
+				Owner.A_TakeInventory("LockTarget3");
 			}
-			If (/*Owner.CountInv("LockTarget2") &&*/ !Ptr2Tag)
+			Else If (Owner.CountInv("LockTarget2"))
 			{
-				Ptr2 = Ptr1;
-				Ptr1 = Ptr3;
-				Ptr2Tag = Ptr1Tag;
-				Ptr1Tag = Ptr3Tag;
-				If (Owner.CountInv("LockTarget3"))
-				{
-					Owner.A_TakeInventory("LockTarget3");
-				}
-				Else If (Owner.CountInv("LockTarget2"))
-				{
-					Owner.A_TakeInventory("LockTarget2");
-				}
-				Else
-				{
-					Owner.A_TakeInventory("LockTarget1");
-				}
+				Owner.A_TakeInventory("LockTarget2");
 			}
-			If (/*Owner.CountInv("LockTarget3") &&*/ !Ptr3Tag)
+			Else
 			{
-				Ptr3 = Ptr2;
-				Ptr2 = Ptr1;
-				Ptr3Tag = Ptr2Tag;
-				Ptr2Tag = Ptr1Tag;
-				If (Owner.CountInv("LockTarget3"))
-				{
-					Owner.A_TakeInventory("LockTarget3");
-				}
-				Else If (Owner.CountInv("LockTarget2"))
-				{
-					Owner.A_TakeInventory("LockTarget2");
-				}
-				Else
-				{
-					Owner.A_TakeInventory("LockTarget1");
-				}
-				If (!(Owner.CountInv("LockTarget1") || Owner.CountInv("LockTarget2") || Owner.CountInv("LockTarget3")))
-				{
-					Owner.A_TakeInventory("LockOnBurstChargeCounter");
-					Ptr1 = Ptr2 = Ptr3 = Ptr1Tag = Ptr2Tag = Ptr3Tag = Null;
-				}
+				Owner.A_TakeInventory("LockTarget1");
+			}
+		}
+		If (Owner.CountInv("LockTarget2") && !Ptr2Tag)
+		{
+			Ptr2 = Ptr1;
+			Ptr1 = Ptr3;
+			Ptr2Tag = Ptr1Tag;
+			Ptr1Tag = Ptr3Tag;
+			If (Owner.CountInv("LockTarget3"))
+			{
+				Owner.A_TakeInventory("LockTarget3");
+			}
+			Else If (Owner.CountInv("LockTarget2"))
+			{
+				Owner.A_TakeInventory("LockTarget2");
+			}
+			Else
+			{
+				Owner.A_TakeInventory("LockTarget1");
+			}
+		}
+		If (Owner.CountInv("LockTarget3") && !Ptr3Tag)
+		{
+			Ptr3 = Ptr2;
+			Ptr2 = Ptr1;
+			Ptr3Tag = Ptr2Tag;
+			Ptr2Tag = Ptr1Tag;
+			If (Owner.CountInv("LockTarget3"))
+			{
+				Owner.A_TakeInventory("LockTarget3");
+			}
+			Else If (Owner.CountInv("LockTarget2"))
+			{
+				Owner.A_TakeInventory("LockTarget2");
+			}
+			Else
+			{
+				Owner.A_TakeInventory("LockTarget1");
+			}
+			If (!(Owner.CountInv("LockTarget1") || Owner.CountInv("LockTarget2") || Owner.CountInv("LockTarget3")))
+			{
+				Owner.A_TakeInventory("LockOnBurstChargeCounter");
+				Ptr1 = Ptr2 = Ptr3 = Ptr1Tag = Ptr2Tag = Ptr3Tag = Null;
 			}
 		}
 		If (Owner && Owner.Player && Owner.Player.ReadyWeapon && Owner.Player.ReadyWeapon != Self)
@@ -393,7 +392,7 @@ Class EOA_RocketLauncher : EOA_Weapon
 		}
 		Return False;
 	}
-	Action Void EOA_LockOn() //DOOM Eternal-styled lock-on...
+	Action Void EOA_LockOn() //Thank you, phantombeta!
 	{
 		If (CountInv("LockOnCooldown"))
 		{
@@ -410,18 +409,18 @@ Class EOA_RocketLauncher : EOA_Weapon
 					Invoker.TagPos = Puff.Pos;
 					Puff.Destroy();
 				}
-				If (/*Invoker.CurrentPtr ||*/ (LTarget.LineTarget && !LTarget.LineTarget.bSHADOW && (LTarget.LineTarget.bISMONSTER || LTarget.LineTarget.Player)))
+				If (Invoker.CurrentPtr || (LTarget.LineTarget && !LTarget.LineTarget.bSHADOW && (LTarget.LineTarget.bISMONSTER || LTarget.LineTarget.Player)))
 				{
 					Let Victim = LTarget.LineTarget;
-					If ((Invoker.CurrentPtr == Victim && GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("LockOnBurstCooldownCounter")) //[DoomKrakken]: So that it only locks on while you're holding down the trigger. ;)
+					If ((Invoker.CurrentPtr && GetPlayerInput(INPUT_BUTTONS) & BT_ALTATTACK) && !CountInv("LockOnBurstCooldownCounter")) //[DoomKrakken]: So that it only locks on while you're holding down the trigger. ;)
 					{
 						If (!CountInv("LockOnBurstChargeCounter"))
 						{
 							EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "RLR/LockingOn", 4, 0, 0.5);
 						}
-						//EOA_AcquireLockTargets(); //[DoomKrakken]: Called for initialization (when LockOnBurstChargeCounter has an Amount of 0).  Uncomment for Eternal-styled locking.
+						EOA_AcquireLockTargets(); //[DoomKrakken]: Called for initialization (when LockOnBurstChargeCounter has an Amount of 0).
 						A_GiveInventory("LockOnBurstChargeCounter", (1 + CountInv("PowerHaste")) * (1 + 3 * CountInv("QuickLock")));
-						//EOA_AcquireLockTargets(); //[DoomKrakken]: Called for making sure the LockTarget items are given before the overlay calling A_LockOn (this function) is destroyed.  Uncomment for Eternal-styled locking.
+						EOA_AcquireLockTargets(); //[DoomKrakken]: Called for making sure the LockTarget items are given before the overlay calling A_LockOn (this function) is destroyed.
 					}
 					Else
 					{
@@ -441,9 +440,9 @@ Class EOA_RocketLauncher : EOA_Weapon
 	}
 	Action Void EOA_AcquireLockTargets()
 	{
-		//[DoomKrakken]: (for Eternal-styled locking) NOTE TO FUTURE SELF... now that this function is being called constantly, make sure to spawn and then assign this LockTag ONLY when a new target is acquired.
-		/* If (!CountInv("LockOnBurstChargeCounter")) //Uncomment for Eternal-styled locking
-		{ */
+		//[DoomKrakken]: NOTE TO FUTURE SELF... now that this function is being called constantly, make sure to spawn and then assign this LockTag ONLY when a new target is acquired.
+		If (!CountInv("LockOnBurstChargeCounter"))
+		{
 			Actor LockTag = Spawn("EOA_LockTag", Invoker.TagPos);
 			If (LockTag)
 			{
@@ -452,30 +451,22 @@ Class EOA_RocketLauncher : EOA_Weapon
 				If (!CountInv("LockTarget1"))
 				{
 					Invoker.Ptr1 = Invoker.Ptr2 = Invoker.Ptr3 = Invoker.CurrentPtr; //[DoomKrakken]: Have all three rockets initialized to the first target acquired.
-					Invoker.CurrentPtr = Null; //Comment out for Eternal-style locking
 					Invoker.Ptr1Tag = Invoker.Ptr2Tag = Invoker.Ptr3Tag = LockTag;
-					A_GiveInventory("LockTarget1"); //Comment out for Eternal-style locking
 				}
 				Else If (!CountInv("LockTarget2"))
 				{
 					Invoker.Ptr3 = Invoker.CurrentPtr; //No, you're not reading it wrong... I want the last rocket to deviate to the additional target.
-					Invoker.CurrentPtr = Null; //Comment out for Eternal-style locking
 					Invoker.Ptr3Tag = LockTag;
-					A_GiveInventory("LockTarget2"); //Comment out for Eternal-style locking
 				}
 				Else If (!CountInv("LockTarget3")) //But if we've acquired all three targets, have them go in order of selection.
 				{
 					Invoker.Ptr2 = Invoker.Ptr3; //But if we've acquired all three targets, have them go in order of selection.
 					Invoker.Ptr3 = Invoker.CurrentPtr;
-					Invoker.CurrentPtr = Null; //Comment out for Eternal-style locking
 					Invoker.Ptr2Tag = Invoker.Ptr3Tag;
 					Invoker.Ptr3Tag = LockTag;
-					A_GiveInventory("LockTarget3"); //Comment out for Eternal-style locking
 				}
 			}
-		/* } */
-		//Uncomment for Eternal-style locking
-		/*
+		}
 		If (CountInv("LockOnBurstChargeCounter") >= 32)
 		{
 			If (!CountInv("LockTarget1"))
@@ -492,7 +483,6 @@ Class EOA_RocketLauncher : EOA_Weapon
 			}
 			Invoker.CurrentPtr = Null;
 		}
-		*/
 	}
 	Action Void EOA_LockTarget1()
 	{
@@ -704,8 +694,8 @@ Class EOA_RocketLauncher : EOA_Weapon
 			Else If (CountInv("LockOnBurstChargeCounter") >= 32)
 			{
 				EOA_SpawnNoiseMaker("RLR/Locked", 0, 0.5);
-				EOA_AcquireLockTargets();
-				A_TakeInventory("LockOnBurstChargeCounter");
+				//EOA_AcquireLockTargets();
+				//A_TakeInventory("LockOnBurstChargeCounter");
 			}
 			Return ResolveState(Null);
 		}
@@ -720,8 +710,8 @@ Class EOA_RocketLauncher : EOA_Weapon
 			Else If (CountInv("LockOnBurstChargeCounter") >= 32)
 			{
 				EOA_SpawnNoiseMaker("RLR/Locked", 0, 0.5);
-				EOA_AcquireLockTargets();
-				A_TakeInventory("LockOnBurstChargeCounter");
+				//EOA_AcquireLockTargets();
+				//A_TakeInventory("LockOnBurstChargeCounter");
 				A_Overlay(-2, "Null");
 				Return ResolveState("LockReady");
 			}

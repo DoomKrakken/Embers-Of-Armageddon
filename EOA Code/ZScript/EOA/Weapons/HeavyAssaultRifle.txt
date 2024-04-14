@@ -422,13 +422,13 @@ Class EOA_HeavyAssaultRifle : EOA_Weapon
 			}
 			A_GiveInventory("SoundCounter");
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Fire", CountInv("SoundCounter"));
-			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Add", 1+ CountInv("SoundCounter"), 0, 0.5);
+			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Add", 1 + CountInv("SoundCounter"), 0, 0.5);
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Bass", 0);
 			If (CountInv("PowerQDMG"))
 			{
 				EOA_SpawnNoiseMaker("QuadDamage/Shot");
 			}
-			EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "HARTracer", -6 + GetViewZ(), 10 + GetRelVelY() / 3);
+			EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_USEAMMO, 32767, "HARTracer", -6, 10 + GetRelVelY() / 3 + 2 * GetRelYaw(), 10 + GetRelVelX() / 1.5 + 2 * GetRelPitch());
 			EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -0.75, 0, 0.25);
 			EOA_SpawnCustomDynamicLight("HAR_Light", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
 			A_AlertMonsters();
@@ -566,7 +566,7 @@ Class EOA_HeavyAssaultRifle : EOA_Weapon
 				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Missile", CountInv("SoundCounter"));
 				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Launch", 1 + CountInv("SoundCounter"));
 				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Bass", 0);
-				EOA_FireBullets(4, 2, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_PUFFTRACER, 32767, "HARMicroMissile", -4 + GetViewZ(), 5 + GetRelVelY() / 5);
+				EOA_FireBullets(4, 2, -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ|FBF_PUFFTRACER, 32767, "HARMicroMissile", -4, 5 + GetRelVelY() / 5 + 2 * GetRelYaw(), 5 + GetRelVelX() / 1.5 + 2 * GetRelYaw());
 				EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -1, 0, 0.25);
 				EOA_SpawnCustomDynamicLight("HAR_Light", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);
 				A_TakeInventory("EOA_BulletAmmo", 3 - CountInv("AmmoEfficient"), TIF_NOTAKEINFINITE);
@@ -678,11 +678,11 @@ Class EOA_HeavyAssaultRifle : EOA_Weapon
 				EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "HAR/Bass", 0);
 				If (CountInv("DevastatorRounds"))
 				{
-					EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "HARDevastatorTracer", -6 + GetViewZ(), GetRelVelY() / 1.5);
+					EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "HARDevastatorTracer", -6, GetRelVelY() / 3 + 2 * GetRelYaw(), 10 + GetRelVelX() / 1.5 + 2 * GetRelYaw());
 				}
 				Else
 				{
-					EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "HARTracer", -6 + GetViewZ(), GetRelVelY() / 1.5);
+					EOA_FireBullets(0.025 * CountInv("HARAccuracyCounter"), 0.025 * CountInv("HARAccuracyCounter"), 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "HARTracer", -6, GetRelVelY() / 3 + 2 * GetRelYaw(), 10 + GetRelVelX() / 1.5 + 2 * GetRelYaw());
 				}
 				EOA_SetWeaponRecoilOffset(frandompick(-1, 0.5, 0.5, 1), -0.75, 0, 0.25);
 				EOA_SpawnCustomDynamicLight("HAR_Light", DynamicLight.PulseLight, (255, 153, 76), 48, 1, DYNAMICLIGHT.LF_ADDITIVE|DYNAMICLIGHT.LF_ATTENUATE, 4, (0, 0, Height / 2), 0.1);

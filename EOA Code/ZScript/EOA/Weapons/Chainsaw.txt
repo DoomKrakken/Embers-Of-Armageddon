@@ -55,7 +55,7 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 		{
 			A_WeaponOffset();
 			A_TakeInventory("ChainsawSelected");
-			If (IsActorPlayingSound(Int(Invoker.SlotNumber + 0.75 * 100 + 1), "Chainsaw/Idle") || IsActorPlayingSound(Int(Invoker.SlotNumber + 0.75 * 100 + 1), "Chainsaw/Fire"))
+			If (IsActorPlayingSound(Int(Invoker.SlotNumber + 0.75 * 100 + 1), "Chainsaw/Idle") || IsActorPlayingSound(Int(Invoker.SlotNumber + 0.75 * 100 + 1), "Chainsaw/Use"))
 			{
 				EOA_DestroyPersistentNoiseMaker(Invoker.SlotNumber + 0.75);
 			}
@@ -198,11 +198,15 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 	ReFire:
 		SCSB A 0 A_JumpIfInventory("BloodCounter", 1, 2);
 		SCSN A 0;
-		"####" A 0
+		"####" CD 1;
+		"####" "#" 0 
 		{
 			A_WeaponOffset(frandom(-2, 2), frandom(32, 36));
 			EOA_WeaponReady(WRF_NOFIRE);
-			A_CustomPunch(0, 0, CPF_NOTURN, "ChainsawGloryKillChecker", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+			If ((GetPlayerInput(INPUT_BUTTONS) & BT_ATTACK) && !CountInv("ChainsawRipAndTear"))
+			{
+				A_CustomPunch(0, 0, CPF_NOTURN, "ChainsawGloryKillChecker", 192 * ((1 + CountInv("SeekAndDestroySelected")) * (1 + (CountInv("SeekAndDestroySelected") && CountInv("SeekAndDestroyII")))));
+			}
 			A_CustomPunch(0, 1, CPF_NOTURN, "ChainsawPuff");
 			If (CountInv("ChainsawRipAndTear"))
 			{
@@ -223,11 +227,10 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 5);
 					EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.5, "", 6);
 				}
+				A_ReFire("ReFire");
 				Return ResolveState(Null);
 			}
 		}
-		"####" CD 1;
-		"####" "#" 0 A_ReFire("ReFire");
 		"####" "#" 0
 		{
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber + 0.75, "", 1);
@@ -317,6 +320,10 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 		}
 		"####" "#" 0 
 		{
+			If (Tracer && !Tracer.bNOBLOOD)
+			{
+				A_GiveInventory("BloodCounter");
+			}
 			A_GiveInventory("GloryKilled", 1, AAPTR_TRACER);
 		}
 		"####" CDCDCDCD 1 A_WeaponOffset(10, 16, WOF_ADD);
@@ -331,7 +338,6 @@ Class EOA_Chainsaw : EOA_Weapon replaces Chainsaw
 				A_TakeInventory("EOA_FuelAmmo", CountInv("ChainsawFuelCounter"));
 			}
 			A_TakeInventory("ChainsawFuelCounter");
-			A_GiveInventory("BloodCounter");
 			If (CountInv("ArmoredOffensiveSelected"))
 			{
 				EOA_SpawnNoiseMaker("Rune/ArmoredOffensive");
@@ -405,6 +411,7 @@ Class ChainsawGloryKillChecker : EOA_NullPuff2
 	States
 	{
 	Spawn:
+	Melee:
 	Crash:
 	Death:
 	XDeath:

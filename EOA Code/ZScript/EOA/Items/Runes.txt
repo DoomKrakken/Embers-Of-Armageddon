@@ -2,9 +2,7 @@
 Class EOA_RuneTrialStone : Actor
 {
 	Mixin EOA_MapMarkerUser;
-	Bool Interact;
-	Bool StoneUsed;
-	Bool StoneBeingUsed;
+	Bool Interact, StoneUsed, StoneBeingUsed;
 	Int AmbSoundTimer;
 	Default
 	{

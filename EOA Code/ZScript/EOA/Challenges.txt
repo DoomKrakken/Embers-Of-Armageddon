@@ -819,9 +819,7 @@ Class EOA_ChallengeEventHandler : StaticEventHandler //Thank you, phantombeta an
 		PlayerInfo Player = Players[ConsolePlayer];
 		If (Player && Player.Mo && PlayerInGame[ConsolePlayer])
 		{
-			Int Msg1Tics;
-			Int Msg2Tics;
-			Int Msg3Tics;
+			Int Msg1Tics, Msg2Tics, Msg3Tics;
 			Let MessageHandler = EOA_HandlerItem(Player.Mo.FindInventory("EOA_HandlerItem"));
 			Let Msg1 = Powerup(Player.Mo.FindInventory("PowerMsg1Active"));
 			Let Msg2 = Powerup(Player.Mo.FindInventory("PowerMsg2Active"));

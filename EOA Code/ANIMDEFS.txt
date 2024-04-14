@@ -27,42 +27,42 @@ Pic BRQDMG03 Tics 2.5
 Pic BRQDMG04 Tics 2.5
 
 //[Strongbelly]: Menu cursor
-texture optional N_BOXSEL
-pic BOXSEL01 tics 3
-pic BOXSEL02 tics 3
-pic BOXSEL03 tics 3
-pic BOXSEL04 tics 3
-pic BOXSEL05 tics 3
-pic BOXSEL06 tics 3
-pic BOXSEL07 tics 3
-pic BOXSEL08 tics 3
-pic BOXSEL09 tics 3
-pic BOXSEL10 tics 15
-pic BOXSEL09 tics 3
-pic BOXSEL08 tics 3
-pic BOXSEL07 tics 3
-pic BOXSEL06 tics 3
-pic BOXSEL05 tics 3
-pic BOXSEL04 tics 3
-pic BOXSEL03 tics 3
-pic BOXSEL02 tics 3
+Texture Optional N_BOXSEL
+Pic BOXSEL01 Tics 3
+Pic BOXSEL02 Tics 3
+Pic BOXSEL03 Tics 3
+Pic BOXSEL04 Tics 3
+Pic BOXSEL05 Tics 3
+Pic BOXSEL06 Tics 3
+Pic BOXSEL07 Tics 3
+Pic BOXSEL08 Tics 3
+Pic BOXSEL09 Tics 3
+Pic BOXSEL10 Tics 15
+Pic BOXSEL09 Tics 3
+Pic BOXSEL08 Tics 3
+Pic BOXSEL07 Tics 3
+Pic BOXSEL06 Tics 3
+Pic BOXSEL05 Tics 3
+Pic BOXSEL04 Tics 3
+Pic BOXSEL03 Tics 3
+Pic BOXSEL02 Tics 3
 
-texture optional N_UPGSEL
-pic UPGSEL01 tics 3
-pic UPGSEL02 tics 3
-pic UPGSEL03 tics 3
-pic UPGSEL04 tics 3
-pic UPGSEL05 tics 3
-pic UPGSEL06 tics 3
-pic UPGSEL07 tics 3
-pic UPGSEL08 tics 3
-pic UPGSEL09 tics 3
-pic UPGSEL10 tics 15
-pic UPGSEL09 tics 3
-pic UPGSEL08 tics 3
-pic UPGSEL07 tics 3
-pic UPGSEL06 tics 3
-pic UPGSEL05 tics 3
-pic UPGSEL04 tics 3
-pic UPGSEL03 tics 3
-pic UPGSEL02 tics 3
+Texture Optional N_UPGSEL
+Pic UPGSEL01 Tics 3
+Pic UPGSEL02 Tics 3
+Pic UPGSEL03 Tics 3
+Pic UPGSEL04 Tics 3
+Pic UPGSEL05 Tics 3
+Pic UPGSEL06 Tics 3
+Pic UPGSEL07 Tics 3
+Pic UPGSEL08 Tics 3
+Pic UPGSEL09 Tics 3
+Pic UPGSEL10 Tics 15
+Pic UPGSEL09 Tics 3
+Pic UPGSEL08 Tics 3
+Pic UPGSEL07 Tics 3
+Pic UPGSEL06 Tics 3
+Pic UPGSEL05 Tics 3
+Pic UPGSEL04 Tics 3
+Pic UPGSEL03 Tics 3
+Pic UPGSEL02 Tics 3

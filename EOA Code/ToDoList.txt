@@ -13,12 +13,10 @@
 = Implement TT-Supermolot font for better HUD recreation accuracy.
 = Implement additional CVar options for manipulating aesthetics/gameplay:
 	- Toaster Mode.
-= Use better friction systems (check with ZMovement).
 = Change sector light levels, damage amounts, and damage intervals on the fly.
 = Implement screen timers for powerups.
-= Implement improved Siphon Grenade effects (in-world and on HUD).
+= Implement improved Siphon Grenade effects (on HUD).
 = Implement dynamic challenge systems for people to write their own challenges or to utilize their own challenge lists.
 = Heretic/Hexen/Strife compatibility.
-= Desaturated translations.
 = Better bullet-time.
 = Plenty of other stuff that I've forgotten to write down. XD

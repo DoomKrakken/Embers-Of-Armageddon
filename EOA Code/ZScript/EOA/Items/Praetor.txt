@@ -78,9 +78,7 @@ Class EOA_EliteGuardCorpseWeapon : EOA_InteractWeapon
 	Vector3 V;
 	Double Len2;
 	Bool LookAtTarget;
-	Double CurPitch;
-	Double OfsPitch;
-	Double MaxPitch;
+	Double CurPitch, OfsPitch, MaxPitch;
 	Int LegOffset;
 	Default
 	{

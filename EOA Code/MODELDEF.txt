@@ -368,6 +368,7 @@ Model SiphonSphere
 	Path "Models"
 	Skin 0 "BoltBlue2.png"
 	Model 0 "Sphere.md3"
+	DONTCULLBACKFACES
 	INHERITACTORPITCH
 	FrameIndex NULL A 0 0
 }

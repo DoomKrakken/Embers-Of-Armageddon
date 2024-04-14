@@ -186,7 +186,7 @@ Class EOA_Pistol : EOA_Weapon Replaces Pistol
 			{
 				EOA_SpawnNoiseMaker("QuadDamage/Shot");
 			}
-			EOA_FireBullets(1 + 0.15 * CountInv("EMGAccuracyCounter"), 1 + 0.15 * CountInv("EMGAccuracyCounter"), -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "EMGTracer", GetViewZ(), 3 + GetRelVelY() / 6, 1.25);
+			EOA_FireBullets(1 + 0.15 * CountInv("EMGAccuracyCounter"), 1 + 0.15 * CountInv("EMGAccuracyCounter"), -1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "EMGTracer", 0, 3 + GetRelVelY() / 6 + 2 * GetRelYaw(), 1.25 + GetRelVelX() / 3 + 2 * GetRelPitch());
 			EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -1.5, 0, 0.25);
 			A_AlertMonsters();
 			EOA_SpawnPersistentNoiseMaker(Invoker.SlotNumber, "", 6);
@@ -286,7 +286,7 @@ Class EOA_Pistol : EOA_Weapon Replaces Pistol
 			{
 				EOA_SpawnNoiseMaker("QuadDamage/Shot"); 
 			}
-			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "EMGChargeTracer", -1 + GetViewZ(), 2 + GetRelVelY() / 6, 2.5);
+			EOA_FireBullets(0, 0, 1, 0, "EOA_NullPuff", FBF_NORANDOMPUFFZ, 32767, "EMGChargeTracer", -1, 2 + GetRelVelY() / 6 + 2 * GetRelYaw(), 2.5 + GetRelVelX() / 5 + 2 * GetRelPitch());
 			EOA_SetWeaponRecoilOffset(frandompick(-1, -0.5, 0.5, 1), -3, 0, 0.25);
 			A_AlertMonsters();
 			A_GiveInventory("EMGCooldownCounter", 70);

@@ -1,7 +1,30 @@
-===== v1.9.3 (Hotfix) =====
-- Granted slight AirFriction factor to the Slayer (to decrease midair velocity).
+===== v1.9.3 =====
+- Added slight AirFriction factor to the Slayer (to decrease midair velocity).
 - Condensed variable declarations in challenge-related code, Glory Kill Drop code, global variable archive code, and Doom Slayer player pawn code.
 - "Doom Slayer's True Speed" option now toggles between "modern" and "classic" modes of movement.  While enabled, the Doom Slayer will move more similarly to how he does in DOOM (2016).  While disabled, the Doom Slayer will move more similarly to how he does in classic Doom.
+- Fixed a rare projectile deviation bug that occurred whenever firing a weapon while banking an edge.
+- Fixed a bug that allowed the Slayer to have full air control while In-Flight Mobility is equipped while the thrust boots aren't in the Slayer's possession.
+- Fixed a bug that caused the Chaingun's looping sounds to continue playing faintly even while it wasn't selected.
+- Added 2 tics to each standard firing animation state sequence for the Chaingun.
+- Created "GetRelVelX" to compensate for forward velocity whenever firing weapons (especially while looking up or down).
+- Added a pitch check to all calls to "EOA_FireBullets" to better align projectiles with the gun's muzzle upon firing using a height offset.
+- Added the DONTCULLBACKFACES flag to the Siphon Grenade's sphere model.
+- Smoothed out the Siphon Grenade projectile's fading so it happens every tic (previously every 5 tics).
+- Fixed an issue with the Stun Bomb reacting weird when it hit EOA_WeakPoint-derived weak point hitboxes.
+- Created "GetRelPitch" and "GetRelYaw" to compensate for angular velocity whenever firing weapons.
+- Updated Siphon Grenade's effects.
+- The total number of Elite Guard Corpses, Field Drones, Argent Cell Caskets, and Rune Trial Stones that will spawn now depend on the lowest amounts of any such items collected by any player (so that every player will have a chance to get everything).
+- Fixed spawning of "BFG_ExplosionFX" actors so their spawn angle args use "frandom" (previously "random").
+- Fixed a few syntax errors in the menu descriptions.
+- Renamed the "EOA_TrueSpeed" CVar to "EOA_TrueMove".
+- Fixed a critical issue with the Slayer freezing and failing to perform a Chainsaw Glory Kill whenever he attempts to chainsaw an enemy that has the NOBLOOD flag enabled.
+- Fixed an issue with the Event Handler spawning more Field Drones and Argent Cells than necessary.
+- Fixed an issue with the game crashing whenever the Slayer engages a morph.
+- Mantling ledges can no longer be engaged while the Slayer is on the ground.
+- Simplified the "GetFrame" function.
+- Overhauled "GetLedgeOffset" to also detect actors that have the ACTLIKEBRIDGE flag for mantling.
+- Added additional checks to mantling code to better ensure mantling on top of stairs.
+- Added a few Return statements to the "WorldThingSpawned" override of EOA_StaticEventHandler.
 
 ===== v1.9.2 =====
 - Homing attacks such as the BFG's tracers and Lock-On Burst will lose their victims if the victims become unshootable.

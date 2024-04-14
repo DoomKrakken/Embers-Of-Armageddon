@@ -51,13 +51,7 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 			}
 			If (!(e.IsSaveGame || e.IsReopen) && StaticArchive) //DoomKrakken]: Reset these counters.
 			{
-				StaticArchive.ShotgunNeeded = False;
-				StaticArchive.ShotgunSpawned = False;
-				StaticArchive.ChaingunNeeded = False;
-				StaticArchive.ChaingunSpawned = False;
-				StaticArchive.ChainsawSpawnedInLevel = False;
-				StaticArchive.ThrustBootsSpawned = False;
-				StaticArchive.AutomapSpawned = False;
+				StaticArchive.ShotgunNeeded = StaticArchive.ShotgunSpawned = StaticArchive.ChaingunNeeded = StaticArchive.ChaingunSpawned = StaticArchive.ChainsawSpawnedInLevel = StaticArchive.ThrustBootsSpawned = StaticArchive.AutomapSpawned = False;
 				StaticArchive.FuelAmmoSpawnedInLevel = 0;
 				/*For (Int i = 0; i < StaticArchive.KillMilestone.Size(); i++)
 				{
@@ -66,22 +60,31 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 						StaticArchive.KillMilestone.Delete(i);
 					}
 				}*/
-				PlayerInfo Player = Players[ConsolePlayer];
-				If (Player && Player.Mo)
+				Int MinPraetorTokensClaimed = 36;
+				Int MinFieldDronesClaimed = 12, MinArgentCellsClaimed = 12, MinRuneTrialStonesClaimed = 12;
+				For (Int i = 0; i < MAXPLAYERS; i++)
 				{
-					Let ThisPlayer = DoomSlayer(Player.Mo);
-					If (ThisPlayer)
+					PlayerInfo Player = Players[i];
+					If (Player && Player.Mo)
 					{
-						StaticArchive.PraetorTokensClaimed = ThisPlayer.CountInv("PraetorToken") + ThisPlayer.CountInv("HazardProtection") + 2 * ThisPlayer.CountInv("SelfPreservation") + 3 * ThisPlayer.CountInv("BarrelsOFun") + ThisPlayer.CountInv("ItemAwareness") + 2 * ThisPlayer.CountInv("SecretFinder") + 3 * ThisPlayer.CountInv("FullView") + 2 * ThisPlayer.CountInv("QuickCharge") + 3 * ThisPlayer.CountInv("StockUp") + 4 * ThisPlayer.CountInv("RapidCharge") + ThisPlayer.CountInv("PowerSurge") + 2 * ThisPlayer.CountInv("HealingPower") + 3 * ThisPlayer.CountInv("PowerExtender") + 2 * ThisPlayer.CountInv("Adept") + 3 * ThisPlayer.CountInv("QuickHands") + 4 * ThisPlayer.CountInv("HotSwap");
-						StaticArchive.FieldDronesClaimed = ThisPlayer.CountInv("ChargedBurst") + ThisPlayer.CountInv("ExplosiveShot") + ThisPlayer.CountInv("MicroMissiles") + ThisPlayer.CountInv("TacticalScope") + ThisPlayer.CountInv("LockOnBurst") + ThisPlayer.CountInv("RemoteDetonation") + ThisPlayer.CountInv("HeatBlast") + ThisPlayer.CountInv("StunBomb") + ThisPlayer.CountInv("PrecisionBolt") + ThisPlayer.CountInv("SiegeMode") + ThisPlayer.CountInv("GatlingRotator") + ThisPlayer.CountInv("MobileTurret");
-						StaticArchive.ArgentCellsClaimed = ThisPlayer.CountInv("EOA_ArgentHealthBonusCounter") + ThisPlayer.CountInv("EOA_ArgentArmorBonusCounter") + ThisPlayer.CountInv("EOA_ArgentAmmoBonusCounter");
-						StaticArchive.RuneTrialStonesClaimed = ThisPlayer.CountInv("Vacuum") + ThisPlayer.CountInv("DazedAndConfused") + ThisPlayer.CountInv("AmmoBoost") + ThisPlayer.CountInv("EquipmentPower") + ThisPlayer.CountInv("Savagery") + ThisPlayer.CountInv("SeekAndDestroy") + ThisPlayer.CountInv("InFlightMobility") + ThisPlayer.CountInv("ArmoredOffensive") + ThisPlayer.CountInv("BloodFueled") + ThisPlayer.CountInv("IntimacyIsBest") + ThisPlayer.CountInv("RichGetRicher") + ThisPlayer.CountInv("SavingThrow");
+						Let ThisPlayer = DoomSlayer(Player.Mo);
+						If (ThisPlayer)
+						{
+							Int PraetorTokensClaimed = ThisPlayer.CountInv("PraetorToken") + ThisPlayer.CountInv("HazardProtection") + 2 * ThisPlayer.CountInv("SelfPreservation") + 3 * ThisPlayer.CountInv("BarrelsOFun") + ThisPlayer.CountInv("ItemAwareness") + 2 * ThisPlayer.CountInv("SecretFinder") + 3 * ThisPlayer.CountInv("FullView") + 2 * ThisPlayer.CountInv("QuickCharge") + 3 * ThisPlayer.CountInv("StockUp") + 4 * ThisPlayer.CountInv("RapidCharge") + ThisPlayer.CountInv("PowerSurge") + 2 * ThisPlayer.CountInv("HealingPower") + 3 * ThisPlayer.CountInv("PowerExtender") + 2 * ThisPlayer.CountInv("Adept") + 3 * ThisPlayer.CountInv("QuickHands") + 4 * ThisPlayer.CountInv("HotSwap");
+							Int FieldDronesClaimed = ThisPlayer.CountInv("ChargedBurst") + ThisPlayer.CountInv("ExplosiveShot") + ThisPlayer.CountInv("MicroMissiles") + ThisPlayer.CountInv("TacticalScope") + ThisPlayer.CountInv("LockOnBurst") + ThisPlayer.CountInv("RemoteDetonation") + ThisPlayer.CountInv("HeatBlast") + ThisPlayer.CountInv("StunBomb") + ThisPlayer.CountInv("PrecisionBolt") + ThisPlayer.CountInv("SiegeMode") + ThisPlayer.CountInv("GatlingRotator") + ThisPlayer.CountInv("MobileTurret");
+							Int ArgentCellsClaimed = ThisPlayer.CountInv("EOA_ArgentHealthBonusCounter") + ThisPlayer.CountInv("EOA_ArgentArmorBonusCounter") + ThisPlayer.CountInv("EOA_ArgentAmmoBonusCounter");
+							Int RuneTrialStonesClaimed = ThisPlayer.CountInv("Vacuum") + ThisPlayer.CountInv("DazedAndConfused") + ThisPlayer.CountInv("AmmoBoost") + ThisPlayer.CountInv("EquipmentPower") + ThisPlayer.CountInv("Savagery") + ThisPlayer.CountInv("SeekAndDestroy") + ThisPlayer.CountInv("InFlightMobility") + ThisPlayer.CountInv("ArmoredOffensive") + ThisPlayer.CountInv("BloodFueled") + ThisPlayer.CountInv("IntimacyIsBest") + ThisPlayer.CountInv("RichGetRicher") + ThisPlayer.CountInv("SavingThrow");
+							StaticArchive.PraetorTokensClaimed = min(MinPraetorTokensClaimed, PraetorTokensClaimed);
+							StaticArchive.FieldDronesClaimed = min(MinFieldDronesClaimed, FieldDronesClaimed);
+							StaticArchive.ArgentCellsClaimed = min(MinArgentCellsClaimed, ArgentCellsClaimed);
+							StaticArchive.RuneTrialStonesClaimed = min(MinRuneTrialStonesClaimed, RuneTrialStonesClaimed);
+						}
 					}
+					StaticArchive.PraetorTokensSpawned = StaticArchive.PraetorTokensClaimed;
+					StaticArchive.FieldDronesSpawned = StaticArchive.FieldDronesClaimed;
+					StaticArchive.ArgentCellsSpawned = StaticArchive.ArgentCellsClaimed;
+					StaticArchive.RuneTrialStonesSpawned = StaticArchive.RuneTrialStonesClaimed;
 				}
-				StaticArchive.PraetorTokensSpawned = StaticArchive.PraetorTokensClaimed;
-				StaticArchive.FieldDronesSpawned = StaticArchive.FieldDronesClaimed;
-				StaticArchive.ArgentCellsSpawned = StaticArchive.ArgentCellsClaimed;
-				StaticArchive.RuneTrialStonesSpawned = StaticArchive.RuneTrialStonesClaimed;
 			}
 		}
 	}
@@ -129,8 +132,7 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 	}
 	Override Void WorldThingSpawned(WorldEvent e)
 	{
-		//[DoomKrakken]:
-		//For the Glory Kill system.  Ported here so that no one tampers with the system in-game.
+		//[DoomKrakken]: For the Glory Kill system.  Ported here so that no one tampers with the system in-game.
 		If (e.Thing Is "EOA_PlasmaLauncherPuff" && e.Thing.Target && !e.Thing.Target.Player && !e.Thing.Target.bMISSILE)
 		{
 			e.Thing.Target.A_StartSound("PLR/Enemy/Fire", CHAN_WEAPON);
@@ -152,6 +154,7 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 					Blood.CopyBloodColor(BloodOwner);
 				}
 			}
+			Return;
 		}
 		Let Essentials = New("EOA_Essentials");
 		Essentials.Owner = e.Thing;
@@ -161,6 +164,7 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 		If (e.Thing.GetClassName() == "EOA_RadsuitReplacer" && !e.Thing.CheckProximity("EOA_RadsuitReplacer", 256, 1, CPXF_CHECKSIGHT))
 		{
 			e.Thing.A_SpawnItemEx("EOA_QuadHasteSpawner", Flags: SXF_NOCHECKPOSITION|SXF_TRANSFERSPECIAL);
+			Return;
 		}
 		If (e.Thing.GetClassName() == "EOA_QuadHasteSpawner" && StaticArchive) //Have Haste and Quad Damage alternate spawning.
 		{
@@ -272,6 +276,7 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 			{
 				StaticArchive.ChainsawSpawned = True;
 				StaticArchive.ChainsawSpawnedInLevel = True;
+				Return;
 			}
 			Else If (e.Thing Is "EOA_WeaponReplacer")
 			{
@@ -561,6 +566,7 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 		If (e.Thing.GetClassName() == "GloryKillIndicator" && e.Thing.Master)
 		{
 			e.Thing.A_SetSize(e.Thing.Master.Radius, e.Thing.Master.Height);
+			Return;
 		}
 	}
     Override Void WorldThingDamaged(WorldEvent e)
@@ -742,12 +748,9 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
     }
 	Override Void WorldThingDestroyed(WorldEvent e)
 	{
-		If (e.Thing.GetClassName() == "EOA_Rocket" && e.Thing.Target && !e.Thing.Target.CountInv("ExternalPayload"))
+		If (e.Thing.GetClassName() == "EOA_Rocket" && e.Thing.Target && !e.Thing.Target.CountInv("ExternalPayload") && e.Thing.CountInv("ExternalPayloadKillCounter") >= 3)
 		{
-			If (e.Thing.CountInv("ExternalPayloadKillCounter") >= 3)
-			{
-				e.Thing.Target.A_GiveInventory("ExternalPayloadMasteryCounter");
-			}
+			e.Thing.Target.A_GiveInventory("ExternalPayloadMasteryCounter");
 		}
 	}
 	Override Void WorldThingDied(WorldEvent e)
@@ -796,6 +799,12 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 			e.Thing.A_TakeInventory("ChainsawGloryKillCounter");
 		}
 	}
+	Override Void WorldThingRevived(WorldEvent e)
+	{
+		//For the Glory Kill system.  Ported here so that no one tampers with the system in-game.
+		Let Essentials = New("EOA_Essentials");
+		Essentials.Owner = e.Thing;
+	}
 	Override Void PlayerSpawned(PlayerEvent e)
 	{
 		PlayerInfo ThisPlayer = Players[e.PlayerNumber];
@@ -808,12 +817,6 @@ Class EOA_StaticEventHandler : StaticEventHandler //Thank you, TheZombieKiller!
 				Break;
 			}
 		}
-	}
-	Override Void WorldThingRevived(WorldEvent e)
-	{
-		//For the Glory Kill system.  Ported here so that no one tampers with the system in-game.
-		Let Essentials = New("EOA_Essentials");
-		Essentials.Owner = e.Thing;
 	}
 	Override Void WorldTick()
 	{

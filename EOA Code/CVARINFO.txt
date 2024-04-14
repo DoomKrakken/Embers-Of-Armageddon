@@ -2,7 +2,7 @@
 Server Float EOA_ItemSparsity = 2;
 Server Int EOA_PointSparsity = 1;
 Server Bool EOA_KillAmount = False;
-User Bool EOA_TrueSpeed = True;
+User Bool EOA_TrueMove = True;
 Server Bool EOA_DynLights = True;
 User Bool EOA_APRRecoil = True;
 Server Bool EOA_DamFloors = False;

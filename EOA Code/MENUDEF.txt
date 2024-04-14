@@ -91,6 +91,7 @@ OptionMenu "EOA_SettingsMenu"
 	Option "Kill-Based Upgrades", "EOA_KillAmount", "OnOff"
 	StaticText "If enabled, you will gain upgrade points for every", 1
 	StaticText "20 monsters you have killed.", 1
+	StaticText ""
 	StaticText "This is done instead of killing 20% of the monsters to"
 	StaticText "gain a point."
 	StaticText "The amount of monsters to kill will be affected"
@@ -111,8 +112,8 @@ OptionMenu "EOA_SettingsMenu"
 	StaticText "\"Minimal\" yields half the points."
 	StaticText ""
 	StaticText ""
-	Option "Doom Slayer's True Speed", "EOA_TrueSpeed", "OnOff"
-	StaticText "Adjust player speed rate according to personal preferences.", 1
+	Option "Doom Slayer's True Move", "EOA_TrueMove", "OnOff"
+	StaticText "Adjust player movement scheme according to personal preferences.", 1
 	StaticText ""
 	StaticText "By default, the player has a tighter movement scheme,"
 	StaticText "as seen in DOOM (2016).  You can disable this option to restore"
@@ -131,7 +132,7 @@ OptionMenu "EOA_SettingsMenu"
 	StaticText "Enable/Disable angle/pitch/roll shifting.", 1
 	StaticText ""
 	StaticText "By default, weapons now have a bit of recoil (which will"
-	StaticText "automatically readjust itself.  You can disable it in case"
+	StaticText "automatically readjust itself).  You can disable it in case"
 	StaticText "things get too dizzying, for example."
 	StaticText ""
 	StaticText ""
